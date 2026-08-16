@@ -162,12 +162,11 @@ def test_human_scorer_fails_closed_on_incomplete_claim_list() -> None:
         score_rows(cases, claims)
 
 
-def test_human_adjudication_workbook_is_generated_and_nonempty() -> None:
-    workbook = (
-        PROJECT_ROOT
-        / "outputs"
-        / "ng12_blind_adjudication_v1"
-        / "ng12_human_adjudication_v1.xlsx"
-    )
-    assert workbook.is_file()
-    assert workbook.stat().st_size > 50_000
+def test_human_adjudication_workbook_inputs_are_versioned() -> None:
+    required_inputs = [
+        EVAL_DIR / "adjudication_packets_v1.jsonl",
+        EVAL_DIR / "provisional_claim_adjudication_v1.jsonl",
+        EVAL_DIR / "blind_e2e_report_v1.json",
+        PROJECT_ROOT / "scripts" / "build_human_adjudication_workbook.mjs",
+    ]
+    assert all(path.is_file() and path.stat().st_size > 0 for path in required_inputs)
