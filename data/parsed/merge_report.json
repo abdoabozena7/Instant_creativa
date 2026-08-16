@@ -1,0 +1,993 @@
+{
+  "document": "NICE NG12",
+  "scope": [
+    "lung",
+    "colorectal",
+    "oesophageal",
+    "stomach",
+    "pancreatic",
+    "bladder",
+    "renal"
+  ],
+  "source_priority_rule": {
+    "canonical": "2026_current",
+    "supporting": "2015_full",
+    "rule": "Current 2026 wording is authoritative for clinical recommendations. The 2015 full guideline supplies supporting evidence and rationale only; historical recommendation copies are retained for audit but are not chunked."
+  },
+  "sources": {
+    "2026_current": {
+      "source_file": "ng12_current_2026.pdf",
+      "source_type": "current_guideline",
+      "authority_priority": "primary",
+      "sha256": "140ecbe21a689a483f76fc5d05a954d759d4fab75773692df7b883124b691a27",
+      "pages": 101,
+      "parser": {
+        "page_and_prose_parser": "PyMuPDF 1.26.4",
+        "table_parser": "pdfplumber 0.11.9",
+        "ocr_used": false,
+        "why_selected": "All 101 pages have a usable native text layer and the PDF exposes bookmark boundaries for headings and recommendation IDs. PyMuPDF therefore provides the simplest reliable page/prose parser. The symptom index uses ruled three-column tables; pdfplumber recovered those rows cleanly and is used only for pages 39-84."
+      },
+      "inspection": {
+        "pdf_pages": 101,
+        "native_text_layer": {
+          "usable": true,
+          "pages_with_text": 101,
+          "total_characters": 205390,
+          "minimum_characters_on_a_page": 277,
+          "maximum_characters_on_a_page": 4495
+        },
+        "headings": {
+          "bookmark_entries": 242,
+          "usable_for_boundaries": true
+        },
+        "recommendation_ids": {
+          "unique_native_ids": 109,
+          "examples": [
+            "1.1.1",
+            "1.1.2",
+            "1.1.3",
+            "1.1.4",
+            "1.1.5",
+            "1.1.6",
+            "1.2.1",
+            "1.2.2",
+            "1.2.3",
+            "1.2.4",
+            "1.2.5",
+            "1.2.6"
+          ]
+        },
+        "page_numbering": {
+          "physical_pages_preserved": true,
+          "printed_labels_found": 0,
+          "printed_label_mismatches": []
+        },
+        "cleaning": {
+          "headers_removed": 100,
+          "footer_lines_removed": 202
+        },
+        "metadata": {
+          "format": "PDF 1.7",
+          "title": "Suspected cancer: recognition and referral",
+          "author": "National Institute for Health and Care Excellence (NICE)",
+          "subject": "Suspected cancer: recognition and referral (NG12)",
+          "keywords": "NG12",
+          "creator": "NICE Publications",
+          "producer": "Prince 12.5 (www.princexml.com)",
+          "creationDate": "D:20260415000000Z",
+          "modDate": "",
+          "trapped": "",
+          "encryption": null
+        },
+        "bullets": {
+          "readable": true,
+          "bullet_lines_after_cleaning": 206
+        },
+        "text_order": {
+          "prose_reading_order_usable": true,
+          "table_reading_order_usable_with_pdfplumber": true
+        },
+        "tables": {
+          "native_plain_text_is_column-interleaved": true,
+          "pdfplumber_tables_detected": 95,
+          "pdfplumber_rows_seen": 215,
+          "malformed_rows": []
+        }
+      }
+    },
+    "2015_full": {
+      "source_file": "ng12_full_2015.pdf",
+      "source_type": "full_guideline",
+      "authority_priority": "supporting",
+      "sha256": "d9fc024b10db3128738047ec0476386105b80887bf1dadc09bfa3df7489b09fb",
+      "pages": 382,
+      "parser": {
+        "page_and_structure_parser": "PyMuPDF 1.26.4",
+        "table_observation_parser": "pdfplumber 0.11.9",
+        "ocr_used": false,
+        "why_selected": "381 of 382 pages have native text and 69 bookmarks provide reliable chapter/site boundaries. Layout-aware PyMuPDF span coordinates remove the update sidebar and identify old recommendation boxes. Supporting evidence tables retain their original line/row text and table titles."
+      },
+      "inspection": {
+        "pdf_pages": 382,
+        "native_text_layer": {
+          "usable": true,
+          "pages_with_text": 381,
+          "blank_pages": [
+            2
+          ],
+          "total_characters": 1461965,
+          "minimum_characters_on_a_nonblank_page": 111,
+          "maximum_characters_on_a_page": 6942
+        },
+        "headings": {
+          "bookmark_entries": 69,
+          "usable_for_section_boundaries": true,
+          "recommendation_ids_present": false
+        },
+        "cleaning": {
+          "header_lines_removed": 738,
+          "footer_lines_removed": 1115,
+          "update_markers_removed": 364
+        },
+        "scoped_sections": [
+          {
+            "section": "Methodology",
+            "pages": [
+              9,
+              21
+            ],
+            "records_extracted": 13,
+            "historical_recommendations": 0,
+            "cancer_sites": []
+          },
+          {
+            "section": "Research recommendations",
+            "pages": [
+              27,
+              28
+            ],
+            "records_extracted": 2,
+            "historical_recommendations": 0,
+            "cancer_sites": []
+          },
+          {
+            "section": "Patient information and support",
+            "pages": [
+              29,
+              32
+            ],
+            "records_extracted": 19,
+            "historical_recommendations": 9,
+            "cancer_sites": []
+          },
+          {
+            "section": "Safety netting",
+            "pages": [
+              33,
+              35
+            ],
+            "records_extracted": 11,
+            "historical_recommendations": 2,
+            "cancer_sites": []
+          },
+          {
+            "section": "The diagnostic process",
+            "pages": [
+              36,
+              36
+            ],
+            "records_extracted": 9,
+            "historical_recommendations": 8,
+            "cancer_sites": []
+          },
+          {
+            "section": "Lung cancer",
+            "pages": [
+              37,
+              48
+            ],
+            "records_extracted": 24,
+            "historical_recommendations": 3,
+            "cancer_sites": [
+              "lung"
+            ]
+          },
+          {
+            "section": "Oesophageal cancer",
+            "pages": [
+              54,
+              67
+            ],
+            "records_extracted": 26,
+            "historical_recommendations": 3,
+            "cancer_sites": [
+              "oesophageal"
+            ]
+          },
+          {
+            "section": "Pancreatic cancer",
+            "pages": [
+              68,
+              75
+            ],
+            "records_extracted": 20,
+            "historical_recommendations": 2,
+            "cancer_sites": [
+              "pancreatic"
+            ]
+          },
+          {
+            "section": "Stomach cancer",
+            "pages": [
+              76,
+              88
+            ],
+            "records_extracted": 26,
+            "historical_recommendations": 4,
+            "cancer_sites": [
+              "stomach"
+            ]
+          },
+          {
+            "section": "Colorectal cancer",
+            "pages": [
+              103,
+              143
+            ],
+            "records_extracted": 72,
+            "historical_recommendations": 4,
+            "cancer_sites": [
+              "colorectal"
+            ]
+          },
+          {
+            "section": "Bladder cancer",
+            "pages": [
+              183,
+              193
+            ],
+            "records_extracted": 22,
+            "historical_recommendations": 2,
+            "cancer_sites": [
+              "bladder"
+            ]
+          },
+          {
+            "section": "Renal cancer",
+            "pages": [
+              194,
+              206
+            ],
+            "records_extracted": 27,
+            "historical_recommendations": 1,
+            "cancer_sites": [
+              "renal"
+            ]
+          },
+          {
+            "section": "Non-site-specific symptoms",
+            "pages": [
+              318,
+              355
+            ],
+            "records_extracted": 52,
+            "historical_recommendations": 3,
+            "cancer_sites": []
+          }
+        ],
+        "metadata": {
+          "format": "PDF 1.6",
+          "title": "NG12 Suspected cancer: recognition and referral: Full guideline 2015",
+          "author": "",
+          "subject": "",
+          "keywords": "",
+          "creator": "Acrobat PDFMaker 26 for Word",
+          "producer": "Adobe PDF Library 26.1.119",
+          "creationDate": "D:20260407140537+01'00'",
+          "modDate": "D:20260410122420+01'00'",
+          "trapped": "",
+          "encryption": null
+        }
+      }
+    }
+  },
+  "records": {
+    "from_each_pdf": {
+      "2015_full": 323,
+      "2026_current": 122
+    },
+    "retained_after_scope_filtering": 445,
+    "retrieval_eligible": 404,
+    "audit_only_historical_recommendations": 41,
+    "by_content_type": {
+      "clinical_context": 8,
+      "clinical_question": 9,
+      "definition": 12,
+      "diagnostic_process": 9,
+      "evidence": 33,
+      "evidence_table": 157,
+      "guidance": 1,
+      "historical_recommendation": 41,
+      "methodology": 13,
+      "patient_support": 9,
+      "rationale": 57,
+      "recommendation": 23,
+      "research_recommendation": 2,
+      "safety_netting": 3,
+      "symptom_table": 68
+    },
+    "by_cancer_site": {
+      "bladder": 38,
+      "colorectal": 118,
+      "lung": 65,
+      "oesophageal": 56,
+      "pancreatic": 47,
+      "renal": 38,
+      "stomach": 66
+    }
+  },
+  "reconciliation": {
+    "records_from_current_pdf": 122,
+    "records_from_full_pdf": 323,
+    "records_retained_after_scope_filtering": 445,
+    "duplicates_detected": [
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p029_02",
+        "canonical_record_id": "ng12_1.14.1",
+        "recommendation_id": "1.14.1",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p029_03",
+        "canonical_record_id": "ng12_1.14.2",
+        "recommendation_id": "1.14.2",
+        "similarity": 0.9667,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p030_04",
+        "canonical_record_id": "ng12_1.14.3",
+        "recommendation_id": "1.14.3",
+        "similarity": 0.9883,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p030_05",
+        "canonical_record_id": "ng12_1.14.4",
+        "recommendation_id": "1.14.4",
+        "similarity": 0.9626,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p030_06",
+        "canonical_record_id": "ng12_1.14.5",
+        "recommendation_id": "1.14.5",
+        "similarity": 0.8957,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p030_07",
+        "canonical_record_id": "ng12_1.14.6",
+        "recommendation_id": "1.14.6",
+        "similarity": 0.9116,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p032_08",
+        "canonical_record_id": "ng12_1.14.7",
+        "recommendation_id": "1.14.7",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p032_09",
+        "canonical_record_id": "ng12_1.14.8",
+        "recommendation_id": "1.14.8",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_safety_netting_historical_recommendation_p033_01",
+        "canonical_record_id": "ng12_1.15.1",
+        "recommendation_id": "1.15.1",
+        "similarity": 0.9787,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_safety_netting_historical_recommendation_p033_02",
+        "canonical_record_id": "ng12_1.15.2",
+        "recommendation_id": "1.15.2",
+        "similarity": 0.9978,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_01",
+        "canonical_record_id": "ng12_1.16.1",
+        "recommendation_id": "1.16.1",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_02",
+        "canonical_record_id": "ng12_1.16.2",
+        "recommendation_id": "1.16.2",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_03",
+        "canonical_record_id": "ng12_1.16.3",
+        "recommendation_id": "1.16.3",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_04",
+        "canonical_record_id": "ng12_1.16.4",
+        "recommendation_id": "1.16.4",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_05",
+        "canonical_record_id": "ng12_1.16.5",
+        "recommendation_id": "1.16.5",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_06",
+        "canonical_record_id": "ng12_1.16.6",
+        "recommendation_id": "1.16.6",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_07",
+        "canonical_record_id": "ng12_1.16.7",
+        "recommendation_id": "1.16.7",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_the_diagnostic_process_historical_recommendation_p036_08",
+        "canonical_record_id": "ng12_1.16.8",
+        "recommendation_id": "1.16.8",
+        "similarity": 1.0,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_lung_cancer_historical_recommendation_p047_01",
+        "canonical_record_id": "ng12_1.1.1",
+        "recommendation_id": "1.1.1",
+        "similarity": 0.9657,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_lung_cancer_historical_recommendation_p047_02",
+        "canonical_record_id": "ng12_1.1.2",
+        "recommendation_id": "1.1.2",
+        "similarity": 0.8874,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_lung_cancer_historical_recommendation_p047_03",
+        "canonical_record_id": "ng12_1.1.3",
+        "recommendation_id": "1.1.3",
+        "similarity": 0.8745,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_oesophageal_cancer_historical_recommendation_p065_02",
+        "canonical_record_id": "ng12_1.2.2",
+        "recommendation_id": "1.2.2",
+        "similarity": 0.9476,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_oesophageal_cancer_historical_recommendation_p065_03",
+        "canonical_record_id": "ng12_1.2.3",
+        "recommendation_id": "1.2.3",
+        "similarity": 0.8081,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_pancreatic_cancer_historical_recommendation_p073_01",
+        "canonical_record_id": "ng12_1.2.4",
+        "recommendation_id": "1.2.4",
+        "similarity": 0.9474,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_pancreatic_cancer_historical_recommendation_p073_02",
+        "canonical_record_id": "ng12_1.2.5",
+        "recommendation_id": "1.2.5",
+        "similarity": 0.9217,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_stomach_cancer_historical_recommendation_p086_01",
+        "canonical_record_id": "ng12_1.2.6",
+        "recommendation_id": "1.2.6",
+        "similarity": 0.9386,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_stomach_cancer_historical_recommendation_p086_03",
+        "canonical_record_id": "ng12_1.2.8",
+        "recommendation_id": "1.2.8",
+        "similarity": 0.9474,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_stomach_cancer_historical_recommendation_p086_04",
+        "canonical_record_id": "ng12_1.2.9",
+        "recommendation_id": "1.2.9",
+        "similarity": 0.8076,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_colorectal_cancer_historical_recommendation_p139_02",
+        "canonical_record_id": "ng12_1.3.5",
+        "recommendation_id": "1.3.5",
+        "similarity": 0.8147,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_bladder_cancer_historical_recommendation_p192_01",
+        "canonical_record_id": "ng12_1.6.4",
+        "recommendation_id": "1.6.4",
+        "similarity": 0.9794,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_bladder_cancer_historical_recommendation_p192_02",
+        "canonical_record_id": "ng12_1.6.5",
+        "recommendation_id": "1.6.5",
+        "similarity": 0.9513,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_renal_cancer_historical_recommendation_p205_01",
+        "canonical_record_id": "ng12_1.6.6",
+        "recommendation_id": "1.6.6",
+        "similarity": 0.9731,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_non_site_specific_symptoms_historical_recommendation_p350_01",
+        "canonical_record_id": "ng12_1.13.2",
+        "recommendation_id": "1.13.2",
+        "similarity": 0.771,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      },
+      {
+        "supporting_record_id": "ng12_full_non_site_specific_symptoms_historical_recommendation_p350_02",
+        "canonical_record_id": "ng12_1.13.3",
+        "recommendation_id": "1.13.3",
+        "similarity": 0.9109,
+        "resolution": "2026 current recommendation retained; historical copy is not retrieval eligible."
+      }
+    ],
+    "duplicates_detected_count": 34,
+    "possible_conflicts": [
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p030_06",
+        "canonical_record_id": "ng12_1.14.5",
+        "recommendation_id": "1.14.5",
+        "similarity": 0.8957,
+        "reasons": [
+          "numeric/threshold tokens differ (2015=['5'], 2026=[])"
+        ],
+        "resolution": "Not auto-resolved; 2026 wording remains canonical and the difference is flagged for review."
+      },
+      {
+        "supporting_record_id": "ng12_full_patient_information_and_support_historical_recommendation_p030_07",
+        "canonical_record_id": "ng12_1.14.6",
+        "recommendation_id": "1.14.6",
+        "similarity": 0.9116,
+        "reasons": [
+          "numeric/threshold tokens differ (2015=['5'], 2026=[])"
+        ],
+        "resolution": "Not auto-resolved; 2026 wording remains canonical and the difference is flagged for review."
+      },
+      {
+        "supporting_record_id": "ng12_full_lung_cancer_historical_recommendation_p047_02",
+        "canonical_record_id": "ng12_1.1.2",
+        "recommendation_id": "1.1.2",
+        "similarity": 0.8874,
+        "reasons": [
+          "action/investigation wording differs (2015=['chest_xray'], 2026=['chest_xray', 'direct_access'])"
+        ],
+        "resolution": "Not auto-resolved; 2026 wording remains canonical and the difference is flagged for review."
+      },
+      {
+        "supporting_record_id": "ng12_full_lung_cancer_historical_recommendation_p047_03",
+        "canonical_record_id": "ng12_1.1.3",
+        "recommendation_id": "1.1.3",
+        "similarity": 0.8745,
+        "reasons": [
+          "action/investigation wording differs (2015=['chest_xray'], 2026=['chest_xray', 'direct_access'])"
+        ],
+        "resolution": "Not auto-resolved; 2026 wording remains canonical and the difference is flagged for review."
+      },
+      {
+        "supporting_record_id": "ng12_full_oesophageal_cancer_historical_recommendation_p064_01",
+        "canonical_record_id": "ng12_1.2.1",
+        "recommendation_id": "1.2.1",
+        "similarity": 0.3389,
+        "reasons": [
+          "action/investigation wording differs (2015=['direct_access', 'endoscopy'], 2026=['suspected_cancer_pathway'])"
+        ],
+        "resolution": "Not auto-resolved; 2026 wording remains canonical and the difference is flagged for review."
+      },
+      {
+        "supporting_record_id": "ng12_full_stomach_cancer_historical_recommendation_p086_02",
+        "canonical_record_id": "ng12_1.2.7",
+        "recommendation_id": "1.2.7",
+        "similarity": 0.3427,
+        "reasons": [
+          "action/investigation wording differs (2015=['direct_access', 'endoscopy'], 2026=['suspected_cancer_pathway'])"
+        ],
+        "resolution": "Not auto-resolved; 2026 wording remains canonical and the difference is flagged for review."
+      },
+      {
+        "supporting_record_id": "ng12_full_non_site_specific_symptoms_historical_recommendation_p350_01",
+        "canonical_record_id": "ng12_1.13.2",
+        "recommendation_id": "1.13.2",
+        "similarity": 0.771,
+        "reasons": [
+          "numeric/threshold tokens differ (2015=[], 2026=['5', '6', '60'])"
+        ],
+        "resolution": "Not auto-resolved; 2026 wording remains canonical and the difference is flagged for review."
+      }
+    ],
+    "conflicts_detected_count": 7,
+    "unmatched_historical_recommendations": [
+      "ng12_full_patient_information_and_support_historical_recommendation_p029_01",
+      "ng12_full_colorectal_cancer_historical_recommendation_p139_01",
+      "ng12_full_colorectal_cancer_historical_recommendation_p140_04"
+    ],
+    "records_by_source_and_content_type": {
+      "2026_current": {
+        "definition": 12,
+        "diagnostic_process": 8,
+        "guidance": 1,
+        "patient_support": 8,
+        "recommendation": 23,
+        "safety_netting": 2,
+        "symptom_table": 68
+      },
+      "2015_full": {
+        "clinical_context": 8,
+        "clinical_question": 9,
+        "diagnostic_process": 1,
+        "evidence": 33,
+        "evidence_table": 157,
+        "historical_recommendation": 41,
+        "methodology": 13,
+        "patient_support": 1,
+        "rationale": 57,
+        "research_recommendation": 2,
+        "safety_netting": 1
+      }
+    }
+  },
+  "chunking": {
+    "strategy": {
+      "current_guideline": "One chunk per recommendation, symptom-table row, definition, or shared guidance record.",
+      "full_guideline": "Keep short structural records intact; split only records over 700 cl100k tokens. Evidence tables split on extracted row/line boundaries and narrative evidence/rationale split on sentence boundaries, packed toward 550 tokens without overlap.",
+      "historical_recommendations": "Excluded from chunks after reconciliation; 2026 canonical versions win.",
+      "token_encoding": "cl100k_base",
+      "target_supporting_tokens": 550,
+      "maximum_supporting_tokens": 700
+    },
+    "record_token_distribution_before_chunking": {
+      "count": 404,
+      "min": 10,
+      "p50": 124,
+      "p90": 686,
+      "p95": 777,
+      "max": 1049,
+      "mean": 250.7
+    },
+    "chunk_token_distribution": {
+      "count": 440,
+      "min": 10,
+      "p50": 155,
+      "p90": 531,
+      "p95": 589,
+      "max": 697,
+      "mean": 230.16
+    },
+    "chunks_total": 440,
+    "chunks_by_source": {
+      "2015_full": 318,
+      "2026_current": 122
+    },
+    "chunks_by_content_type": {
+      "clinical_context": 8,
+      "clinical_question": 9,
+      "definition": 12,
+      "diagnostic_process": 9,
+      "evidence": 34,
+      "evidence_table": 188,
+      "guidance": 1,
+      "methodology": 17,
+      "patient_support": 9,
+      "rationale": 57,
+      "recommendation": 23,
+      "research_recommendation": 2,
+      "safety_netting": 3,
+      "symptom_table": 68
+    },
+    "chunks_by_cancer_site": {
+      "bladder": 40,
+      "colorectal": 119,
+      "lung": 63,
+      "oesophageal": 55,
+      "pancreatic": 45,
+      "renal": 40,
+      "stomach": 65
+    },
+    "oversize_current_logical_units": [],
+    "chunks_over_maximum": []
+  },
+  "chunk_examples": [
+    {
+      "chunk_id": "ng12_1.1.2_c01",
+      "record_id": "ng12_1.1.2",
+      "document": "NICE NG12",
+      "source_file": "ng12_current_2026.pdf",
+      "source_version": "2026_current",
+      "source_type": "current_guideline",
+      "authority_priority": "primary",
+      "page": 9,
+      "page_end": 9,
+      "section": "Lung cancer",
+      "subsection": "1.1 Lung and pleural cancers",
+      "cancer_sites": [
+        "lung"
+      ],
+      "recommendation_id": "1.1.2",
+      "content_type": "recommendation",
+      "text": "1.1.2 Offer an urgent, direct access chest X-ray to assess for lung cancer in people aged 40 and over if they have 2 or more of the following unexplained symptoms, or if they have ever smoked and have 1 or more of the following unexplained symptoms:\n• cough\n• fatigue\n• shortness of breath\n• chest pain\n• weight loss\n• appetite loss. [2015]",
+      "canonical_recommendation": true,
+      "related_recommendation_ids": [],
+      "supporting_record_ids": [
+        "ng12_full_lung_cancer_clinical_context_p037_001",
+        "ng12_full_lung_cancer_clinical_question_p037_002",
+        "ng12_full_lung_cancer_evidence_p037_003",
+        "ng12_full_lung_cancer_evidence_p038_004",
+        "ng12_full_lung_cancer_evidence_table_p038_005",
+        "ng12_full_lung_cancer_evidence_table_p039_006",
+        "ng12_full_lung_cancer_evidence_table_p039_007",
+        "ng12_full_lung_cancer_evidence_table_p040_008",
+        "ng12_full_lung_cancer_evidence_table_p041_009",
+        "ng12_full_lung_cancer_evidence_table_p042_010",
+        "ng12_full_lung_cancer_evidence_table_p043_011",
+        "ng12_full_lung_cancer_evidence_table_p044_012",
+        "ng12_full_lung_cancer_evidence_table_p044_013",
+        "ng12_full_lung_cancer_evidence_table_p045_014",
+        "ng12_full_lung_cancer_evidence_table_p046_015",
+        "ng12_full_lung_cancer_evidence_p047_017",
+        "ng12_full_lung_cancer_evidence_table_p047_016",
+        "ng12_full_lung_cancer_historical_recommendation_p047_02",
+        "ng12_full_lung_cancer_rationale_p047_018",
+        "ng12_full_lung_cancer_rationale_p047_019",
+        "ng12_full_lung_cancer_rationale_p048_020",
+        "ng12_full_lung_cancer_rationale_p048_021",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p326_013",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p327_014",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p329_018",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p330_019",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p331_022",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p332_023",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p343_037",
+        "ng12_full_non_site_specific_symptoms_evidence_table_p344_038"
+      ],
+      "chunk_index": 1,
+      "chunk_count": 1,
+      "token_count": 87,
+      "token_encoding": "cl100k_base"
+    },
+    {
+      "chunk_id": "ng12_symptom_p064_t01_r01_c01",
+      "record_id": "ng12_symptom_p064_t01_r01",
+      "document": "NICE NG12",
+      "source_file": "ng12_current_2026.pdf",
+      "source_version": "2026_current",
+      "source_type": "current_guideline",
+      "authority_priority": "primary",
+      "page": 64,
+      "page_end": 64,
+      "section": "Non-specific features of cancer",
+      "subsection": "Appetite loss",
+      "cancer_sites": [
+        "lung",
+        "colorectal",
+        "oesophageal",
+        "stomach",
+        "pancreatic",
+        "bladder",
+        "renal"
+      ],
+      "recommendation_id": null,
+      "content_type": "symptom_table",
+      "text": "Symptom and specific features: Appetite loss (unexplained)\nPossible cancer: Several, including lung, oesophageal, stomach, colorectal, pancreatic, bladder or renal\nActions: Carry out an assessment for additional symptoms, signs or findings that may help to clarify which cancer is most likely Offer urgent investigation, or a suspected cancer pathway referral, or a non-specific symptoms pathway referral [1.13.3]",
+      "canonical_recommendation": false,
+      "related_recommendation_ids": [
+        "1.13.3"
+      ],
+      "supporting_record_ids": [],
+      "chunk_index": 1,
+      "chunk_count": 1,
+      "token_count": 85,
+      "token_encoding": "cl100k_base"
+    },
+    {
+      "chunk_id": "ng12_full_patient_information_and_support_evidence_p029_003_c01",
+      "record_id": "ng12_full_patient_information_and_support_evidence_p029_003",
+      "document": "NICE NG12",
+      "source_file": "ng12_full_2015.pdf",
+      "source_version": "2015_full",
+      "source_type": "full_guideline",
+      "authority_priority": "supporting",
+      "page": 29,
+      "page_end": 29,
+      "section": "Patient information and support",
+      "subsection": "Clinical evidence",
+      "cancer_sites": [],
+      "recommendation_id": null,
+      "content_type": "evidence",
+      "text": "Clinical evidence No evidence was found pertaining to the information needs of patients in primary care who are referred for suspected cancer and their carers/families. No evidence was found pertaining to the information needs of patients who are being monitored for suspected cancer in primary care and their carers/families.",
+      "canonical_recommendation": false,
+      "related_recommendation_ids": [
+        "1.14.1",
+        "1.14.2",
+        "1.14.3",
+        "1.14.4",
+        "1.14.5",
+        "1.14.6",
+        "1.14.7",
+        "1.14.8"
+      ],
+      "supporting_record_ids": [],
+      "chunk_index": 1,
+      "chunk_count": 1,
+      "token_count": 57,
+      "token_encoding": "cl100k_base"
+    },
+    {
+      "chunk_id": "ng12_full_patient_information_and_support_rationale_p030_005_c01",
+      "record_id": "ng12_full_patient_information_and_support_rationale_p030_005",
+      "document": "NICE NG12",
+      "source_file": "ng12_full_2015.pdf",
+      "source_version": "2015_full",
+      "source_type": "full_guideline",
+      "authority_priority": "supporting",
+      "page": 30,
+      "page_end": 30,
+      "section": "Patient information and support",
+      "subsection": "Relative value placed on the",
+      "cancer_sites": [],
+      "recommendation_id": null,
+      "content_type": "rationale",
+      "text": "Relative value placed on the The GDG considered the information reported by patients/carers/families to be useful/not useful or wanted/not outcomes considered wanted when being referred for suspected cancer and when being monitoring for suspected cancer in primary care to be the most important outcome when considering these patients’ information needs. No evidence was found pertaining to the information needs of",
+      "canonical_recommendation": false,
+      "related_recommendation_ids": [
+        "1.14.1",
+        "1.14.2",
+        "1.14.3",
+        "1.14.4",
+        "1.14.5",
+        "1.14.6",
+        "1.14.7",
+        "1.14.8"
+      ],
+      "supporting_record_ids": [],
+      "chunk_index": 1,
+      "chunk_count": 1,
+      "token_count": 69,
+      "token_encoding": "cl100k_base"
+    },
+    {
+      "chunk_id": "ng12_full_lung_cancer_evidence_table_p038_005_c01",
+      "record_id": "ng12_full_lung_cancer_evidence_table_p038_005",
+      "document": "NICE NG12",
+      "source_file": "ng12_full_2015.pdf",
+      "source_version": "2015_full",
+      "source_type": "full_guideline",
+      "authority_priority": "supporting",
+      "page": 38,
+      "page_end": 38,
+      "section": "Lung cancer",
+      "subsection": "Table 4: Lung cancer: Meta-analyses",
+      "cancer_sites": [
+        "lung"
+      ],
+      "recommendation_id": null,
+      "content_type": "evidence_table",
+      "text": "Table 4: Lung cancer: Meta-analyses\nStudies included\nSymptom(s)\nJones (2007, at 6\nAll patients (N =\nHaemoptysis\n3.51 (1.61-7.5)\nmonths), Hippisley-\n14516)\nCox (2011), Iyen-\nOmofoman (2013)\nJones (2007, at 3\nAll patients (N =\nHaemoptysis\n3.83 (1.66-8.62)\nyears), Hippisley-Cox\n14516)\n(2011), Iyen-\nOmofoman (2013)\nPlease note that the data from Hamilton (2005) are not included in these meta-analyses due to the case-control\ndesign of the study. These data are instead reported in the second table below.",
+      "canonical_recommendation": false,
+      "related_recommendation_ids": [
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.13.2",
+        "1.13.3",
+        "1.13.4"
+      ],
+      "supporting_record_ids": [],
+      "chunk_index": 1,
+      "chunk_count": 1,
+      "token_count": 173,
+      "token_encoding": "cl100k_base"
+    }
+  ],
+  "current_to_supporting_examples": [
+    {
+      "recommendation_id": "1.1.2",
+      "canonical_record_id": "ng12_1.1.2",
+      "canonical_page": 9,
+      "supporting_record_id": "ng12_full_lung_cancer_evidence_p037_003",
+      "supporting_page": 37,
+      "supporting_content_type": "evidence",
+      "supporting_preview": "Risk of bias in the included studies The risk of bias and applicability concerns are summarised per study in the figure below. The main bias and validity issues to note are that patient sampling was not based on a consecutive or random series of patients in a number of the studies, some of which were also not conducted in a population directly relevant to the current question. Studies employing non-consecutive/random sampling are at high risk of bias because, for example, case-control studies ha"
+    },
+    {
+      "recommendation_id": "1.2.5",
+      "canonical_record_id": "ng12_1.2.5",
+      "canonical_page": 12,
+      "supporting_record_id": "ng12_full_pancreatic_cancer_evidence_p068_004",
+      "supporting_page": 68,
+      "supporting_content_type": "evidence",
+      "supporting_preview": "Risk of bias in the included studies The risk of bias and applicability concerns are summarised per study in the figure below. The main bias and applicability concerns to note in terms of patient selection were that this was not clearly consecutive or random in four of the studies, with three of these studies conducted in a setting that is not clearly directly representative of UK-based primary care. The other bias and applicability concerns to note include missing data, population with restrict"
+    },
+    {
+      "recommendation_id": "1.3.1",
+      "canonical_record_id": "ng12_1.3.1",
+      "canonical_page": 14,
+      "supporting_record_id": "ng12_full_colorectal_cancer_evidence_p103_003",
+      "supporting_page": 103,
+      "supporting_content_type": "evidence",
+      "supporting_preview": "Risk of bias in the included studies The risk of bias and applicability concerns are summarised per study in the figure below. The main bias and validity issues to note relates to patient selection and applicability with some studies employing non-consecutive patient sampling, e.g., case-control designs (which has been shown to be associated with inflated test accuracy parameters compared to designs that incorporate random or consecutive patient selection), and others being conducted in setting "
+    },
+    {
+      "recommendation_id": "1.6.6",
+      "canonical_record_id": "ng12_1.6.6",
+      "canonical_page": 23,
+      "supporting_record_id": "ng12_full_renal_cancer_evidence_p194_004",
+      "supporting_page": 194,
+      "supporting_content_type": "evidence",
+      "supporting_preview": "Risk of bias in the included studies The risk of bias and applicability concerns are summarised per study in the figure below. The main issue to note is that patient selection is associated with a number of bias or applicability concerns in most of the included studies, with some studies employing non-consecutive or non-random selection of patients and with some studies being employed in settings that are not clearly directly representative of UK-based primary care. Other areas of concern includ"
+    }
+  ],
+  "parsing_and_merge_problems": [
+    {
+      "source": "2015_full",
+      "issue": "The full guideline has no recommendation IDs and its Word-style evidence tables do not flatten cleanly as plain prose.",
+      "handling": "Bookmarks define site ranges; font/position identifies unnumbered recommendation boxes; table titles and extracted line order are retained in evidence_table records."
+    },
+    {
+      "source": "2015_full",
+      "issue": "One front-matter page has no text layer.",
+      "handling": "The blank physical page is preserved in pages_full.jsonl; OCR is unnecessary."
+    },
+    {
+      "source": "both",
+      "issue": "Some 2015 recommendations overlap current recommendations but differ after updates.",
+      "handling": "Historical copies are audit-only, linked where possible, and possible threshold/action differences are reported without modifying either source text."
+    },
+    {
+      "source": "2026_current",
+      "issue": "The symptom index intentionally repeats some actions under multiple symptom categories.",
+      "handling": "Each source row remains a separate, cited symptom-table chunk."
+    }
+  ],
+  "complementarity_assessment": {
+    "complement_cleanly": false,
+    "assessment": "The sources complement each other structurally: the 2026 PDF supplies concise canonical actions, while the full guideline supplies clinical questions, PPV evidence, limitations, and committee reasoning. Version differences are isolated in the reconciliation report rather than blended into canonical text."
+  }
+}

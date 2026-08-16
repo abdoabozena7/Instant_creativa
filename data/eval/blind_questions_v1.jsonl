@@ -1,0 +1,44 @@
+{"case_id":"BL-L01","scope_group":"lung","category":"direct","question":"A 42-year-old has unexplained haemoptysis. What action does NG12 recommend?"}
+{"case_id":"BL-L02","scope_group":"lung","category":"age_edge","question":"A 39-year-old has unexplained haemoptysis. Does this evidence set specify a suspected lung cancer pathway referral?"}
+{"case_id":"BL-L03","scope_group":"lung","category":"threshold","question":"A 55-year-old who has previously smoked now has an unexplained cough. What investigation is recommended?"}
+{"case_id":"BL-L04","scope_group":"lung","category":"combination","question":"A 55-year-old who has never smoked has unexplained cough and fatigue. What does NG12 advise?"}
+{"case_id":"BL-L05","scope_group":"lung","category":"direct","question":"What should be considered for a person aged 40 or over with a persistent or recurrent chest infection?"}
+{"case_id":"BL-L06","scope_group":"lung","category":"missing_information","question":"Someone has unexplained cough and weight loss, but their age and smoking history are not provided. Can the exact NG12 lung action be determined?"}
+{"case_id":"BL-L07","scope_group":"lung","category":"supporting_evidence","question":"What does the full guideline say about the evidence quality or risk of bias behind lung cancer symptom recognition?"}
+{"case_id":"BL-L08","scope_group":"lung","category":"version_conflict","question":"For lung symptoms meeting the current criteria, should I rely on the older full-guideline wording or the current direct-access chest X-ray recommendation?"}
+{"case_id":"BL-L09","scope_group":"lung","category":"hard_negative","question":"Does a normal chest X-ray definitively rule out lung cancer according to the retrieved NG12 evidence?"}
+{"case_id":"BL-L10","scope_group":"lung","category":"out_of_scope","question":"What are the NG12 referral criteria for mesothelioma?"}
+{"case_id":"BL-L11","scope_group":"lung","category":"multi_site","question":"How should unexplained appetite loss be assessed when it could indicate lung or several gastrointestinal and urological cancers?"}
+{"case_id":"BL-C01","scope_group":"colorectal","category":"direct","question":"Should an adult with a change in bowel habit be offered FIT to guide suspected colorectal cancer referral?"}
+{"case_id":"BL-C02","scope_group":"colorectal","category":"threshold","question":"What happens when a FIT result is exactly 10 micrograms of haemoglobin per gram of faeces?"}
+{"case_id":"BL-C03","scope_group":"colorectal","category":"threshold_edge","question":"A symptomatic adult has a FIT result of 9 micrograms of haemoglobin per gram. What safety action does NG12 specify?"}
+{"case_id":"BL-C04","scope_group":"colorectal","category":"missing_sample","question":"What should healthcare professionals consider when a person needs extra help to return their FIT sample?"}
+{"case_id":"BL-C05","scope_group":"colorectal","category":"direct","question":"What referral should be considered for an adult with a rectal mass?"}
+{"case_id":"BL-C06","scope_group":"colorectal","category":"missing_information","question":"An adult reports rectal bleeding, but no age or accompanying symptoms are supplied. Can the precise FIT criterion be selected?"}
+{"case_id":"BL-C07","scope_group":"colorectal","category":"screening_history","question":"Should FIT still be offered for qualifying colorectal symptoms after a previous negative NHS bowel screening FIT?"}
+{"case_id":"BL-C08","scope_group":"colorectal","category":"supporting_evidence","question":"Why did the guideline committee focus on positive predictive value when judging colorectal cancer symptoms?"}
+{"case_id":"BL-C09","scope_group":"colorectal","category":"hard_negative","question":"What FIT threshold does this adult NG12 evidence specify for a 12-year-old child?"}
+{"case_id":"BL-C10","scope_group":"colorectal","category":"out_of_scope","question":"What is the referral pathway for suspected anal cancer?"}
+{"case_id":"BL-C11","scope_group":"colorectal","category":"multi_site","question":"For unexplained appetite loss that might include colorectal cancer among several sites, what cross-cutting action is recommended?"}
+{"case_id":"BL-U01","scope_group":"upper_gi","category":"direct","question":"What is the current NG12 action for a person with dysphagia when oesophageal cancer is suspected?"}
+{"case_id":"BL-U02","scope_group":"upper_gi","category":"age_edge","question":"A 54-year-old has weight loss and reflux but no dysphagia. Does the cited oesophageal recommendation meet its age threshold?"}
+{"case_id":"BL-U03","scope_group":"upper_gi","category":"direct","question":"What investigation should be considered for haematemesis when assessing oesophageal cancer?"}
+{"case_id":"BL-U04","scope_group":"upper_gi","category":"threshold","question":"A person aged 55 has treatment-resistant dyspepsia. What oesophageal investigation should be considered?"}
+{"case_id":"BL-U05","scope_group":"upper_gi","category":"direct","question":"What does NG12 recommend for a 40-year-old with jaundice when pancreatic cancer is suspected?"}
+{"case_id":"BL-U06","scope_group":"upper_gi","category":"age_edge","question":"A 59-year-old has weight loss and back pain. Does the pancreatic CT or ultrasound recommendation meet its age threshold?"}
+{"case_id":"BL-U07","scope_group":"upper_gi","category":"combination","question":"A 60-year-old has weight loss and nausea. Which urgent investigation is recommended for possible pancreatic cancer?"}
+{"case_id":"BL-U08","scope_group":"upper_gi","category":"direct","question":"What referral should be considered for an upper abdominal mass consistent with stomach cancer?"}
+{"case_id":"BL-U09","scope_group":"upper_gi","category":"direct","question":"What is the current stomach cancer referral action for dysphagia?"}
+{"case_id":"BL-U10","scope_group":"upper_gi","category":"out_of_scope","question":"What does NG12 recommend for suspected gall bladder cancer with jaundice?"}
+{"case_id":"BL-U11","scope_group":"upper_gi","category":"version_conflict","question":"For dysphagia and suspected oesophageal cancer, should the older direct-endoscopy wording override the current suspected cancer pathway referral?"}
+{"case_id":"BL-R01","scope_group":"bladder_renal","category":"direct","question":"A 45-year-old has unexplained visible haematuria without a urinary tract infection. What is the bladder cancer action?"}
+{"case_id":"BL-R02","scope_group":"bladder_renal","category":"age_edge","question":"A 44-year-old has unexplained visible haematuria without UTI. Does the cited bladder recommendation meet its age threshold?"}
+{"case_id":"BL-R03","scope_group":"bladder_renal","category":"direct","question":"What should be considered for a 60-year-old with recurrent, persistent and unexplained urinary tract infection?"}
+{"case_id":"BL-R04","scope_group":"bladder_renal","category":"direct","question":"What is the renal cancer referral action for someone aged 45 with unexplained visible haematuria and no UTI?"}
+{"case_id":"BL-R05","scope_group":"bladder_renal","category":"hard_negative","question":"Does the renal recommendation shown here require referral for isolated non-visible haematuria in a 45-year-old?"}
+{"case_id":"BL-R06","scope_group":"bladder_renal","category":"missing_information","question":"A person has unexplained visible haematuria, but their age is unknown. Can the exact bladder or renal referral criterion be confirmed?"}
+{"case_id":"BL-R07","scope_group":"bladder_renal","category":"supporting_evidence","question":"What supporting evidence discusses positive predictive value or study limitations for haematuria and renal cancer?"}
+{"case_id":"BL-R08","scope_group":"bladder_renal","category":"multi_site","question":"For visible haematuria at age 45 without UTI, how do the current bladder and renal recommendations relate?"}
+{"case_id":"BL-R09","scope_group":"bladder_renal","category":"out_of_scope","question":"At what PSA level should someone be referred for suspected prostate cancer?"}
+{"case_id":"BL-R10","scope_group":"bladder_renal","category":"out_of_scope","question":"What is the urgent pathway for a painless testicular mass?"}
+{"case_id":"BL-R11","scope_group":"bladder_renal","category":"multi_site","question":"What cross-cutting NG12 action applies to unexplained appetite loss when bladder and renal cancer are among several possibilities?"}

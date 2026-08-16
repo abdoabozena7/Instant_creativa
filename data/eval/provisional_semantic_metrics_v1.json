@@ -1,0 +1,253 @@
+{
+  "created_at": "2026-08-16T19:57:03.929471+00:00",
+  "status": "provisional_model_assisted_pending_human_review",
+  "judge_model": "gpt-oss:120b-cloud",
+  "independence_limitation": "The judge is the same model family used for generation. These scores are triage signals, not independent or clinically validated semantic metrics.",
+  "cases": 44,
+  "claims": 134,
+  "citation_accuracy_provisional": 0.9065,
+  "claim_support_rate_provisional": 0.791,
+  "unsupported_claim_rate_provisional": 0.209,
+  "answer_behavior_accuracy_provisional": 0.8182,
+  "current_guideline_accuracy_provisional": 0.7105,
+  "failure_type_counts": {
+    "citation_binding": 15,
+    "current_vs_historical": 1,
+    "grounding": 6,
+    "overreach": 16,
+    "scope": 1
+  },
+  "human_review_queue": [
+    {
+      "case_id": "BL-L02",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach",
+        "citation_binding"
+      ],
+      "summary": "Answer overreaches by asserting no alternative pathway exists, a claim not supported by the evidence; therefore the behavior is incorrect."
+    },
+    {
+      "case_id": "BL-L05",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach"
+      ],
+      "summary": "The answer correctly cites the NG12 recommendation to consider an urgent chest X\u2011ray, but adds an unsupported claim that it is the first step, resulting in overreach."
+    },
+    {
+      "case_id": "BL-L06",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach"
+      ],
+      "summary": "The answer correctly states that the action cannot be decided without age or smoking data, matching the expected 'insufficient' behavior. All cited clinical claims are supported except the first claim, which overstates the guideline by adding an unsupported exclusivity clause."
+    },
+    {
+      "case_id": "BL-L07",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "citation_binding",
+        "grounding"
+      ],
+      "summary": "Answer contains several accurate, well\u2011cited claims but also makes unsupported statements lacking citations, resulting in citation\u2011binding and grounding failures."
+    },
+    {
+      "case_id": "BL-L08",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 0,
+      "failure_types": [
+        "citation_binding"
+      ],
+      "summary": "Answer correctly reflects current NG12 recommendations, but two claims lack explicit citations, resulting in a citation\u2011binding issue."
+    },
+    {
+      "case_id": "BL-C02",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach",
+        "citation_binding"
+      ],
+      "summary": "The answer contains an unsupported claim about safety\u2011netting not being needed at the 10\u202f\u00b5g/g threshold, lacking citation and not grounded in the provided guidelines."
+    },
+    {
+      "case_id": "BL-C03",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 0,
+      "failure_types": [
+        "citation_binding"
+      ],
+      "summary": "Answer is clinically correct and uses the 2026 NG12 guideline, but the first claim is cited to E2 which does not explicitly support the statement that <10\u202f\u00b5g Hb/g does not trigger automatic referral."
+    },
+    {
+      "case_id": "BL-C04",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "overreach",
+        "grounding"
+      ],
+      "summary": "The answer contains several unsupported actionable statements lacking citation, resulting in overreach and grounding errors despite correct use of some guideline references."
+    },
+    {
+      "case_id": "BL-C06",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 3,
+      "failure_types": [
+        "citation_binding",
+        "overreach"
+      ],
+      "summary": "The answer correctly indicates insufficient information, matching expected behavior, but contains uncited and unsupported claims, including an overreaching statement about referral."
+    },
+    {
+      "case_id": "BL-C07",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "citation_binding"
+      ],
+      "summary": "Answer correctly reflects the 2026 NICE NG12 recommendation that FIT be offered despite a prior negative screening result, but one safety\u2011netting claim lacks a citation, resulting in a citation\u2011binding error."
+    },
+    {
+      "case_id": "BL-C08",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach"
+      ],
+      "summary": "All cited claims are supported by the evidence; one uncited conclusion is not grounded in the supplied sources, constituting an overreach."
+    },
+    {
+      "case_id": "BL-C09",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "grounding",
+        "citation_binding",
+        "overreach"
+      ],
+      "summary": "Answer correctly notes lack of a pediatric threshold per E6, but adds unsupported claims about FIT specifics not entailed by cited evidence."
+    },
+    {
+      "case_id": "BL-C10",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "grounding",
+        "citation_binding"
+      ],
+      "summary": "The response correctly refused per expected behavior, but the scope claims lack any supporting citations."
+    },
+    {
+      "case_id": "BL-C11",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "overreach"
+      ],
+      "summary": "Answer includes correct guideline actions but adds unsupported statements about universal applicability and guaranteed timeliness, constituting overreach."
+    },
+    {
+      "case_id": "BL-U01",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach"
+      ],
+      "summary": "Answer contains one accurate claim and one unsupported claim that overreaches the evidence."
+    },
+    {
+      "case_id": "BL-U05",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach",
+        "grounding"
+      ],
+      "summary": "Answer contains two accurate guideline claims but adds an unsupported statement about referral being the first step and not needing further tests, constituting an overreach."
+    },
+    {
+      "case_id": "BL-U06",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 0,
+      "failure_types": [
+        "overreach"
+      ],
+      "summary": "All claims are fully supported by current 2026 NICE NG12 evidence, but the answer provides a definitive \u2018No\u2019 whereas the expected behavior was \u2018insufficient\u2019; thus the answer behavior does not match the expected directive."
+    },
+    {
+      "case_id": "BL-U07",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "current_vs_historical",
+        "overreach",
+        "citation_binding"
+      ],
+      "summary": "The answer cites a 2015 recommendation to claim a specific urgent CT (and fallback ultrasound) for pancreatic cancer, but the 2026 NG12 guideline does not contain that detail, so the claims are not supported by the current guideline."
+    },
+    {
+      "case_id": "BL-U10",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "scope",
+        "overreach",
+        "citation_binding",
+        "grounding"
+      ],
+      "summary": "The response should have refused (scope error) and instead provided unsupported claims without proper citations."
+    },
+    {
+      "case_id": "BL-R02",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 0,
+      "failure_types": [
+        "overreach"
+      ],
+      "summary": "Answer is sufficiently supported by current guidelines, but does not match the expected \u201cinsufficient\u201d behavior."
+    },
+    {
+      "case_id": "BL-R05",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 1,
+      "failure_types": [
+        "overreach",
+        "citation_binding"
+      ],
+      "summary": "The answer gives a definitive \u2018No\u2019 conclusion that isolated non\u2011visible haematuria requires no referral, which is not directly supported by the guideline; the negative inference is an overreach."
+    },
+    {
+      "case_id": "BL-R06",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 0,
+      "failure_types": [
+        "citation_binding"
+      ],
+      "summary": "All clinical claims are accurate to the 2026 NG12 guideline, but two claims lack explicit citations, resulting in a citation\u2011binding issue."
+    },
+    {
+      "case_id": "BL-R08",
+      "answer_behavior_correct": false,
+      "unsupported_claims": 2,
+      "failure_types": [
+        "citation_binding"
+      ],
+      "summary": "Answer contains accurate supported claims but includes two unsupported statements without citations, causing citation\u2011binding failures."
+    },
+    {
+      "case_id": "BL-R11",
+      "answer_behavior_correct": true,
+      "unsupported_claims": 0,
+      "failure_types": [
+        "citation_binding"
+      ],
+      "summary": "Answer is clinically correct and matches current NG12 guidance; only minor citation omission for the first claim."
+    }
+  ]
+}

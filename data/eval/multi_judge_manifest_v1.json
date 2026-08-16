@@ -1,0 +1,18 @@
+{
+  "created_at": "2026-08-16T20:53:57.187171+00:00",
+  "architecture_sha256": "c0abd7977cf0fb02a2e9664b0ae52ccd9cea32107f556fa2db038e16af4f82bd",
+  "llm_tasks": 334,
+  "deterministic_missing_citation_tasks": 27,
+  "mode": "hackathon",
+  "passes": 1,
+  "judges": {
+    "gemini": "gemini-3.6-flash",
+    "gpt_oss": "gpt-oss:120b-cloud"
+  },
+  "planned_model_calls": {
+    "primary": 334,
+    "conditional_second_judge": "0-334",
+    "maximum": 668
+  },
+  "policy": "One Gemini pass per task; only primary failures are escalated to GPT-OSS. Escalation disagreement is UNCERTAIN and fails closed. Automated evaluation, not clinical validation."
+}

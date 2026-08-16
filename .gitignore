@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+tmp/
+.playwright-cli/
+
+# Local source PDFs are not part of the submission. The small, evaluated
+# data/parsed and data/index runtime snapshot is intentionally tracked so a
+# fresh clone can run without private/local PDF files.
+data/raw/*.pdf
+
+# Frontend/local build output.
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+output/
+outputs/
+
+# Local configuration. Keep the secret-free template tracked.
+.env
+.env.*
+!.env.example

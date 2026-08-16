@@ -1,0 +1,996 @@
+{
+  "document": "NICE NG12",
+  "evaluation_name": "blind_end_to_end_v1",
+  "created_at": "2026-08-16T19:49:07.338434+00:00",
+  "architecture_sha256": "c0abd7977cf0fb02a2e9664b0ae52ccd9cea32107f556fa2db038e16af4f82bd",
+  "architecture_frozen_at": "2026-08-16T19:39:36.338061+00:00",
+  "questions": {
+    "total": 44,
+    "by_scope_group": {
+      "bladder_renal": 11,
+      "colorectal": 11,
+      "lung": 11,
+      "upper_gi": 11
+    },
+    "by_category": {
+      "age_edge": 4,
+      "combination": 2,
+      "direct": 12,
+      "hard_negative": 3,
+      "missing_information": 3,
+      "missing_sample": 1,
+      "multi_site": 4,
+      "out_of_scope": 5,
+      "screening_history": 1,
+      "supporting_evidence": 3,
+      "threshold": 3,
+      "threshold_edge": 1,
+      "version_conflict": 2
+    },
+    "by_expected_behavior": {
+      "answer": 29,
+      "insufficient": 10,
+      "refuse": 5
+    }
+  },
+  "deterministic_metrics": {
+    "scope_classification_accuracy": 0.9773,
+    "correct_refusal_rate": 0.8,
+    "false_refusal_rate": 0.0,
+    "retrieval_queries_scored": 37,
+    "retrieval_recall_at_1": 0.7568,
+    "retrieval_recall_at_3": 0.973,
+    "retrieval_recall_at_5": 0.973,
+    "retrieval_mrr_at_6": 0.8559,
+    "current_guideline_accuracy": 1.0,
+    "citation_label_validity_rate": 0.8,
+    "latency_ms": {
+      "end_to_end_p50": 3080.36,
+      "end_to_end_p95": 5494.12,
+      "generation_p50": 3084.31,
+      "generation_p95": 5187.21
+    }
+  },
+  "semantic_metrics": {
+    "status": "pending_human_adjudication",
+    "citation_accuracy": null,
+    "claim_support_rate": null,
+    "unsupported_claim_rate": null,
+    "answer_behavior_accuracy": null,
+    "note": "Valid citation labels do not prove entailment. Complete the claim-level adjudication packet before reporting these metrics.",
+    "provisional_model_assisted": {
+      "created_at": "2026-08-16T19:57:03.929471+00:00",
+      "status": "provisional_model_assisted_pending_human_review",
+      "judge_model": "gpt-oss:120b-cloud",
+      "independence_limitation": "The judge is the same model family used for generation. These scores are triage signals, not independent or clinically validated semantic metrics.",
+      "cases": 44,
+      "claims": 134,
+      "citation_accuracy_provisional": 0.9065,
+      "claim_support_rate_provisional": 0.791,
+      "unsupported_claim_rate_provisional": 0.209,
+      "answer_behavior_accuracy_provisional": 0.8182,
+      "current_guideline_accuracy_provisional": 0.7105,
+      "failure_type_counts": {
+        "citation_binding": 15,
+        "current_vs_historical": 1,
+        "grounding": 6,
+        "overreach": 16,
+        "scope": 1
+      },
+      "human_review_queue": [
+        {
+          "case_id": "BL-L02",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach",
+            "citation_binding"
+          ],
+          "summary": "Answer overreaches by asserting no alternative pathway exists, a claim not supported by the evidence; therefore the behavior is incorrect."
+        },
+        {
+          "case_id": "BL-L05",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach"
+          ],
+          "summary": "The answer correctly cites the NG12 recommendation to consider an urgent chest X\u2011ray, but adds an unsupported claim that it is the first step, resulting in overreach."
+        },
+        {
+          "case_id": "BL-L06",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach"
+          ],
+          "summary": "The answer correctly states that the action cannot be decided without age or smoking data, matching the expected 'insufficient' behavior. All cited clinical claims are supported except the first claim, which overstates the guideline by adding an unsupported exclusivity clause."
+        },
+        {
+          "case_id": "BL-L07",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "citation_binding",
+            "grounding"
+          ],
+          "summary": "Answer contains several accurate, well\u2011cited claims but also makes unsupported statements lacking citations, resulting in citation\u2011binding and grounding failures."
+        },
+        {
+          "case_id": "BL-L08",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 0,
+          "failure_types": [
+            "citation_binding"
+          ],
+          "summary": "Answer correctly reflects current NG12 recommendations, but two claims lack explicit citations, resulting in a citation\u2011binding issue."
+        },
+        {
+          "case_id": "BL-C02",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach",
+            "citation_binding"
+          ],
+          "summary": "The answer contains an unsupported claim about safety\u2011netting not being needed at the 10\u202f\u00b5g/g threshold, lacking citation and not grounded in the provided guidelines."
+        },
+        {
+          "case_id": "BL-C03",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 0,
+          "failure_types": [
+            "citation_binding"
+          ],
+          "summary": "Answer is clinically correct and uses the 2026 NG12 guideline, but the first claim is cited to E2 which does not explicitly support the statement that <10\u202f\u00b5g Hb/g does not trigger automatic referral."
+        },
+        {
+          "case_id": "BL-C04",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "overreach",
+            "grounding"
+          ],
+          "summary": "The answer contains several unsupported actionable statements lacking citation, resulting in overreach and grounding errors despite correct use of some guideline references."
+        },
+        {
+          "case_id": "BL-C06",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 3,
+          "failure_types": [
+            "citation_binding",
+            "overreach"
+          ],
+          "summary": "The answer correctly indicates insufficient information, matching expected behavior, but contains uncited and unsupported claims, including an overreaching statement about referral."
+        },
+        {
+          "case_id": "BL-C07",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "citation_binding"
+          ],
+          "summary": "Answer correctly reflects the 2026 NICE NG12 recommendation that FIT be offered despite a prior negative screening result, but one safety\u2011netting claim lacks a citation, resulting in a citation\u2011binding error."
+        },
+        {
+          "case_id": "BL-C08",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach"
+          ],
+          "summary": "All cited claims are supported by the evidence; one uncited conclusion is not grounded in the supplied sources, constituting an overreach."
+        },
+        {
+          "case_id": "BL-C09",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "grounding",
+            "citation_binding",
+            "overreach"
+          ],
+          "summary": "Answer correctly notes lack of a pediatric threshold per E6, but adds unsupported claims about FIT specifics not entailed by cited evidence."
+        },
+        {
+          "case_id": "BL-C10",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "grounding",
+            "citation_binding"
+          ],
+          "summary": "The response correctly refused per expected behavior, but the scope claims lack any supporting citations."
+        },
+        {
+          "case_id": "BL-C11",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "overreach"
+          ],
+          "summary": "Answer includes correct guideline actions but adds unsupported statements about universal applicability and guaranteed timeliness, constituting overreach."
+        },
+        {
+          "case_id": "BL-U01",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach"
+          ],
+          "summary": "Answer contains one accurate claim and one unsupported claim that overreaches the evidence."
+        },
+        {
+          "case_id": "BL-U05",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach",
+            "grounding"
+          ],
+          "summary": "Answer contains two accurate guideline claims but adds an unsupported statement about referral being the first step and not needing further tests, constituting an overreach."
+        },
+        {
+          "case_id": "BL-U06",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 0,
+          "failure_types": [
+            "overreach"
+          ],
+          "summary": "All claims are fully supported by current 2026 NICE NG12 evidence, but the answer provides a definitive \u2018No\u2019 whereas the expected behavior was \u2018insufficient\u2019; thus the answer behavior does not match the expected directive."
+        },
+        {
+          "case_id": "BL-U07",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "current_vs_historical",
+            "overreach",
+            "citation_binding"
+          ],
+          "summary": "The answer cites a 2015 recommendation to claim a specific urgent CT (and fallback ultrasound) for pancreatic cancer, but the 2026 NG12 guideline does not contain that detail, so the claims are not supported by the current guideline."
+        },
+        {
+          "case_id": "BL-U10",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "scope",
+            "overreach",
+            "citation_binding",
+            "grounding"
+          ],
+          "summary": "The response should have refused (scope error) and instead provided unsupported claims without proper citations."
+        },
+        {
+          "case_id": "BL-R02",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 0,
+          "failure_types": [
+            "overreach"
+          ],
+          "summary": "Answer is sufficiently supported by current guidelines, but does not match the expected \u201cinsufficient\u201d behavior."
+        },
+        {
+          "case_id": "BL-R05",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 1,
+          "failure_types": [
+            "overreach",
+            "citation_binding"
+          ],
+          "summary": "The answer gives a definitive \u2018No\u2019 conclusion that isolated non\u2011visible haematuria requires no referral, which is not directly supported by the guideline; the negative inference is an overreach."
+        },
+        {
+          "case_id": "BL-R06",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 0,
+          "failure_types": [
+            "citation_binding"
+          ],
+          "summary": "All clinical claims are accurate to the 2026 NG12 guideline, but two claims lack explicit citations, resulting in a citation\u2011binding issue."
+        },
+        {
+          "case_id": "BL-R08",
+          "answer_behavior_correct": false,
+          "unsupported_claims": 2,
+          "failure_types": [
+            "citation_binding"
+          ],
+          "summary": "Answer contains accurate supported claims but includes two unsupported statements without citations, causing citation\u2011binding failures."
+        },
+        {
+          "case_id": "BL-R11",
+          "answer_behavior_correct": true,
+          "unsupported_claims": 0,
+          "failure_types": [
+            "citation_binding"
+          ],
+          "summary": "Answer is clinically correct and matches current NG12 guidance; only minor citation omission for the first claim."
+        }
+      ]
+    }
+  },
+  "failures": {
+    "scope": [
+      {
+        "case_id": "BL-U10",
+        "scope_group": "upper_gi",
+        "category": "out_of_scope",
+        "expected_behavior": "refuse",
+        "scope_correct": false,
+        "retrieval_rank": null,
+        "current_guideline_correct": null,
+        "citation_labels_valid": true,
+        "top_chunk_id": "ng12_1.14.3_c01",
+        "top_recommendation_id": "1.14.3"
+      }
+    ],
+    "retrieval_at_5": [
+      {
+        "case_id": "BL-L03",
+        "scope_group": "lung",
+        "category": "threshold",
+        "expected_behavior": "answer",
+        "scope_correct": true,
+        "retrieval_rank": 6,
+        "current_guideline_correct": true,
+        "citation_labels_valid": true,
+        "top_chunk_id": "ng12_1.3.1_c01",
+        "top_recommendation_id": "1.3.1"
+      }
+    ],
+    "current_guideline": [],
+    "citation_labels": [
+      {
+        "case_id": "BL-L05",
+        "scope_group": "lung",
+        "category": "direct",
+        "expected_behavior": "answer",
+        "scope_correct": true,
+        "retrieval_rank": 1,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.1.3_c01",
+        "top_recommendation_id": "1.1.3"
+      },
+      {
+        "case_id": "BL-L11",
+        "scope_group": "lung",
+        "category": "multi_site",
+        "expected_behavior": "answer",
+        "scope_correct": true,
+        "retrieval_rank": 2,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.13.2_c01",
+        "top_recommendation_id": "1.13.2"
+      },
+      {
+        "case_id": "BL-C04",
+        "scope_group": "colorectal",
+        "category": "missing_sample",
+        "expected_behavior": "answer",
+        "scope_correct": true,
+        "retrieval_rank": 1,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.3.4_c01",
+        "top_recommendation_id": "1.3.4"
+      },
+      {
+        "case_id": "BL-C06",
+        "scope_group": "colorectal",
+        "category": "missing_information",
+        "expected_behavior": "insufficient",
+        "scope_correct": true,
+        "retrieval_rank": 1,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.3.1_c01",
+        "top_recommendation_id": "1.3.1"
+      },
+      {
+        "case_id": "BL-C11",
+        "scope_group": "colorectal",
+        "category": "multi_site",
+        "expected_behavior": "answer",
+        "scope_correct": true,
+        "retrieval_rank": 2,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.13.4_c01",
+        "top_recommendation_id": "1.13.4"
+      },
+      {
+        "case_id": "BL-U04",
+        "scope_group": "upper_gi",
+        "category": "threshold",
+        "expected_behavior": "answer",
+        "scope_correct": true,
+        "retrieval_rank": 1,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.2.3_c01",
+        "top_recommendation_id": "1.2.3"
+      },
+      {
+        "case_id": "BL-U11",
+        "scope_group": "upper_gi",
+        "category": "version_conflict",
+        "expected_behavior": "answer",
+        "scope_correct": true,
+        "retrieval_rank": 1,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.2.1_c01",
+        "top_recommendation_id": "1.2.1"
+      },
+      {
+        "case_id": "BL-R06",
+        "scope_group": "bladder_renal",
+        "category": "missing_information",
+        "expected_behavior": "insufficient",
+        "scope_correct": true,
+        "retrieval_rank": 1,
+        "current_guideline_correct": true,
+        "citation_labels_valid": false,
+        "top_chunk_id": "ng12_1.6.4_c01",
+        "top_recommendation_id": "1.6.4"
+      }
+    ]
+  },
+  "by_scope_group": {
+    "bladder_renal": {
+      "cases": 11,
+      "scope_accuracy": 1.0,
+      "retrieval_recall_at_5": 1.0
+    },
+    "colorectal": {
+      "cases": 11,
+      "scope_accuracy": 1.0,
+      "retrieval_recall_at_5": 1.0
+    },
+    "lung": {
+      "cases": 11,
+      "scope_accuracy": 1.0,
+      "retrieval_recall_at_5": 0.8889
+    },
+    "upper_gi": {
+      "cases": 11,
+      "scope_accuracy": 0.9091,
+      "retrieval_recall_at_5": 1.0
+    }
+  },
+  "case_diagnostics": [
+    {
+      "case_id": "BL-L01",
+      "scope_group": "lung",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.1.1_c01",
+      "top_recommendation_id": "1.1.1"
+    },
+    {
+      "case_id": "BL-L02",
+      "scope_group": "lung",
+      "category": "age_edge",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 2,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_symptom_p046_t03_r01_c01",
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-L03",
+      "scope_group": "lung",
+      "category": "threshold",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 6,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.3.1_c01",
+      "top_recommendation_id": "1.3.1"
+    },
+    {
+      "case_id": "BL-L04",
+      "scope_group": "lung",
+      "category": "combination",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.1.2_c01",
+      "top_recommendation_id": "1.1.2"
+    },
+    {
+      "case_id": "BL-L05",
+      "scope_group": "lung",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.1.3_c01",
+      "top_recommendation_id": "1.1.3"
+    },
+    {
+      "case_id": "BL-L06",
+      "scope_group": "lung",
+      "category": "missing_information",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.1.2_c01",
+      "top_recommendation_id": "1.1.2"
+    },
+    {
+      "case_id": "BL-L07",
+      "scope_group": "lung",
+      "category": "supporting_evidence",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_full_lung_cancer_evidence_p037_003_c01",
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-L08",
+      "scope_group": "lung",
+      "category": "version_conflict",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.1.2_c01",
+      "top_recommendation_id": "1.1.2"
+    },
+    {
+      "case_id": "BL-L09",
+      "scope_group": "lung",
+      "category": "hard_negative",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": null,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_full_lung_cancer_clinical_context_p037_001_c01",
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-L10",
+      "scope_group": "lung",
+      "category": "out_of_scope",
+      "expected_behavior": "refuse",
+      "scope_correct": true,
+      "retrieval_rank": null,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": null,
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-L11",
+      "scope_group": "lung",
+      "category": "multi_site",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 2,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.13.2_c01",
+      "top_recommendation_id": "1.13.2"
+    },
+    {
+      "case_id": "BL-C01",
+      "scope_group": "colorectal",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.3.1_c01",
+      "top_recommendation_id": "1.3.1"
+    },
+    {
+      "case_id": "BL-C02",
+      "scope_group": "colorectal",
+      "category": "threshold",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.3.2_c01",
+      "top_recommendation_id": "1.3.2"
+    },
+    {
+      "case_id": "BL-C03",
+      "scope_group": "colorectal",
+      "category": "threshold_edge",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 2,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.3.2_c01",
+      "top_recommendation_id": "1.3.2"
+    },
+    {
+      "case_id": "BL-C04",
+      "scope_group": "colorectal",
+      "category": "missing_sample",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.3.4_c01",
+      "top_recommendation_id": "1.3.4"
+    },
+    {
+      "case_id": "BL-C05",
+      "scope_group": "colorectal",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 3,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.3.1_c01",
+      "top_recommendation_id": "1.3.1"
+    },
+    {
+      "case_id": "BL-C06",
+      "scope_group": "colorectal",
+      "category": "missing_information",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.3.1_c01",
+      "top_recommendation_id": "1.3.1"
+    },
+    {
+      "case_id": "BL-C07",
+      "scope_group": "colorectal",
+      "category": "screening_history",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.3.1_c01",
+      "top_recommendation_id": "1.3.1"
+    },
+    {
+      "case_id": "BL-C08",
+      "scope_group": "colorectal",
+      "category": "supporting_evidence",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_full_colorectal_cancer_rationale_p140_062_c01",
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-C09",
+      "scope_group": "colorectal",
+      "category": "hard_negative",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": null,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_full_methodology_p015_c02",
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-C10",
+      "scope_group": "colorectal",
+      "category": "out_of_scope",
+      "expected_behavior": "refuse",
+      "scope_correct": true,
+      "retrieval_rank": null,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": null,
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-C11",
+      "scope_group": "colorectal",
+      "category": "multi_site",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 2,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.13.4_c01",
+      "top_recommendation_id": "1.13.4"
+    },
+    {
+      "case_id": "BL-U01",
+      "scope_group": "upper_gi",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 3,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.14.3_c01",
+      "top_recommendation_id": "1.14.3"
+    },
+    {
+      "case_id": "BL-U02",
+      "scope_group": "upper_gi",
+      "category": "age_edge",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.2.1_c01",
+      "top_recommendation_id": "1.2.1"
+    },
+    {
+      "case_id": "BL-U03",
+      "scope_group": "upper_gi",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.2.2_c01",
+      "top_recommendation_id": "1.2.2"
+    },
+    {
+      "case_id": "BL-U04",
+      "scope_group": "upper_gi",
+      "category": "threshold",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.2.3_c01",
+      "top_recommendation_id": "1.2.3"
+    },
+    {
+      "case_id": "BL-U05",
+      "scope_group": "upper_gi",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.2.4_c01",
+      "top_recommendation_id": "1.2.4"
+    },
+    {
+      "case_id": "BL-U06",
+      "scope_group": "upper_gi",
+      "category": "age_edge",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.2.5_c01",
+      "top_recommendation_id": "1.2.5"
+    },
+    {
+      "case_id": "BL-U07",
+      "scope_group": "upper_gi",
+      "category": "combination",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 2,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.13.2_c01",
+      "top_recommendation_id": "1.13.2"
+    },
+    {
+      "case_id": "BL-U08",
+      "scope_group": "upper_gi",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.2.6_c01",
+      "top_recommendation_id": "1.2.6"
+    },
+    {
+      "case_id": "BL-U09",
+      "scope_group": "upper_gi",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.2.7_c01",
+      "top_recommendation_id": "1.2.7"
+    },
+    {
+      "case_id": "BL-U10",
+      "scope_group": "upper_gi",
+      "category": "out_of_scope",
+      "expected_behavior": "refuse",
+      "scope_correct": false,
+      "retrieval_rank": null,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.14.3_c01",
+      "top_recommendation_id": "1.14.3"
+    },
+    {
+      "case_id": "BL-U11",
+      "scope_group": "upper_gi",
+      "category": "version_conflict",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.2.1_c01",
+      "top_recommendation_id": "1.2.1"
+    },
+    {
+      "case_id": "BL-R01",
+      "scope_group": "bladder_renal",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.6.4_c01",
+      "top_recommendation_id": "1.6.4"
+    },
+    {
+      "case_id": "BL-R02",
+      "scope_group": "bladder_renal",
+      "category": "age_edge",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.6.4_c01",
+      "top_recommendation_id": "1.6.4"
+    },
+    {
+      "case_id": "BL-R03",
+      "scope_group": "bladder_renal",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.6.5_c01",
+      "top_recommendation_id": "1.6.5"
+    },
+    {
+      "case_id": "BL-R04",
+      "scope_group": "bladder_renal",
+      "category": "direct",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.6.6_c01",
+      "top_recommendation_id": "1.6.6"
+    },
+    {
+      "case_id": "BL-R05",
+      "scope_group": "bladder_renal",
+      "category": "hard_negative",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.6.6_c01",
+      "top_recommendation_id": "1.6.6"
+    },
+    {
+      "case_id": "BL-R06",
+      "scope_group": "bladder_renal",
+      "category": "missing_information",
+      "expected_behavior": "insufficient",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": false,
+      "top_chunk_id": "ng12_1.6.4_c01",
+      "top_recommendation_id": "1.6.4"
+    },
+    {
+      "case_id": "BL-R07",
+      "scope_group": "bladder_renal",
+      "category": "supporting_evidence",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 3,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_full_renal_cancer_rationale_p206_025_c01",
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-R08",
+      "scope_group": "bladder_renal",
+      "category": "multi_site",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.6.6_c01",
+      "top_recommendation_id": "1.6.6"
+    },
+    {
+      "case_id": "BL-R09",
+      "scope_group": "bladder_renal",
+      "category": "out_of_scope",
+      "expected_behavior": "refuse",
+      "scope_correct": true,
+      "retrieval_rank": null,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": null,
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-R10",
+      "scope_group": "bladder_renal",
+      "category": "out_of_scope",
+      "expected_behavior": "refuse",
+      "scope_correct": true,
+      "retrieval_rank": null,
+      "current_guideline_correct": null,
+      "citation_labels_valid": true,
+      "top_chunk_id": null,
+      "top_recommendation_id": null
+    },
+    {
+      "case_id": "BL-R11",
+      "scope_group": "bladder_renal",
+      "category": "multi_site",
+      "expected_behavior": "answer",
+      "scope_correct": true,
+      "retrieval_rank": 1,
+      "current_guideline_correct": true,
+      "citation_labels_valid": true,
+      "top_chunk_id": "ng12_1.13.3_c01",
+      "top_recommendation_id": "1.13.3"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "document": "NICE NG12",
+  "embedding_model": "nomic-embed-text:latest",
+  "chunks_file": "chunks.jsonl",
+  "chunks_sha256": "f8324802f490e31e535fc9066f8f80d77696196bad41b258967b56af72d675eb",
+  "rows": 440,
+  "dimensions": 768,
+  "dtype": "float32",
+  "normalized": true,
+  "index_type": "exact cosine over NumPy matrix"
+}
