@@ -9,9 +9,9 @@ The project has a strong, defensible hackathon architecture. Its best decisions 
 
 The architecture is not “productionized,” and it should not be. The main complexity is concentrated in source-specific PDF extraction and optional evaluation tooling, where the source layout and experiment history justify most of it. The runtime remains small.
 
-The audit found no P0 defect. Three clear P1 correctness issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, and insufficient dense-index integrity validation. One P1 submission issue remains: all project files except `.gitattributes` are untracked, while critical runtime artifacts are ignored, so a Git-based submission is not reproducible until the intended package is explicitly staged/committed or otherwise bundled.
+The audit found no P0 defect. Four clear P1 issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, insufficient dense-index integrity validation, and a non-reproducible submission package. The repository now tracks the reviewed 440-chunk corpus, matching dense index, evaluation evidence, source, tests, and documentation while excluding raw PDFs, secrets, dependencies, builds, and temporary outputs.
 
-The project is ready for an instructor architecture review in the current workspace. It is not ready for a clone-based final submission until repository packaging is resolved.
+The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, 41 tests, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without untracked machine files.
 
 ## Audit method and evidence
 
@@ -339,10 +339,10 @@ Findings:
 
 - `src/retrieval` also owns generation, scope, and Ollama transport. Renaming it to `runtime` could be cleaner but would create broad import churn for little value. KEEP.
 - `parse_ng12.py` and its `pages.jsonl/scoped_records.jsonl/parsing_report.json` are a documented earlier current-only pipeline. They duplicate part of `build_corpus.py` but remain useful parser diagnostics. OPTIONAL TOOLING; do not delete before submission unless the team no longer demonstrates parser phases.
-- `output/`, `outputs/`, `.playwright-cli/`, frontend `*.tsbuildinfo`, compiled `vite.config.js/.d.ts`, and preview PNGs are generated artifacts mixed with the working tree. Clean packaging would separate or ignore them, but deletion is polish and was not authorized.
+- `output/`, `outputs/`, `.playwright-cli/`, frontend `*.tsbuildinfo`, compiled `vite.config.js/.d.ts`, and preview PNGs are local generated artifacts excluded by `.gitignore`; they are not submission dependencies.
 - Evaluation artifacts live under `data/eval` and evaluation code under `src/evaluation/scripts`, separate from answer runtime. This boundary is good.
-- Critical parsed/index artifacts are ignored as reproducible/large, but the API requires them at import. A clone therefore needs a documented build with source PDFs or a submission bundle containing artifacts.
-- Git reports only `.gitattributes` as tracked; every project source file, test, document, and artifact is currently untracked. This is the remaining P1 submission risk.
+- The reviewed `data/parsed`, `data/index`, and `data/eval` snapshots are tracked. Raw PDFs remain local because they are unnecessary to run the submitted snapshot and may have redistribution constraints.
+- `scripts/bootstrap.ps1` verifies shipped artifacts, rebuilds a missing dense index, or rebuilds the corpus when both source PDFs are supplied explicitly. README documents clone → setup → run → query → evidence.
 
 # Over-Engineering Audit
 
@@ -374,7 +374,7 @@ Findings:
 | Scope semantics | No-site unrelated query is allowed | REMAINS P2; benchmark first, do not add an LLM reflexively |
 | Policy score naming | `authority_adjustment` includes intent/coherence | REMAINS P2 clarity debt |
 | Evaluation versioning | v1 freeze filenames are hard-coded and current code now differs | REMAINS P2 tooling debt; preserve v1 and create v2 for a new run |
-| Artifact packaging | Runtime requires ignored local corpus/index; almost all files untracked | REMAINS P1 submission risk |
+| Artifact packaging | Reviewed corpus/index/evaluation snapshot is tracked; raw PDFs and disposable outputs are excluded | FIXED and clean-clone verified |
 | Public metrics artifact errors | Required merge report read is not guarded | REMAINS P2 demo resilience issue |
 
 # Architecture Scores
@@ -391,7 +391,7 @@ Findings:
 | Evaluation design | 7.8 | Strong blind/deterministic split and lightweight default; optional evaluator is complex and claim decomposition is not independent |
 | Testability | 8.7 | High-value invariants and integration tests; public dictionary schema/no-site negatives remain gaps |
 | Explainability | 8.8 | Score details, evidence inspector, source authority, reports, and measured alternatives are visible |
-| Hackathon suitability | 9.0 | Technically strong without vector DB/reranker/framework creep; submission packaging is the main practical caveat |
+| Hackathon suitability | 9.2 | Technically strong without vector DB/reranker/framework creep; the small evaluated runtime snapshot is self-contained |
 
 # Prioritized Findings
 
@@ -428,14 +428,14 @@ None found.
 - **Expected impact:** No metric change; corrupted/stale configurations now fail loudly.
 - **Regression risk:** Low; valid current artifacts pass, and changes now require the already-documented rebuild step.
 
-### P1-4 — Repository is not a reproducible Git submission (not implemented)
+### P1-4 — Repository was not a reproducible Git submission (implemented)
 
-- **Problem:** `git ls-files` contains only `.gitattributes`; source, tests, docs, and evaluation artifacts are untracked. Parsed/index artifacts required by API startup are ignored.
-- **Why it matters:** A judge cloning the repository may receive no application or may receive source that cannot start without unavailable local PDFs/index artifacts.
-- **Smallest correct fix:** Decide the submission contract, then stage/commit all intended source/config/docs/tests and either (a) include the small runtime corpus/index artifacts, or (b) provide source PDFs/licensing-safe inputs plus a verified one-command build. Keep secrets and disposable outputs excluded.
-- **Files affected:** Git index, `.gitignore`, data packaging, README run instructions.
-- **Expected impact:** No model metric change; major reproducibility/review improvement.
-- **Regression risk:** Medium because source PDFs/licensing and artifact size/competition rules require owner judgment. Not changed automatically.
+- **Problem:** Source and runtime artifacts were previously untracked/ignored, so a clone could not start without hidden local files.
+- **Why it matters:** A judge must be able to reproduce the reviewed demo rather than reconstruct an undocumented corpus from unavailable PDFs.
+- **Smallest correct fix:** Track the small reviewed corpus/index/evaluation snapshot; keep raw PDFs, secrets, dependencies, builds, and disposable outputs ignored; add a secret-free environment reference, verifier, bootstrap command, and README workflow.
+- **Files affected:** Git index, `.gitignore`, `.gitattributes`, `.env.example`, `README.md`, `scripts/bootstrap.ps1`, `scripts/verify_runtime_artifacts.py`, runtime/evaluation artifacts.
+- **Expected impact:** No model metric change; clean clone now reaches setup → run → query → evidence and preserves the evaluated snapshot.
+- **Regression risk:** Low after rehearsal. LF normalization for JSONL is enforced so Windows checkout cannot invalidate the chunk hash; tests no longer depend on an ignored local workbook.
 
 ## P2 — worthwhile if time allows
 
@@ -461,7 +461,7 @@ None found.
 
 **B. Unnecessarily complex:** only the optional full 2×3 semantic evaluator and its checkpoints/fingerprints are research-grade. Keep them out of the core story; the default lightweight mode is appropriate.
 
-**C. Too fragile/simple:** the phrase overlap, citation parser, and index integrity checks were too fragile and are fixed. Remaining simplicity debt is dictionary-based runtime contracts, generic no-site scope behavior, and artifact packaging.
+**C. Too fragile/simple:** the phrase overlap, citation parser, index integrity checks, and submission contract were too fragile and are fixed. Remaining P2 simplicity debt is dictionary-based runtime contracts and generic no-site scope behavior.
 
 **D. Actually fixed:** excluded-span-first scope matching; centralized citation normalization/range validation; named retrieval constants; dense-index manifest/hash/model/vector validation; defect-specific tests; historical freeze test semantics.
 
@@ -469,6 +469,6 @@ None found.
 
 **F. Metric regression:** none. Development retrieval metrics are unchanged. Deterministic post-audit replay improves the targeted scope and citation-format metrics; no semantic improvement is claimed.
 
-**G. Remaining P0/P1:** no P0. One P1 remains: Git/submission packaging and reproducibility.
+**G. Remaining P0/P1:** none. Later architecture changes are frozen unless a rehearsal exposes a concrete bug.
 
-**H. Review readiness:** yes for an instructor reviewing the current workspace and architecture. Resolve P1-4 before any clone-based submission or reproducibility claim.
+**H. Review readiness:** yes. The architecture and the submission path have both been exercised from a clean clone outside the development workspace.
