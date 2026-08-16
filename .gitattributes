@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Runtime manifests hash the exact JSONL bytes. Keep those files LF on every
+# platform so a Windows checkout cannot invalidate the dense-index contract.
+*.jsonl text eol=lf
