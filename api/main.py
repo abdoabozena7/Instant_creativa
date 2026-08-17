@@ -219,7 +219,7 @@ def metrics() -> dict:
     merge_path = PROJECT_ROOT / "data" / "parsed" / "merge_report.json"
     evaluation_path = PROJECT_ROOT / "data" / "eval" / "retrieval_metrics.json"
     blind_evaluation_path = (
-        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v4.json"
+        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v6.json"
     )
     multi_judge_path = (
         PROJECT_ROOT / "data" / "eval" / "multi_judge_report_v1.json"

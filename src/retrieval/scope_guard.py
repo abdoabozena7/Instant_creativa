@@ -35,59 +35,85 @@ _DECISION_INTENT = re.compile(
     r"offer(?:ed)?|need|should)\b",
     re.IGNORECASE,
 )
+_PATIENT_SPECIFIC_CONTEXT = re.compile(
+    r"\b(?:(?:a|the|this|that|my|our|your)(?:\s+[a-z0-9-]+){0,3}\s+"
+    r"(?:patient|person)|patient\s+(?:has|had|reports?|describes?|feels?|experiences?)|"
+    r"someone|somebody|i|i'm|i've|me|my|mine|he|she|they|his|hers?|theirs?)\b",
+    re.IGNORECASE,
+)
 _QUERY_TOKEN = re.compile(r"[a-z0-9]+(?:[-'][a-z0-9]+)*", re.IGNORECASE)
-_GENERIC_DECISION_TOKENS = {
-    "a", "about", "an", "and", "any", "apply", "applies", "are", "as", "at",
+_AGE_TOKEN = re.compile(r"\d+(?:-year-old)?", re.IGNORECASE)
+_NON_CLINICAL_FEATURE_TOKENS = {
+    "a", "about", "adult", "age", "aged", "an", "and", "any", "apply", "applies",
+    "are", "around", "as", "ask", "asked", "asking", "asks", "at",
     "be", "been", "being", "by", "can", "cancer", "care", "clinical", "clinician",
-    "could", "criteria", "criterion", "decision", "details", "determine", "determined",
-    "diagnosis", "do", "does", "eligible", "eligibility", "enter", "for", "from",
-    "guidance", "guideline", "have", "in", "information", "investigate", "investigation",
+    "child", "complaint", "complaints", "concern", "concerned", "concerning", "could",
+    "criteria", "criterion", "danger",
+    "dangerous", "decision", "described", "describes", "describing", "details", "determine",
+    "determined", "diagnosis", "do",
+    "does", "eligible", "eligibility", "enter", "experience", "experienced", "experiencing",
+    "feel", "feeling", "feels", "fine", "for", "from", "general", "generally", "get",
+    "getting", "got", "guidance", "guideline", "had", "has", "have", "having",
+    "in", "information", "investigate", "investigation", "issue", "issues",
     "is", "it", "may", "need", "ng12", "of", "on", "or", "offered", "offer",
+    "day", "days", "female", "ill", "long", "male", "mean", "means", "month", "months",
+    "matter", "near", "new-onset", "normal", "noticed", "noticing", "ok", "okay", "old",
+    "older", "persistent",
     "he", "her", "him", "his", "i", "me", "my", "our", "patient", "pathway",
     "person", "please", "qualify", "qualified", "qualifies", "receive", "received",
+    "problem", "problems", "reported", "reporting", "reports", "said", "say", "says",
+    "serious", "seriously", "severity",
+    "sick", "some", "somebody", "specific", "sudden",
+    "someone", "something", "thing", "things", "unwell", "weird", "weirdness", "worry",
+    "worried", "wrong",
     "recommend", "recommendation", "recommended",
     "recommends", "refer", "referral", "referred", "scan", "should", "sign", "signs",
     "require", "required", "requires", "someone", "suspected", "symptom", "symptoms",
-    "tell", "test", "tested", "testing", "the", "their", "they", "this", "to", "urgent",
-    "us", "we", "what", "when", "whether", "who", "will", "with", "would", "you", "your",
+    "tell", "test", "tested", "testing", "that", "the", "their", "they", "these", "this",
+    "those", "to", "unexplained", "urgent",
+    "us", "we", "week", "weeks", "what", "when", "whether", "who", "will", "with",
+    "woman", "would", "year", "years", "you", "younger", "your",
 }
 _SITE_TOKENS = {
-    "bladder", "bowel", "colorectal", "colon", "esophageal", "gastric", "gastrointestinal",
-    "gi", "kidney", "lung", "lower", "oesophageal", "pancreatic", "pancreas", "rectal",
-    "renal", "stomach", "upper", "urological",
+    "abdomen", "abdominal", "belly", "bladder", "bowel", "breathing", "chest", "colorectal",
+    "colon", "digestive", "esophageal", "gastric", "gastrointestinal", "gi", "kidney", "lung",
+    "lower", "oesophageal", "pancreatic", "pancreas", "rectal", "renal", "respiratory",
+    "stomach", "tummy", "upper", "urinary", "urological",
 }
 
 
 def assess_query_answerability(query: str) -> dict[str, object]:
-    """Fail closed only when a decision request has no patient feature at all.
+    """Fail closed when an assessment has no concrete clinical feature at all.
 
-    This deliberately does not encode NG12 eligibility criteria. Partially specified
-    questions continue to grounded generation, which must preserve unknown qualifiers.
+    This deliberately does not encode NG12 eligibility criteria or a symptom ontology.
+    It removes only grammatical, workflow, site, qualifier, and explicitly vague terms.
+    Partially specified questions with a concrete feature continue to grounded generation,
+    which must preserve unknown qualifiers.
     """
 
-    if not _DECISION_INTENT.search(query):
-        return {"status": "model_assessed", "clinical_features": []}
     tokens = [token.lower() for token in _QUERY_TOKEN.findall(query)]
     clinical_features = sorted(
         {
             token
             for token in tokens
             if len(token) > 1
-            and not token.isdigit()
-            and token not in _GENERIC_DECISION_TOKENS
+            and not _AGE_TOKEN.fullmatch(token)
+            and token not in _NON_CLINICAL_FEATURE_TOKENS
             and token not in _SITE_TOKENS
         }
     )
-    if clinical_features:
+    requires_clinical_feature = bool(
+        _DECISION_INTENT.search(query) or _PATIENT_SPECIFIC_CONTEXT.search(query)
+    )
+    if clinical_features or not requires_clinical_feature:
         return {"status": "model_assessed", "clinical_features": clinical_features}
     return {
         "status": "insufficient",
         "clinical_features": [],
         "message": (
-            "Insufficient information to determine whether this person meets an NG12 "
-            "referral or investigation criterion. Please provide the suspected cancer "
-            "site and the relevant patient details, such as age, specific symptoms or "
-            "signs, their duration, smoking history, and any test results."
+            "Insufficient information to assess this patient against NG12. Please describe "
+            "the specific symptoms or signs rather than a general issue, together with "
+            "relevant details such as age, duration, smoking history, and any test results."
         ),
     }
 

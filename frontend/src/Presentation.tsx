@@ -235,7 +235,7 @@ export function Presentation({
           <div className="failure-story">
             <FailureBeat marker="A" before="gall bladder" fault="substring: bladder" after="phrase-level scope" metric="Correct refusal 80% → 100%" />
             <FailureBeat marker="B" before="[ **E2** ]" fault="strict label parser" after="citation normalization" metric="Validity 80% → 100%" />
-            <FailureBeat marker="C" before="Should this patient be referred?" fault="missing patient facts" after="deterministic answerability gate" metric="No retrieval · no model call" />
+            <FailureBeat marker="C" before="Some stomach issues—is this serious?" fault="vague patient description" after="minimum-answerability gate" metric="No retrieval · no model call" />
           </div>
           <div className="do-not-touch"><ShieldCheck /><p><b>Retrieval architecture stays frozen.</b> Recall@5 is already above the 95% target.</p></div>
         </StorySlide>

@@ -138,6 +138,29 @@ def test_context_free_clinical_decisions_are_insufficient(query: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "query",
+    [
+        "A patient has some stomach issues, is this serious?",
+        "My stomach has problems. Should I worry?",
+        "This person feels unwell around the stomach. Could it be cancer?",
+        "A patient has gastric symptoms. Is that concerning?",
+        "The patient has bowel problems. Is it dangerous?",
+        "They have issues with their pancreas. What does this mean?",
+        "Someone says something is wrong with their stomach. Is it urgent?",
+        "A 70-year-old patient has persistent stomach issues. Is this serious?",
+        "Patient reports digestive problems and asks whether they are serious.",
+        "My abdominal symptoms are concerning. What do they mean?",
+        "A patient has breathing issues. Could this be dangerous?",
+        "This person has urinary problems. Should they worry?",
+    ],
+)
+def test_patient_specific_vague_assessments_are_insufficient(query: str) -> None:
+    answerability = assess_query_answerability(query)
+    assert answerability["status"] == "insufficient"
+    assert answerability["clinical_features"] == []
+
+
+@pytest.mark.parametrize(
     "query, expected_feature",
     [
         ("Should someone with dysphagia be referred?", "dysphagia"),
@@ -148,6 +171,13 @@ def test_context_free_clinical_decisions_are_insufficient(query: str) -> None:
             "A 62-year-old has weight loss and new-onset diabetes. What does NG12 recommend?",
             "diabetes",
         ),
+        ("A patient has persistent vomiting. Is this serious?", "vomiting"),
+        ("My stomach pain is accompanied by weight loss. Should I worry?", "pain"),
+        ("This patient has dysphagia. Could it be cancer?", "dysphagia"),
+        ("A person has haematemesis. Is it dangerous?", "haematemesis"),
+        ("They found an abdominal mass. What does this mean?", "mass"),
+        ("A patient has difficulty breathing. Is this serious?", "difficulty"),
+        ("This person noticed blood in their urine. Should they worry?", "blood"),
     ],
 )
 def test_clinical_features_prevent_the_low_information_guard(
@@ -181,6 +211,21 @@ def test_context_free_decision_stops_before_retrieval_scoring() -> None:
     assert "inferred_anchor_sites" not in response["scope"]
 
 
+def test_vague_patient_assessment_stops_before_retrieval_scoring() -> None:
+    engine = RetrievalEngine()
+    response = asyncio.run(
+        engine.search(
+            "A patient has some stomach issues, is this serious?",
+            mode="hybrid",
+        )
+    )
+    assert response["mode_used"] == "answerability_guard"
+    assert response["answerability"]["status"] == "insufficient"
+    assert response["results"] == []
+    assert response["scope"]["selected_sites"] == ["stomach"]
+    assert "inferred_anchor_sites" not in response["scope"]
+
+
 def test_citation_pattern_accepts_canonical_evidence_labels() -> None:
     assert CITATION_PATTERN.findall("Referral is recommended [E1] and supported [E3].") == [
         "1",
@@ -192,12 +237,12 @@ def test_citation_normalization_handles_observed_model_formatting_variants() -> 
     answer = (
         "One[\u200bE1], two[**E2**], three[\u202fE3\u202f], "
         "four[\u200bE4】, grouped (E5;\u202fE6), line ref 【E2†L1-L5】, "
-        "and bullet **E3** – support."
+        "bullet **E3** – support, and named [Evidence\u202fE2; E4]."
     )
     normalized = normalize_citation_labels(answer)
     assert normalized == (
         "One[E1], two[E2], three[E3], four[E4], grouped [E5] [E6], line ref [E2], "
-        "and bullet [E3] – support."
+        "bullet [E3] – support, and named [E2] [E4]."
     )
     validation, warnings = validate_citation_labels(normalized, 6)
     assert validation["passed"] is True
@@ -238,7 +283,14 @@ def test_generation_normalizes_and_validates_model_citation_brackets() -> None:
     assert result["citation_validation"]["passed"] is True
 
 
-def test_low_information_decision_skips_the_generation_model() -> None:
+@pytest.mark.parametrize(
+    "query",
+    [
+        "Should this person be referred for suspected cancer?",
+        "A patient has some stomach issues, is this serious?",
+    ],
+)
+def test_low_information_assessment_skips_the_generation_model(query: str) -> None:
     class ModelMustNotRun:
         chat_model = "must-not-run"
 
@@ -247,7 +299,7 @@ def test_low_information_decision_skips_the_generation_model() -> None:
 
     result = asyncio.run(
         generate_grounded_answer(
-            "Should this person be referred for suspected cancer?",
+            query,
             [
                 {
                     "citation": "NICE NG12 · Patient support · Page 35",
@@ -323,7 +375,7 @@ def test_fastapi_exposes_health_search_metrics_and_frontend() -> None:
         assert metrics.status_code == 200
         assert metrics.json()["evaluation"]["recommended_mode"] == "hybrid"
         assert metrics.json()["blind_e2e"]["questions"]["total"] == 44
-        assert metrics.json()["blind_e2e"]["evaluation_name"] == "blind_end_to_end_v4"
+        assert metrics.json()["blind_e2e"]["evaluation_name"] == "blind_end_to_end_v6"
         assert (
             metrics.json()["blind_e2e"]["semantic_metrics"]["status"] == "not_run"
         )
@@ -349,6 +401,19 @@ def test_fastapi_exposes_health_search_metrics_and_frontend() -> None:
         assert insufficient.json()["answerability"]["status"] == "insufficient"
         assert insufficient.json()["retrieval"]["mode_used"] == "answerability_guard"
         assert insufficient.json()["retrieval"]["results"] == []
+
+        vague = client.post(
+            "/api/answer",
+            json={
+                "query": "A patient has some stomach issues, is this serious?",
+                "mode": "hybrid",
+            },
+        )
+        assert vague.status_code == 200
+        assert vague.json()["model"] is None
+        assert vague.json()["answerability"]["status"] == "insufficient"
+        assert vague.json()["retrieval"]["mode_used"] == "answerability_guard"
+        assert vague.json()["retrieval"]["results"] == []
 
         frontend = client.get("/")
         assert frontend.status_code == 200

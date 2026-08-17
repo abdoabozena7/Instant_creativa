@@ -1,6 +1,6 @@
 {
   "document": "NICE NG12",
-  "created_at": "2026-08-17T08:56:08.872083+00:00",
+  "created_at": "2026-08-17T11:13:02.776055+00:00",
   "evaluation_set": {
     "path": "data\\eval\\retrieval_cases.jsonl",
     "queries": 31,
@@ -30,8 +30,8 @@
       "canonical_top1_accuracy": 1.0,
       "out_of_scope_refusal_accuracy": 1.0,
       "latency_ms": {
-        "p50": 4.1,
-        "p95": 6.57
+        "p50": 5.12,
+        "p95": 10.7
       },
       "recall_at_5_by_category": {
         "canonical_recommendation": 1.0,
@@ -46,196 +46,196 @@
           "rank": 1,
           "top_chunk_id": "ng12_1.1.1_c01",
           "top_recommendation_id": "1.1.1",
-          "latency_ms": 7.25
+          "latency_ms": 13.27
         },
         {
           "case_id": "lung_xray_smoker",
           "rank": 1,
           "top_chunk_id": "ng12_1.1.2_c01",
           "top_recommendation_id": "1.1.2",
-          "latency_ms": 6.57
+          "latency_ms": 10.7
         },
         {
           "case_id": "lung_recurrent_infection",
           "rank": 1,
           "top_chunk_id": "ng12_1.1.3_c01",
           "top_recommendation_id": "1.1.3",
-          "latency_ms": 6.15
+          "latency_ms": 6.06
         },
         {
           "case_id": "oesophageal_dysphagia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.1_c01",
           "top_recommendation_id": "1.2.1",
-          "latency_ms": 3.85
+          "latency_ms": 4.66
         },
         {
           "case_id": "oesophageal_haematemesis",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.2_c01",
           "top_recommendation_id": "1.2.2",
-          "latency_ms": 4.21
+          "latency_ms": 4.87
         },
         {
           "case_id": "oesophageal_dyspepsia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.3_c01",
           "top_recommendation_id": "1.2.3",
-          "latency_ms": 4.03
+          "latency_ms": 4.51
         },
         {
           "case_id": "pancreatic_jaundice",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.4_c01",
           "top_recommendation_id": "1.2.4",
-          "latency_ms": 4.11
+          "latency_ms": 5.63
         },
         {
           "case_id": "pancreatic_ct",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.5_c01",
           "top_recommendation_id": "1.2.5",
-          "latency_ms": 4.38
+          "latency_ms": 4.98
         },
         {
           "case_id": "stomach_mass",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.6_c01",
           "top_recommendation_id": "1.2.6",
-          "latency_ms": 4.0
+          "latency_ms": 4.87
         },
         {
           "case_id": "stomach_dysphagia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.7_c01",
           "top_recommendation_id": "1.2.7",
-          "latency_ms": 3.62
+          "latency_ms": 5.74
         },
         {
           "case_id": "stomach_haematemesis",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.8_c01",
           "top_recommendation_id": "1.2.8",
-          "latency_ms": 3.68
+          "latency_ms": 7.38
         },
         {
           "case_id": "stomach_dyspepsia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.9_c01",
           "top_recommendation_id": "1.2.9",
-          "latency_ms": 3.78
+          "latency_ms": 8.29
         },
         {
           "case_id": "colorectal_fit_offer",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.1_c01",
           "top_recommendation_id": "1.3.1",
-          "latency_ms": 4.4
+          "latency_ms": 9.15
         },
         {
           "case_id": "colorectal_fit_threshold",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.2_c01",
           "top_recommendation_id": "1.3.2",
-          "latency_ms": 3.9
+          "latency_ms": 5.12
         },
         {
           "case_id": "colorectal_low_fit",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.3_c01",
           "top_recommendation_id": "1.3.3",
-          "latency_ms": 4.1
+          "latency_ms": 4.68
         },
         {
           "case_id": "colorectal_sample_support",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.4_c01",
           "top_recommendation_id": "1.3.4",
-          "latency_ms": 4.41
+          "latency_ms": 4.94
         },
         {
           "case_id": "colorectal_rectal_mass",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.5_c01",
           "top_recommendation_id": "1.3.5",
-          "latency_ms": 4.08
+          "latency_ms": 4.39
         },
         {
           "case_id": "bladder_visible_haematuria",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.4_c01",
           "top_recommendation_id": "1.6.4",
-          "latency_ms": 3.65
+          "latency_ms": 4.07
         },
         {
           "case_id": "bladder_recurrent_uti",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.5_c01",
           "top_recommendation_id": "1.6.5",
-          "latency_ms": 3.46
+          "latency_ms": 3.66
         },
         {
           "case_id": "renal_visible_haematuria",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.6_c01",
           "top_recommendation_id": "1.6.6",
-          "latency_ms": 3.76
+          "latency_ms": 4.22
         },
         {
           "case_id": "shared_safety_results",
           "rank": 1,
           "top_chunk_id": "ng12_1.15.1_c01",
           "top_recommendation_id": "1.15.1",
-          "latency_ms": 6.07
+          "latency_ms": 7.64
         },
         {
           "case_id": "shared_safety_review",
           "rank": 1,
           "top_chunk_id": "ng12_1.15.2_c01",
           "top_recommendation_id": "1.15.2",
-          "latency_ms": 4.48
+          "latency_ms": 5.86
         },
         {
           "case_id": "shared_referral_day",
           "rank": 1,
           "top_chunk_id": "ng12_1.16.8_c01",
           "top_recommendation_id": "1.16.8",
-          "latency_ms": 4.09
+          "latency_ms": 5.38
         },
         {
           "case_id": "multisite_appetite",
           "rank": 1,
           "top_chunk_id": "ng12_1.13.3_c01",
           "top_recommendation_id": "1.13.3",
-          "latency_ms": 4.69
+          "latency_ms": 4.57
         },
         {
           "case_id": "nonspecific_weight_loss",
           "rank": 1,
           "top_chunk_id": "ng12_1.13.2_c01",
           "top_recommendation_id": "1.13.2",
-          "latency_ms": 4.64
+          "latency_ms": 6.79
         },
         {
           "case_id": "lung_evidence",
           "rank": 1,
           "top_chunk_id": "ng12_full_lung_cancer_evidence_p037_003_c01",
           "top_recommendation_id": null,
-          "latency_ms": 5.03
+          "latency_ms": 10.27
         },
         {
           "case_id": "colorectal_rationale",
           "rank": 3,
           "top_chunk_id": "ng12_1.13.4_c01",
           "top_recommendation_id": "1.13.4",
-          "latency_ms": 4.7
+          "latency_ms": 9.54
         },
         {
           "case_id": "renal_evidence",
           "rank": 1,
           "top_chunk_id": "ng12_full_renal_cancer_evidence_table_p196_007_c01",
           "top_recommendation_id": null,
-          "latency_ms": 4.2
+          "latency_ms": 6.53
         },
         {
           "case_id": "outscope_prostate",
@@ -265,8 +265,8 @@
       "canonical_top1_accuracy": 0.84,
       "out_of_scope_refusal_accuracy": 1.0,
       "latency_ms": {
-        "p50": 127.16,
-        "p95": 141.27
+        "p50": 123.27,
+        "p95": 158.57
       },
       "recall_at_5_by_category": {
         "canonical_recommendation": 0.95,
@@ -280,14 +280,14 @@
           "rank": null,
           "top_chunk_id": "ng12_1.6.6_c01",
           "top_recommendation_id": "1.6.6",
-          "latency_ms": 1498.72
+          "latency_ms": 1047.71
         },
         {
           "case_id": "shared_safety_review",
           "rank": null,
           "top_chunk_id": "ng12_1.13.4_c01",
           "top_recommendation_id": "1.13.4",
-          "latency_ms": 133.46
+          "latency_ms": 123.27
         }
       ],
       "case_diagnostics": [
@@ -296,196 +296,196 @@
           "rank": null,
           "top_chunk_id": "ng12_1.6.6_c01",
           "top_recommendation_id": "1.6.6",
-          "latency_ms": 1498.72
+          "latency_ms": 1047.71
         },
         {
           "case_id": "lung_xray_smoker",
           "rank": 1,
           "top_chunk_id": "ng12_1.1.2_c01",
           "top_recommendation_id": "1.1.2",
-          "latency_ms": 132.07
+          "latency_ms": 123.98
         },
         {
           "case_id": "lung_recurrent_infection",
           "rank": 1,
           "top_chunk_id": "ng12_1.1.3_c01",
           "top_recommendation_id": "1.1.3",
-          "latency_ms": 134.65
+          "latency_ms": 119.03
         },
         {
           "case_id": "oesophageal_dysphagia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.1_c01",
           "top_recommendation_id": "1.2.1",
-          "latency_ms": 123.43
+          "latency_ms": 147.12
         },
         {
           "case_id": "oesophageal_haematemesis",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.2_c01",
           "top_recommendation_id": "1.2.2",
-          "latency_ms": 118.94
+          "latency_ms": 124.39
         },
         {
           "case_id": "oesophageal_dyspepsia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.3_c01",
           "top_recommendation_id": "1.2.3",
-          "latency_ms": 123.4
+          "latency_ms": 125.22
         },
         {
           "case_id": "pancreatic_jaundice",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.4_c01",
           "top_recommendation_id": "1.2.4",
-          "latency_ms": 122.92
+          "latency_ms": 111.91
         },
         {
           "case_id": "pancreatic_ct",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.5_c01",
           "top_recommendation_id": "1.2.5",
-          "latency_ms": 135.44
+          "latency_ms": 127.86
         },
         {
           "case_id": "stomach_mass",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.6_c01",
           "top_recommendation_id": "1.2.6",
-          "latency_ms": 122.09
+          "latency_ms": 151.53
         },
         {
           "case_id": "stomach_dysphagia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.7_c01",
           "top_recommendation_id": "1.2.7",
-          "latency_ms": 128.32
+          "latency_ms": 133.72
         },
         {
           "case_id": "stomach_haematemesis",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.8_c01",
           "top_recommendation_id": "1.2.8",
-          "latency_ms": 128.24
+          "latency_ms": 115.93
         },
         {
           "case_id": "stomach_dyspepsia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.9_c01",
           "top_recommendation_id": "1.2.9",
-          "latency_ms": 139.57
+          "latency_ms": 118.02
         },
         {
           "case_id": "colorectal_fit_offer",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.1_c01",
           "top_recommendation_id": "1.3.1",
-          "latency_ms": 129.7
+          "latency_ms": 120.98
         },
         {
           "case_id": "colorectal_fit_threshold",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.2_c01",
           "top_recommendation_id": "1.3.2",
-          "latency_ms": 137.3
+          "latency_ms": 126.99
         },
         {
           "case_id": "colorectal_low_fit",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.3_c01",
           "top_recommendation_id": "1.3.3",
-          "latency_ms": 127.52
+          "latency_ms": 117.17
         },
         {
           "case_id": "colorectal_sample_support",
           "rank": 2,
           "top_chunk_id": "ng12_1.3.1_c01",
           "top_recommendation_id": "1.3.1",
-          "latency_ms": 118.68
+          "latency_ms": 118.2
         },
         {
           "case_id": "colorectal_rectal_mass",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.5_c01",
           "top_recommendation_id": "1.3.5",
-          "latency_ms": 119.66
+          "latency_ms": 118.33
         },
         {
           "case_id": "bladder_visible_haematuria",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.4_c01",
           "top_recommendation_id": "1.6.4",
-          "latency_ms": 116.49
+          "latency_ms": 123.9
         },
         {
           "case_id": "bladder_recurrent_uti",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.5_c01",
           "top_recommendation_id": "1.6.5",
-          "latency_ms": 121.59
+          "latency_ms": 116.83
         },
         {
           "case_id": "renal_visible_haematuria",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.6_c01",
           "top_recommendation_id": "1.6.6",
-          "latency_ms": 126.48
+          "latency_ms": 117.65
         },
         {
           "case_id": "shared_safety_results",
           "rank": 1,
           "top_chunk_id": "ng12_1.15.1_c01",
           "top_recommendation_id": "1.15.1",
-          "latency_ms": 141.27
+          "latency_ms": 132.17
         },
         {
           "case_id": "shared_safety_review",
           "rank": null,
           "top_chunk_id": "ng12_1.13.4_c01",
           "top_recommendation_id": "1.13.4",
-          "latency_ms": 133.46
+          "latency_ms": 123.27
         },
         {
           "case_id": "shared_referral_day",
           "rank": 3,
           "top_chunk_id": "ng12_1.6.5_c01",
           "top_recommendation_id": "1.6.5",
-          "latency_ms": 135.63
+          "latency_ms": 116.14
         },
         {
           "case_id": "multisite_appetite",
           "rank": 1,
           "top_chunk_id": "ng12_1.13.3_c01",
           "top_recommendation_id": "1.13.3",
-          "latency_ms": 129.94
+          "latency_ms": 124.31
         },
         {
           "case_id": "nonspecific_weight_loss",
           "rank": 1,
           "top_chunk_id": "ng12_1.13.2_c01",
           "top_recommendation_id": "1.13.2",
-          "latency_ms": 127.16
+          "latency_ms": 127.59
         },
         {
           "case_id": "lung_evidence",
           "rank": 1,
           "top_chunk_id": "ng12_full_lung_cancer_evidence_p038_004_c01",
           "top_recommendation_id": null,
-          "latency_ms": 125.09
+          "latency_ms": 123.26
         },
         {
           "case_id": "colorectal_rationale",
           "rank": 1,
           "top_chunk_id": "ng12_full_colorectal_cancer_rationale_p140_062_c01",
           "top_recommendation_id": null,
-          "latency_ms": 130.93
+          "latency_ms": 158.57
         },
         {
           "case_id": "renal_evidence",
           "rank": 1,
           "top_chunk_id": "ng12_full_renal_cancer_evidence_table_p196_007_c01",
           "top_recommendation_id": null,
-          "latency_ms": 120.75
+          "latency_ms": 142.52
         },
         {
           "case_id": "outscope_prostate",
@@ -515,8 +515,8 @@
       "canonical_top1_accuracy": 1.0,
       "out_of_scope_refusal_accuracy": 1.0,
       "latency_ms": {
-        "p50": 126.25,
-        "p95": 141.8
+        "p50": 113.41,
+        "p95": 126.45
       },
       "recall_at_5_by_category": {
         "canonical_recommendation": 1.0,
@@ -531,196 +531,196 @@
           "rank": 1,
           "top_chunk_id": "ng12_1.1.1_c01",
           "top_recommendation_id": "1.1.1",
-          "latency_ms": 123.4
+          "latency_ms": 116.51
         },
         {
           "case_id": "lung_xray_smoker",
           "rank": 1,
           "top_chunk_id": "ng12_1.1.2_c01",
           "top_recommendation_id": "1.1.2",
-          "latency_ms": 147.17
+          "latency_ms": 119.9
         },
         {
           "case_id": "lung_recurrent_infection",
           "rank": 1,
           "top_chunk_id": "ng12_1.1.3_c01",
           "top_recommendation_id": "1.1.3",
-          "latency_ms": 131.84
+          "latency_ms": 111.87
         },
         {
           "case_id": "oesophageal_dysphagia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.1_c01",
           "top_recommendation_id": "1.2.1",
-          "latency_ms": 135.37
+          "latency_ms": 111.65
         },
         {
           "case_id": "oesophageal_haematemesis",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.2_c01",
           "top_recommendation_id": "1.2.2",
-          "latency_ms": 116.22
+          "latency_ms": 115.42
         },
         {
           "case_id": "oesophageal_dyspepsia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.3_c01",
           "top_recommendation_id": "1.2.3",
-          "latency_ms": 123.01
+          "latency_ms": 116.02
         },
         {
           "case_id": "pancreatic_jaundice",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.4_c01",
           "top_recommendation_id": "1.2.4",
-          "latency_ms": 119.48
+          "latency_ms": 113.38
         },
         {
           "case_id": "pancreatic_ct",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.5_c01",
           "top_recommendation_id": "1.2.5",
-          "latency_ms": 133.84
+          "latency_ms": 115.51
         },
         {
           "case_id": "stomach_mass",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.6_c01",
           "top_recommendation_id": "1.2.6",
-          "latency_ms": 125.17
+          "latency_ms": 107.09
         },
         {
           "case_id": "stomach_dysphagia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.7_c01",
           "top_recommendation_id": "1.2.7",
-          "latency_ms": 125.98
+          "latency_ms": 103.14
         },
         {
           "case_id": "stomach_haematemesis",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.8_c01",
           "top_recommendation_id": "1.2.8",
-          "latency_ms": 133.79
+          "latency_ms": 112.34
         },
         {
           "case_id": "stomach_dyspepsia",
           "rank": 1,
           "top_chunk_id": "ng12_1.2.9_c01",
           "top_recommendation_id": "1.2.9",
-          "latency_ms": 122.57
+          "latency_ms": 110.13
         },
         {
           "case_id": "colorectal_fit_offer",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.1_c01",
           "top_recommendation_id": "1.3.1",
-          "latency_ms": 124.28
+          "latency_ms": 116.05
         },
         {
           "case_id": "colorectal_fit_threshold",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.2_c01",
           "top_recommendation_id": "1.3.2",
-          "latency_ms": 123.72
+          "latency_ms": 120.03
         },
         {
           "case_id": "colorectal_low_fit",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.3_c01",
           "top_recommendation_id": "1.3.3",
-          "latency_ms": 128.6
+          "latency_ms": 125.35
         },
         {
           "case_id": "colorectal_sample_support",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.4_c01",
           "top_recommendation_id": "1.3.4",
-          "latency_ms": 131.41
+          "latency_ms": 114.8
         },
         {
           "case_id": "colorectal_rectal_mass",
           "rank": 1,
           "top_chunk_id": "ng12_1.3.5_c01",
           "top_recommendation_id": "1.3.5",
-          "latency_ms": 122.1
+          "latency_ms": 115.54
         },
         {
           "case_id": "bladder_visible_haematuria",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.4_c01",
           "top_recommendation_id": "1.6.4",
-          "latency_ms": 126.25
+          "latency_ms": 113.64
         },
         {
           "case_id": "bladder_recurrent_uti",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.5_c01",
           "top_recommendation_id": "1.6.5",
-          "latency_ms": 135.71
+          "latency_ms": 126.45
         },
         {
           "case_id": "renal_visible_haematuria",
           "rank": 1,
           "top_chunk_id": "ng12_1.6.6_c01",
           "top_recommendation_id": "1.6.6",
-          "latency_ms": 141.8
+          "latency_ms": 111.39
         },
         {
           "case_id": "shared_safety_results",
           "rank": 1,
           "top_chunk_id": "ng12_1.15.1_c01",
           "top_recommendation_id": "1.15.1",
-          "latency_ms": 131.45
+          "latency_ms": 114.05
         },
         {
           "case_id": "shared_safety_review",
           "rank": 1,
           "top_chunk_id": "ng12_1.15.2_c01",
           "top_recommendation_id": "1.15.2",
-          "latency_ms": 126.39
+          "latency_ms": 112.81
         },
         {
           "case_id": "shared_referral_day",
           "rank": 1,
           "top_chunk_id": "ng12_1.16.8_c01",
           "top_recommendation_id": "1.16.8",
-          "latency_ms": 123.3
+          "latency_ms": 108.07
         },
         {
           "case_id": "multisite_appetite",
           "rank": 1,
           "top_chunk_id": "ng12_1.13.3_c01",
           "top_recommendation_id": "1.13.3",
-          "latency_ms": 117.75
+          "latency_ms": 114.13
         },
         {
           "case_id": "nonspecific_weight_loss",
           "rank": 1,
           "top_chunk_id": "ng12_1.13.2_c01",
           "top_recommendation_id": "1.13.2",
-          "latency_ms": 133.97
+          "latency_ms": 127.69
         },
         {
           "case_id": "lung_evidence",
           "rank": 1,
           "top_chunk_id": "ng12_full_lung_cancer_evidence_p037_003_c01",
           "top_recommendation_id": null,
-          "latency_ms": 127.41
+          "latency_ms": 109.57
         },
         {
           "case_id": "colorectal_rationale",
           "rank": 1,
           "top_chunk_id": "ng12_full_colorectal_cancer_rationale_p140_062_c01",
           "top_recommendation_id": null,
-          "latency_ms": 128.22
+          "latency_ms": 113.41
         },
         {
           "case_id": "renal_evidence",
           "rank": 1,
           "top_chunk_id": "ng12_full_renal_cancer_evidence_table_p196_007_c01",
           "top_recommendation_id": null,
-          "latency_ms": 139.73
+          "latency_ms": 111.3
         },
         {
           "case_id": "outscope_prostate",

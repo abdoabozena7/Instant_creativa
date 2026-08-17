@@ -7,6 +7,7 @@ import {
   ChevronRight,
   CircleAlert,
   Database,
+  FileText,
   Gauge,
   Layers3,
   LoaderCircle,
@@ -66,6 +67,15 @@ function App() {
 
   const results = answer?.retrieval.results ?? search?.results ?? [];
   const activeRetrieval = answer?.retrieval ?? search;
+
+  function openEvidence(result: EvidenceResult | null) {
+    setSelected(result);
+    if (result && window.matchMedia("(max-width: 1050px)").matches) {
+      window.requestAnimationFrame(() => {
+        document.getElementById("evidence-inspector")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
 
   async function run(withAnswer: boolean) {
     if (query.trim().length < 3) return;
@@ -204,14 +214,14 @@ function App() {
                   transition={{ duration: 0.32 }}
                 >
                   <div className="result-main">
-                    {answer && <AnswerBlock answer={answer} onCitation={(rank) => setSelected(results[rank - 1] ?? null)} />}
+                    {answer && <AnswerBlock answer={answer} onCitation={(rank) => openEvidence(results[rank - 1] ?? null)} />}
                     {activeRetrieval.scope.status === "out_of_scope" ? (
                       <div className="scope-refusal">
                         <XCircle size={24} />
                         <div><h2>Outside configured scope</h2><p>{activeRetrieval.scope.message}</p></div>
                       </div>
                     ) : (
-                      <EvidenceList results={results} selected={selected} onSelect={setSelected} retrieval={activeRetrieval} />
+                      <EvidenceList results={results} selected={selected} onSelect={openEvidence} retrieval={activeRetrieval} />
                     )}
                   </div>
                   <EvidenceInspector result={selected} />
@@ -246,7 +256,15 @@ function AnswerBlock({ answer, onCitation }: { answer: AnswerResponse; onCitatio
         {pieces.map((piece, index) => {
           const match = piece.match(/^\[E(\d+)\]$/);
           return match ? (
-            <button key={`${piece}-${index}`} className="citation-token" onClick={() => onCitation(Number(match[1]))}>{piece}</button>
+            <button
+              key={`${piece}-${index}`}
+              className="citation-token"
+              onClick={() => onCitation(Number(match[1]))}
+              aria-label={`Open evidence ${piece.slice(1, -1)}`}
+              title="Open this evidence"
+            >
+              {piece}
+            </button>
           ) : (
             <span key={index}>
               {piece.split(/(\*\*.*?\*\*)/g).map((part, partIndex) =>
@@ -279,7 +297,11 @@ function EvidenceList({ results, selected, onSelect, retrieval }: {
   return (
     <section className="evidence-list">
       <div className="list-header">
-        <div><span className="section-kicker"><BookOpen size={15} /> Ranked evidence</span><h2>{results.length} traceable passages</h2></div>
+        <div>
+          <span className="section-kicker"><BookOpen size={15} /> Ranked evidence</span>
+          <h2>{results.length} traceable passages</h2>
+          {results.length > 0 && <p>Click a passage to open its full text, source, and ranking trace.</p>}
+        </div>
         <div className="latency-readout"><b>{retrieval.latency_ms.toFixed(1)}</b><small>ms retrieval</small></div>
       </div>
       <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.045 } } }}>
@@ -289,17 +311,25 @@ function EvidenceList({ results, selected, onSelect, retrieval }: {
             key={result.chunk_id}
             className={`evidence-row ${selected?.chunk_id === result.chunk_id ? "selected" : ""}`}
             onClick={() => onSelect(result)}
+            aria-pressed={selected?.chunk_id === result.chunk_id}
+            aria-controls="evidence-inspector"
+            title={`Open evidence E${result.rank}`}
           >
             <span className="rank">E{result.rank}</span>
             <span className="evidence-content">
               <span className="evidence-meta">
                 <b>{result.recommendation_id ? `Recommendation ${result.recommendation_id}` : label(result.content_type)}</b>
-                <i className={result.authority_priority}>{result.authority_priority}</i>
+                <i className={result.authority_priority}>
+                  {result.source_version === "2026_current" ? "Current 2026" : "Supporting 2015"}
+                </i>
                 <span>{result.section} · p.{result.page}{result.page_end !== result.page ? `–${result.page_end}` : ""}</span>
               </span>
               <span className="evidence-excerpt">{result.text}</span>
             </span>
-            <span className="score"><b>{result.score.toFixed(3)}</b><small>score</small></span>
+            <span className="evidence-row-action">
+              <span className="score"><b>{result.score.toFixed(3)}</b><small>score</small></span>
+              <span className="open-label">Open <ChevronRight size={13} /></span>
+            </span>
           </motion.button>
         ))}
       </motion.div>
@@ -309,12 +339,21 @@ function EvidenceList({ results, selected, onSelect, retrieval }: {
 
 function EvidenceInspector({ result }: { result: EvidenceResult | null }) {
   return (
-    <aside className="inspector">
+    <aside className="inspector" id="evidence-inspector" aria-live="polite">
       {result ? (
         <motion.div key={result.chunk_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <span className="inspector-label">Evidence trace / E{result.rank}</span>
+          <div className="inspector-heading">
+            <span className="inspector-label">Selected evidence / E{result.rank}</span>
+            <span className={`source-status ${result.authority_priority}`}>
+              {result.source_version === "2026_current" ? "Current 2026" : "Supporting 2015"}
+            </span>
+          </div>
           <h2>{result.recommendation_id ? `NG12 ${result.recommendation_id}` : result.section}</h2>
           <p className="full-citation">{result.citation}</p>
+          <section className="source-passage" aria-label="Full evidence passage">
+            <h3><FileText size={14} /> Full source passage</h3>
+            <p>{result.text}</p>
+          </section>
           <dl>
             <div><dt>Authority</dt><dd>{result.authority_priority}</dd></div>
             <div><dt>Source</dt><dd>{result.source_version === "2026_current" ? "Current guideline" : "Full guideline"}</dd></div>

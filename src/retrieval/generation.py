@@ -14,7 +14,7 @@ CITATION_PATTERN = re.compile(r"\[E(\d+)\]")
 _CITATION_SPACE = r"[\s\u200b\u200c\u200d\u2060\ufeff]*"
 _CITATION_LABEL = rf"\*{{0,2}}{_CITATION_SPACE}E{_CITATION_SPACE}\d+{_CITATION_SPACE}\*{{0,2}}"
 _CITATION_GROUP_PATTERN = re.compile(
-    rf"[\[【(]{_CITATION_SPACE}{_CITATION_LABEL}"
+    rf"[\[【(]{_CITATION_SPACE}(?:Evidence{_CITATION_SPACE})?{_CITATION_LABEL}"
     rf"(?:{_CITATION_SPACE}[;,/]{_CITATION_SPACE}{_CITATION_LABEL})*"
     rf"{_CITATION_SPACE}[\]】)]",
     re.IGNORECASE,
@@ -86,7 +86,7 @@ async def generate_grounded_answer(
                 "available_evidence_count": len(results),
             },
             "warnings": [
-                "Generation skipped because the decision query contained no clinical feature."
+                "Generation skipped because the patient assessment contained no concrete clinical feature."
             ],
             "ollama_metrics": {},
         }

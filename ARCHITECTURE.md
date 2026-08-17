@@ -13,7 +13,7 @@ flowchart TD
     E --> F["BM25 index + normalized embedding matrix"]
     Q["User question"] --> G["Deterministic query guard"]
     G -->|"excluded-only"| R["Controlled refusal"]
-    G -->|"decision with no clinical facts"| U["Controlled insufficient-information response"]
+    G -->|"patient assessment with no concrete feature"| U["Controlled insufficient-information response"]
     G -->|"in scope + answerable/partial"| H["Weighted hybrid retrieval"]
     F --> H
     H --> I["Ranked evidence selection"]
@@ -92,7 +92,7 @@ For the concrete question, “Should a 45-year-old with visible haematuria be re
 
 1. `AnswerRequest` in `api/main.py` validates the string, mode, evidence count, and optional filters.
 2. `RetrievalEngine.search()` trims whitespace, clamps top-k, calls `assess_scope()`, then calls `assess_query_answerability()`.
-3. The scope guard returns `status=in_scope`, `selected_sites=["renal"]`, and no excluded sites. The answerability guard sees the stated age and haematuria, so the query continues. An excluded-only query or a patient-specific decision with no clinical feature returns before embedding, retrieval, or generation.
+3. The scope guard returns `status=in_scope`, `selected_sites=["renal"]`, and no excluded sites. The answerability guard sees the concrete haematuria feature, so the query continues. An excluded-only query or a patient-specific assessment containing only a site, qualifiers, and vague descriptors returns before embedding, retrieval, or generation.
 4. `BM25Index.scores()` computes lexical scores over retrieval text containing section, subsection, recommendation ID, sites, content type, and source text. Query-only filtering removes the measured non-clinical scaffold terms `what`, `about`, and `the`; document tokens and all other query terms are unchanged.
 5. `OllamaClient.embed()` creates a normalized query vector using `search_query:` prefixing. Exact matrix multiplication produces cosine scores against 440 vectors.
 6. The engine max-normalizes allowed BM25 scores, maps dense cosine scores from `[-1,1]` into `[0,1]`, and calculates `0.55 × BM25 + 0.45 × dense`.
@@ -131,7 +131,7 @@ For the concrete question, “Should a 45-year-old with visible haematuria be re
 
 1. Excluded-only site phrases are refused before embedding, retrieval, or generation.
 2. In a mixed query, excluded phrases are removed before in-scope phrase detection, preventing “gall bladder” from also becoming “bladder.”
-3. A patient-specific referral/investigation decision containing no clinical feature returns a controlled insufficient-information response before retrieval or generation. The gate detects missing input shape; it does not encode eligibility criteria.
+3. A patient-specific decision or severity/uncertainty assessment containing no concrete clinical feature returns a controlled insufficient-information response before retrieval or generation. Site names, age/duration qualifiers, and generic words such as “issues” are not treated as symptoms. The gate detects missing input shape; it does not encode eligibility criteria.
 4. Partially specified questions continue to evidence-grounded generation, where absent patient attributes remain unknown and recommendation modality plus AND/OR structure must be preserved.
 5. Historical recommendation text is never present in `chunks.jsonl`.
 6. Supporting 2015 evidence can retrieve, but its metadata and prompt label remain `supporting`.
@@ -150,7 +150,7 @@ For the concrete question, “Should a 45-year-old with visible haematuria be re
 | Query embedding or Ollama generation unavailable | API returns controlled 503 |
 | Metadata filters match no chunks | Search returns empty results plus warning; answer returns 404 |
 | Excluded-only question | Fail closed before expensive work; controlled refusal |
-| Patient-specific decision with no clinical feature | Fail closed before retrieval/model; request the missing facts without making a decision |
+| Patient-specific assessment with no concrete clinical feature | Fail closed before retrieval/model; request specific symptoms without making a decision |
 | Malformed/empty model answer | Returned with failed citation validation and warning; no fabricated fallback answer |
 | Invalid evidence label | Preserved in answer, reported as invalid; validation fails |
 | Metrics artifact absent | Optional evaluation fields are null; required merge report absence currently produces server error |

@@ -8,6 +8,8 @@ BM25 is strong here because NG12 contains exact symptom terms, ages, thresholds,
 
 **Likely follow-up:** Are the weights universal? No. They are transparent, configurable values chosen on this corpus's development set; the blind set is reported separately and was not used to manufacture a better number.
 
+**Likely follow-up:** Why not add a reranker? The development hybrid already has 100% Recall@1 and MRR, so there is no measurable headroom on the legitimate tuning set. Using the historical blind cases to tune a reranker would weaken the evaluation. A reranker is justified only after a new held-out development set shows repeatable improvement worth the extra model and latency.
+
 ## 2. Why did you not use a vector database?
 
 The corpus has only 440 normalized vectors of 768 floats, roughly 1.29 MB. Exact cosine is one inspectable NumPy matrix multiplication and returns the true score for every chunk. A vector database would add a service, index lifecycle, serialization, and filtering complexity without solving the actual latency bottleneck, which is model generation.
@@ -28,9 +30,9 @@ The guarantee is made before ranking and prompting. Historical recommendation re
 
 ## 5. Why is scope classification deterministic rather than an LLM call?
 
-The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching. The full v4 regression run measured 100% scope, 100% correct refusal, and 0% false refusal.
+The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching. The full v6 regression run measured 100% scope, 100% correct refusal, and 0% false refusal.
 
-**Likely follow-up:** What happens when a user asks “Should this patient be referred?” with no facts? A separate minimum-answerability check returns “insufficient information” before retrieval or generation. It detects the absence of any clinical feature; it does not memorize that sentence or encode NG12 eligibility rules. Questions containing an actual feature continue to grounded generation.
+**Likely follow-up:** What happens with “Should this patient be referred?” or “The patient has stomach issues—is this serious?” A separate minimum-answerability check returns “insufficient information” before retrieval or generation. It requires a concrete symptom/sign, not merely a site, age qualifier, or vague word. It does not memorize those sentences or encode NG12 eligibility rules; questions containing pain, vomiting, dysphagia, haematemesis, a mass, blood, or another concrete feature continue to grounded generation.
 
 ## 6. What does “section-aware chunking” actually preserve?
 
