@@ -4,3 +4,8 @@
 # Runtime manifests hash the exact JSONL bytes. Keep those files LF on every
 # platform so a Windows checkout cannot invalidate the dense-index contract.
 *.jsonl text eol=lf
+
+# Evaluation freezes hash these runtime files byte-for-byte. Pin their checkout
+# endings so the same versioned freeze verifies on Windows, macOS, and Linux.
+src/retrieval/*.py text eol=lf
+data/index/index_manifest.json text eol=crlf

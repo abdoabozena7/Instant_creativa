@@ -58,12 +58,15 @@ data/
     retrieval_metrics.json
     evaluation_freeze.json
     evaluation_freeze_v2.json
+    evaluation_freeze_v4.json
     blind_questions_v1.jsonl
     blind_gold_v1.jsonl
     blind_run_v1.jsonl
     blind_e2e_report_v1.json
     blind_run_v2.jsonl
     blind_e2e_report_v2.json
+    blind_run_v4.jsonl
+    blind_e2e_report_v4.json
     adjudication_packets_v1.jsonl
     adjudication_template_v1.csv
     multi_judge_manifest_v1.json
@@ -313,11 +316,11 @@ The reviewer-ready workbook remains available as the audit surface and optional 
 
 An optional same-model triage run using `gpt-oss:120b-cloud` flagged 24 cases for review and produced provisional signals: 90.65% citation accuracy, 79.10% claim support, 20.90% unsupported claims, and 81.82% behavior accuracy. These numbers are displayed as provisional only. The judge is not independent and made at least one known source-reading error, so they are neither clinical nor official evaluation results.
 
-The frozen v1 evaluation artifacts remain preserved as the honest pre-fix baseline. A separate full v2 run fingerprinted the post-audit architecture and reran the same 44 questions. Scope classification improved from 97.73% to 100%, correct refusal from 80% to 100%, and false refusal remained 0%. Retrieval was unchanged: Recall@1 75.68%, Recall@5 97.30%, MRR@6 85.59%, and current-guideline accuracy 100%. Citation-label validity on newly generated answers was 94.87% (37/39), improved from 80% but not claimed as perfect. End-to-end latency was slower in this run at 5.12 s P50 and 9.95 s P95 versus v1's 3.08 s and 5.49 s; generation is remote/model-variable and no architecture change is credited for that movement. Semantic judging and human review were not run for v2.
+The frozen v1 evaluation artifacts remain preserved as the honest pre-fix baseline. V2 records the gall-bladder scope fix. During presentation rehearsal, two underspecified questions exposed a separate defect: the system inferred missing patient facts from retrieved eligibility criteria. The localized v4 fix adds a generic minimum-answerability gate for patient-specific decisions, strengthens the evidence-only prompt for partially specified questions, removes three measured non-clinical BM25 query terms, and normalizes two additional citation formats. It does not encode the screenshot questions or NG12 eligibility rules.
 
-The dashboard and `/api/metrics` expose v2 as the current deterministic result. The v1 freeze/run/report remain available for before/after inspection and are never overwritten or relabeled.
+The full 44-case v4 regression run reports scope 100%, correct refusal 100%, false refusal 0%, Recall@1 75.68%, Recall@5 97.30%, MRR@6 86.04%, current-guideline accuracy 100%, and citation-label validity 100%. End-to-end latency was 3.57 s P50 and 9.40 s P95. Semantic judging and human review were not run. Because the same 44 cases had already been inspected, v4 is explicitly a versioned regression run, not a new independent blind evaluation.
 
-Optional semantic evaluation tooling remains in the repository, but no judge run is part of setup or the v2 scope-fix evaluation. Future runs must use a new versioned freeze/run/report and must never overwrite or impersonate v1 or v2.
+The dashboard and `/api/metrics` expose v4 as the current deterministic result. V1 and v2 remain historical evidence and are never overwritten or relabeled. Optional semantic tooling is outside setup/runtime; future behavior changes require a new versioned freeze/run/report.
 
 The resulting metric must be described as **automated LLM-judged groundedness**, not clinical validation. The API and dashboard expose `multi_judge_report_v1.json` automatically when the complete report exists.
 

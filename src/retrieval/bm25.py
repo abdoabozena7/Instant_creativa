@@ -10,6 +10,11 @@ import numpy as np
 
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:[.-][a-z0-9]+)*", re.IGNORECASE)
+# Keep this deliberately small. A broad English stopword list improved the
+# reported terse query but regressed an existing safety-netting benchmark.
+# These three high-frequency function words contributed no clinical meaning
+# in the observed failure; all other terms retain the frozen BM25 behavior.
+QUERY_STOPWORDS = {"about", "the", "what"}
 
 
 def tokenize(text: str) -> list[str]:
@@ -36,7 +41,12 @@ class BM25Index:
 
     def scores(self, query: str) -> np.ndarray:
         scores = np.zeros(len(self.term_frequencies), dtype=np.float32)
-        query_terms = Counter(tokenize(query))
+        # Query-only filtering prevents a minimal measured question scaffold
+        # from outranking the actual clinical feature. Document tokens remain
+        # untouched, so medical terms and recommendation IDs retain behavior.
+        query_terms = Counter(
+            token for token in tokenize(query) if token not in QUERY_STOPWORDS
+        )
         if not query_terms or not self.average_length:
             return scores
         for index, frequencies in enumerate(self.term_frequencies):

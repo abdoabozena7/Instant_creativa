@@ -7,6 +7,7 @@ import time
 from typing import Any
 
 from .ollama_client import OllamaClient
+from .scope_guard import assess_query_answerability
 
 
 CITATION_PATTERN = re.compile(r"\[E(\d+)\]")
@@ -19,6 +20,18 @@ _CITATION_GROUP_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _CITATION_NUMBER = re.compile(rf"E{_CITATION_SPACE}(\d+)", re.IGNORECASE)
+_LINE_REFERENCE_CITATION = re.compile(
+    rf"[【\[]{_CITATION_SPACE}E{_CITATION_SPACE}(\d+)"
+    rf"{_CITATION_SPACE}†{_CITATION_SPACE}L\d+"
+    rf"(?:{_CITATION_SPACE}-{_CITATION_SPACE}L?\d+)?"
+    rf"{_CITATION_SPACE}[】\]]",
+    re.IGNORECASE,
+)
+_STANDALONE_EVIDENCE_LABEL = re.compile(
+    rf"(?<![\w\[])\*{{0,2}}E{_CITATION_SPACE}(\d+)\*{{0,2}}"
+    rf"(?={_CITATION_SPACE}[–—:-])",
+    re.IGNORECASE,
+)
 SYSTEM_PROMPT = """You are the NG12 Evidence Console, a retrieval-grounded assistant.
 Use only the supplied evidence. The 2026 current guideline is authoritative for clinical
 actions, thresholds, urgency, and wording. The 2015 full guideline is supporting context
@@ -34,6 +47,22 @@ Rules:
 7. Preserve ages, thresholds, tests, and urgency wording exactly when mentioned.
 8. Do not expand a named referral pathway, investigation, or clinical term with a synonym
    unless that synonym appears in the supplied evidence.
+9. Treat every patient attribute not stated in the question—including age, symptoms,
+   duration, smoking history, and test results—as unknown. Never copy an eligibility
+   condition from evidence and present it as a fact about the patient.
+10. For a patient-specific referral, investigation, or action question, do not begin with
+   Yes or No unless the question supplies every qualifier needed by the cited criterion.
+   If qualifiers are missing, state that the information is insufficient, list what is
+   missing, and describe the guideline only conditionally.
+11. Preserve recommendation modality exactly. In particular, do not strengthen "consider"
+   into "must", "arrange", or an unconditional recommendation.
+12. Do not add after-referral information or patient-support guidance unless it answers the
+   question directly.
+13. For a general or underspecified clinical-feature question, state only the applicable
+   current criteria and the qualifiers needed to use them. Do not add rationale, quantitative
+   historical evidence, or unrelated workflow guidance unless the question asks for it.
+14. Preserve AND/OR structure exactly. When the evidence says "any of the following", one
+   listed feature is sufficient; do not imply that additional listed features are required.
 """
 
 
@@ -43,6 +72,24 @@ async def generate_grounded_answer(
     ollama: OllamaClient,
 ) -> dict[str, Any]:
     started = time.perf_counter()
+    answerability = assess_query_answerability(query)
+    if answerability["status"] == "insufficient":
+        return {
+            "answer": answerability["message"],
+            "model": None,
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "answerability": answerability,
+            "citation_validation": {
+                "passed": True,
+                "cited_evidence_ranks": [],
+                "invalid_evidence_ranks": [],
+                "available_evidence_count": len(results),
+            },
+            "warnings": [
+                "Generation skipped because the decision query contained no clinical feature."
+            ],
+            "ollama_metrics": {},
+        }
     evidence_blocks = []
     for index, result in enumerate(results, start=1):
         evidence_blocks.append(
@@ -57,7 +104,11 @@ async def generate_grounded_answer(
     user_prompt = (
         f"Question: {query}\n\nEvidence:\n\n"
         + "\n\n".join(evidence_blocks)
-        + "\n\nAnswer using only this evidence."
+        + (
+            "\n\nAnswer using only this evidence. Patient attributes absent from the "
+            "question are unknown; do not infer them from eligibility criteria in the evidence. "
+            "Preserve the recommendation's exact modality: 'consider' must remain 'consider'."
+        )
     )
     response = await ollama.chat(
         [
@@ -72,6 +123,7 @@ async def generate_grounded_answer(
         "answer": answer,
         "model": ollama.chat_model,
         "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+        "answerability": answerability,
         "citation_validation": citation_validation,
         "warnings": warnings,
         "ollama_metrics": {
@@ -96,6 +148,12 @@ def normalize_citation_labels(answer: str) -> str:
         numbers = _CITATION_NUMBER.findall(match.group(0))
         return " ".join(f"[E{int(value)}]" for value in numbers)
 
+    answer = _LINE_REFERENCE_CITATION.sub(
+        lambda match: f"[E{int(match.group(1))}]", answer
+    )
+    answer = _STANDALONE_EVIDENCE_LABEL.sub(
+        lambda match: f"[E{int(match.group(1))}]", answer
+    )
     return _CITATION_GROUP_PATTERN.sub(replace_group, answer)
 
 

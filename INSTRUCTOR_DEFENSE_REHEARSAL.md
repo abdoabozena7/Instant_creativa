@@ -28,9 +28,9 @@ The guarantee is made before ranking and prompting. Historical recommendation re
 
 ## 5. Why is scope classification deterministic rather than an LLM call?
 
-The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching. A separate full v2 run of all 44 cases measured 100% scope, 100% correct refusal, and 0% false refusal.
+The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching. The full v4 regression run measured 100% scope, 100% correct refusal, and 0% false refusal.
 
-**Likely follow-up:** Does this understand every unrelated medical question? No. It is a narrow guard, not a clinical reasoning engine. We would add representative no-site negatives before broadening its behavior or considering an LLM.
+**Likely follow-up:** What happens when a user asks “Should this patient be referred?” with no facts? A separate minimum-answerability check returns “insufficient information” before retrieval or generation. It detects the absence of any clinical feature; it does not memorize that sentence or encode NG12 eligibility rules. Questions containing an actual feature continue to grounded generation.
 
 ## 6. What does “section-aware chunking” actually preserve?
 
@@ -40,7 +40,7 @@ Current recommendations, symptom-table rows, definitions, and shared-guidance un
 
 ## 7. Where can hallucination still happen?
 
-After evidence selection, the generator can still over-generalize, combine qualifiers incorrectly, introduce an unsupported workflow step, or attach an existing citation label to a claim the passage does not entail. The prompt restricts it to labeled evidence and deterministic validation proves labels exist, but neither mechanism proves semantic entailment. That residual risk is measured offline through claim support, citation entailment, and overreach.
+After evidence selection, the generator can still over-generalize, combine qualifiers incorrectly, introduce an unsupported workflow step, or attach an existing citation label to a claim the passage does not entail. The prompt now explicitly treats absent patient facts as unknown and preserves modality plus AND/OR logic, but prompting cannot prove compliance. Deterministic validation proves labels exist, not entailment; semantic risk remains an offline evaluation concern.
 
 **Likely follow-up:** Why not let validation reject every unsupported claim? Syntax and ID range are deterministic; semantic entailment is not. Putting an LLM judge in the live response path would add latency and another fallible model, so it remains evaluation tooling.
 
@@ -58,6 +58,6 @@ It estimates semantic properties that deterministic code cannot: claim support, 
 
 ## 10. How can a judge reproduce exactly what you evaluated?
 
-The repository ships the reviewed 440 chunks, matching dense matrix and integrity manifest, and versioned evaluation evidence. The raw PDFs and machine outputs are excluded. One bootstrap command verifies hashes/model/dimensions, installs dependencies, builds the frontend, and runs 42 tests. A clean clone outside the workspace reached API, UI, search, stable evidence provenance, and a citation-valid answer without hidden files.
+The repository ships the reviewed 440 chunks, matching dense matrix and integrity manifest, and versioned evaluation evidence. The raw PDFs and machine outputs are excluded. One bootstrap command verifies hashes/model/dimensions, installs dependencies, builds the frontend, and runs the regression suite. A clean clone outside the workspace reached API, UI, search, stable evidence provenance, and a citation-valid answer without hidden files.
 
 **Likely follow-up:** Why ship generated artifacts instead of rebuilding? They are only about 8 MB, preserve the exact evaluated snapshot, and avoid requiring redistributable PDFs and Ollama embedding work during judging. Rebuild scripts remain available, but a rebuild must be treated as a newly evaluated snapshot.

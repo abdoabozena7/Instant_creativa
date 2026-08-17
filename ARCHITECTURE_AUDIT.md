@@ -9,9 +9,9 @@ The project has a strong, defensible hackathon architecture. Its best decisions 
 
 The architecture is not “productionized,” and it should not be. The main complexity is concentrated in source-specific PDF extraction and optional evaluation tooling, where the source layout and experiment history justify most of it. The runtime remains small.
 
-The audit found no P0 defect. Four clear P1 issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, insufficient dense-index integrity validation, and a non-reproducible submission package. The repository now tracks the reviewed 440-chunk corpus, matching dense index, evaluation evidence, source, tests, and documentation while excluding raw PDFs, secrets, dependencies, builds, and temporary outputs.
+The audit found no P0 defect. Five clear P1 issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, insufficient dense-index integrity validation, a non-reproducible submission package, and rehearsal-discovered inference from missing patient facts. The repository now tracks the reviewed 440-chunk corpus, matching dense index, evaluation evidence, source, tests, and documentation while excluding raw PDFs, secrets, dependencies, builds, and temporary outputs.
 
-The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without hidden machine files; the current regression suite contains 42 tests.
+The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without hidden machine files; the current regression suite contains 63 tests.
 
 ## Audit method and evidence
 
@@ -26,12 +26,14 @@ Pre-change validation:
 
 Post-change validation:
 
-- 42/42 tests pass.
+- 63/63 tests pass after the rehearsal fix.
 - React production build passes.
 - Development retrieval rankings and metrics are unchanged; only nondeterministic latency samples moved.
 - A full versioned v2 run over all 44 blind questions gives scope 100%, correct refusal 100%, and false refusal 0%.
 - Re-normalizing stored v1 answer text gives 100% citation-label validity, but a full new v2 generation run produced two new non-canonical formats and measured 94.87%; this is reported rather than hidden.
 - Full blind v2 confirms scope 100%, correct refusal 100%, false refusal 0%, unchanged Recall@1/5 and MRR, and 100% current-guideline accuracy. Frozen v1 artifacts remain unchanged and honestly labeled.
+- Presentation rehearsal then exposed two underspecified questions that reached retrieval and let the generator treat evidence criteria as patient facts. The localized v4 fix uses a generic zero-feature decision gate, query-only filtering for three measured scaffold words, and stronger unknown-fact/modality/logic prompt contracts.
+- The full v4 regression run reports scope 100%, correct refusal 100%, false refusal 0%, Recall@1 75.68%, Recall@5 97.30%, MRR@6 86.04%, current-guideline accuracy 100%, and citation-label validity 100%. It ran no semantic judge or human review and is not presented as a new independent blind set.
 
 # End-to-End Data Flow Audit
 
@@ -435,7 +437,16 @@ None found.
 - **Smallest correct fix:** Track the small reviewed corpus/index/evaluation snapshot; keep raw PDFs, secrets, dependencies, builds, and disposable outputs ignored; add a secret-free environment reference, verifier, bootstrap command, and README workflow.
 - **Files affected:** Git index, `.gitignore`, `.gitattributes`, `.env.example`, `README.md`, `scripts/bootstrap.ps1`, `scripts/verify_runtime_artifacts.py`, runtime/evaluation artifacts.
 - **Expected impact:** No model metric change; clean clone now reaches setup → run → query → evidence and preserves the evaluated snapshot.
-- **Regression risk:** Low after rehearsal. LF normalization for JSONL is enforced so Windows checkout cannot invalidate the chunk hash; tests no longer depend on an ignored local workbook.
+- **Regression risk:** Low after rehearsal. Checkout line endings are pinned for every byte-hashed runtime file so Windows/Linux conversion cannot invalidate chunk or evaluation fingerprints; tests no longer depend on an ignored local workbook.
+
+### P1-5 — Missing patient facts were inferred from retrieved criteria (implemented after rehearsal)
+
+- **Problem:** Generic questions such as “Should this patient be referred for suspected cancer?” reached retrieval with no clinical facts. A plausible top passage then encouraged the model to turn eligibility conditions into asserted patient facts. Separately, BM25 query scaffolding in “What about the diabetes?” could outrank the diabetes recommendation with generic patient-support text.
+- **Why it matters:** The answer could sound clinically decisive while being unsupported by the question, and the visible evidence trace could be topically wrong.
+- **Smallest correct fix:** Stop only patient-specific decision requests containing zero clinical features before retrieval/model; keep partial questions for grounded generation; remove only the three measured BM25 scaffold terms; explicitly preserve unknown patient facts, recommendation modality, and AND/OR logic; normalize two observed citation variants.
+- **Files affected:** `src/retrieval/scope_guard.py`, `src/retrieval/bm25.py`, `src/retrieval/engine.py`, `src/retrieval/generation.py`, `api/main.py`, and regression tests.
+- **Expected impact:** Generic zero-feature decisions return controlled insufficient information with no evidence or model call; “What about the diabetes?” ranks the diabetes criterion first; partial and complete clinical questions remain answerable.
+- **Regression risk:** Low but non-zero. Nine paraphrased negatives and five positive controls protect against phrase memorization; the full v4 run preserved scope, Recall@1/5, and current-guideline accuracy, while MRR moved 85.59% → 86.04% and citation-label validity 94.87% → 100%.
 
 ## P2 — worthwhile if time allows
 
@@ -461,13 +472,13 @@ None found.
 
 **B. Unnecessarily complex:** only the optional full 2×3 semantic evaluator and its checkpoints/fingerprints are research-grade. Keep them out of the core story; the default lightweight mode is appropriate.
 
-**C. Too fragile/simple:** the phrase overlap, citation parser, index integrity checks, and submission contract were too fragile and are fixed. Remaining P2 simplicity debt is dictionary-based runtime contracts and generic no-site scope behavior.
+**C. Too fragile/simple:** the phrase overlap, citation parser, index integrity checks, submission contract, and handling of underspecified patient decisions were too fragile and are fixed. Remaining P2 simplicity debt is dictionary-based runtime contracts and generic unrelated-domain behavior.
 
-**D. Actually fixed:** excluded-span-first scope matching; centralized citation normalization/range validation; named retrieval constants; dense-index manifest/hash/model/vector validation; defect-specific tests; historical freeze test semantics.
+**D. Actually fixed:** excluded-span-first scope matching; a generic minimum-answerability gate; unknown-fact/modality/AND-OR generation contracts; minimal measured BM25 query filtering; centralized citation normalization/range validation; dense-index manifest/hash/model/vector validation; defect-specific tests; reproducible tracked runtime artifacts.
 
 **E. Deliberately not changed:** UI design, clinical scope, corpus, chunk strategy, embedding/chat models, retrieval weights/strategy, top-k, vector storage, reranking, frameworks, agents, and optional evaluator architecture.
 
-**F. Metric regression:** no correctness or retrieval metric regressed in full blind v2. Scope/refusal improved, citation-label validity improved versus v1 but remained imperfect at 94.87%, and retrieval/current-authority metrics were identical. Observed end-to-end latency increased from 3.08/5.49 s P50/P95 in v1 to 5.12/9.95 s in v2; this remote generation timing is reported without attributing it to the scope fix. No semantic improvement is claimed.
+**F. Metric regression:** none in the full v4 regression run. Scope/refusal remained 100%/100% with 0% false refusal; Recall@1/5 remained 75.68%/97.30%; current-guideline accuracy remained 100%; MRR moved 85.59% → 86.04%; citation-label validity moved 94.87% → 100%. End-to-end latency was 3.57/9.40 s P50/P95. No semantic or clinical improvement is claimed because no judge or human review ran.
 
 **G. Remaining P0/P1:** none. Later architecture changes are frozen unless a rehearsal exposes a concrete bug.
 

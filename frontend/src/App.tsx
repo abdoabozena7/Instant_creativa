@@ -263,7 +263,7 @@ function AnswerBlock({ answer, onCitation }: { answer: AnswerResponse; onCitatio
           {answer.citation_validation.passed ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}
           Citation labels {answer.citation_validation.passed ? "valid" : "need review"}
         </span>
-        <span>{answer.model ?? "scope guard"}</span>
+        <span>{answer.model ?? "deterministic guard"}</span>
         <span>{(answer.latency_ms / 1000).toFixed(2)}s total</span>
       </div>
     </section>

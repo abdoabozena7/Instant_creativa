@@ -174,6 +174,22 @@ async def answer(request: AnswerRequest) -> dict:
             "warnings": ["Generation skipped by the deterministic scope guard."],
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),
         }
+    if retrieval.get("answerability", {}).get("status") == "insufficient":
+        generation = await generate_grounded_answer(
+            request.query, [], engine.ollama
+        )
+        telemetry.answer_count += 1
+        telemetry.answer_latencies.append(generation["latency_ms"])
+        telemetry.citation_pass_count += 1
+        return {
+            "query": request.query,
+            **generation,
+            "retrieval": retrieval,
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety_note": (
+                "Evidence lookup only. This demo does not diagnose or replace clinical judgement."
+            ),
+        }
     if not retrieval["results"]:
         raise HTTPException(status_code=404, detail="No evidence matched the query and filters.")
 
@@ -203,7 +219,7 @@ def metrics() -> dict:
     merge_path = PROJECT_ROOT / "data" / "parsed" / "merge_report.json"
     evaluation_path = PROJECT_ROOT / "data" / "eval" / "retrieval_metrics.json"
     blind_evaluation_path = (
-        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v2.json"
+        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v4.json"
     )
     multi_judge_path = (
         PROJECT_ROOT / "data" / "eval" / "multi_judge_report_v1.json"

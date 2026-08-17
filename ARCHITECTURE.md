@@ -11,15 +11,17 @@ flowchart TD
     C --> D["Explicit source reconciliation"]
     D --> E["Structured, section-aware chunks"]
     E --> F["BM25 index + normalized embedding matrix"]
-    Q["User question"] --> G["Deterministic scope guard"]
+    Q["User question"] --> G["Deterministic query guard"]
     G -->|"excluded-only"| R["Controlled refusal"]
-    G -->|"in scope / mixed"| H["Weighted hybrid retrieval"]
+    G -->|"decision with no clinical facts"| U["Controlled insufficient-information response"]
+    G -->|"in scope + answerable/partial"| H["Weighted hybrid retrieval"]
     F --> H
     H --> I["Ranked evidence selection"]
     I --> J["Evidence-only grounded generation"]
     J --> K["Deterministic citation normalization and validation"]
     K --> L["FastAPI response"]
     R --> L
+    U --> L
     L --> M["React evidence console"]
 ```
 
@@ -42,7 +44,7 @@ flowchart LR
 
     subgraph Runtime["Demo runtime"]
         API["api/main.py\nrequest schemas + orchestration"] --> RE["retrieval/engine.py"]
-        RE --> SG["retrieval/scope_guard.py"]
+        RE --> SG["retrieval/scope_guard.py\nscope + minimum answerability"]
         RE --> BM["retrieval/bm25.py"]
         RE --> OC["retrieval/ollama_client.py\nquery embedding"]
         CJ --> RE
@@ -89,9 +91,9 @@ Primary artifacts are:
 For the concrete question, “Should a 45-year-old with visible haematuria be referred for suspected renal cancer?”:
 
 1. `AnswerRequest` in `api/main.py` validates the string, mode, evidence count, and optional filters.
-2. `RetrievalEngine.search()` trims whitespace, clamps top-k, and calls `assess_scope()`.
-3. The guard returns `status=in_scope`, `selected_sites=["renal"]`, and no excluded sites. An excluded-only result would return immediately, before query embedding or generation.
-4. `BM25Index.scores()` computes lexical scores over retrieval text containing section, subsection, recommendation ID, sites, content type, and source text.
+2. `RetrievalEngine.search()` trims whitespace, clamps top-k, calls `assess_scope()`, then calls `assess_query_answerability()`.
+3. The scope guard returns `status=in_scope`, `selected_sites=["renal"]`, and no excluded sites. The answerability guard sees the stated age and haematuria, so the query continues. An excluded-only query or a patient-specific decision with no clinical feature returns before embedding, retrieval, or generation.
+4. `BM25Index.scores()` computes lexical scores over retrieval text containing section, subsection, recommendation ID, sites, content type, and source text. Query-only filtering removes the measured non-clinical scaffold terms `what`, `about`, and `the`; document tokens and all other query terms are unchanged.
 5. `OllamaClient.embed()` creates a normalized query vector using `search_query:` prefixing. Exact matrix multiplication produces cosine scores against 440 vectors.
 6. The engine max-normalizes allowed BM25 scores, maps dense cosine scores from `[-1,1]` into `[0,1]`, and calculates `0.55 × BM25 + 0.45 × dense`.
 7. Explicit, named deterministic adjustments are applied. In the observed trace, current recommendation 1.6.6 received `+0.22` for canonical authority and `+0.03` for the explicit renal-site match. Its base score was `0.807042`; final score was `1.057042`.
@@ -129,11 +131,13 @@ For the concrete question, “Should a 45-year-old with visible haematuria be re
 
 1. Excluded-only site phrases are refused before embedding, retrieval, or generation.
 2. In a mixed query, excluded phrases are removed before in-scope phrase detection, preventing “gall bladder” from also becoming “bladder.”
-3. Historical recommendation text is never present in `chunks.jsonl`.
-4. Supporting 2015 evidence can retrieve, but its metadata and prompt label remain `supporting`.
-5. Retrieval decides which evidence is supplied; generation cannot request additional corpus content.
-6. Generation may still overreach or cite a topically related passage. Citation syntax validation is not entailment validation; semantic evaluation remains offline.
-7. An unsupported/no-result condition is distinct from an out-of-scope refusal: filtered empty results become a controlled 404, while excluded-only scope returns a 200 refusal response with no model call.
+3. A patient-specific referral/investigation decision containing no clinical feature returns a controlled insufficient-information response before retrieval or generation. The gate detects missing input shape; it does not encode eligibility criteria.
+4. Partially specified questions continue to evidence-grounded generation, where absent patient attributes remain unknown and recommendation modality plus AND/OR structure must be preserved.
+5. Historical recommendation text is never present in `chunks.jsonl`.
+6. Supporting 2015 evidence can retrieve, but its metadata and prompt label remain `supporting`.
+7. Retrieval decides which evidence is supplied; generation cannot request additional corpus content.
+8. Generation may still overreach or cite a topically related passage. Citation syntax validation is not entailment validation; semantic evaluation remains offline.
+9. Insufficient information, unsupported/no-result, and out-of-scope are separate states: the first two guards return controlled 200 responses without a model call, while a filtered empty retrieval becomes 404.
 
 ## Relevant failure behavior
 
@@ -146,6 +150,7 @@ For the concrete question, “Should a 45-year-old with visible haematuria be re
 | Query embedding or Ollama generation unavailable | API returns controlled 503 |
 | Metadata filters match no chunks | Search returns empty results plus warning; answer returns 404 |
 | Excluded-only question | Fail closed before expensive work; controlled refusal |
+| Patient-specific decision with no clinical feature | Fail closed before retrieval/model; request the missing facts without making a decision |
 | Malformed/empty model answer | Returned with failed citation validation and warning; no fabricated fallback answer |
 | Invalid evidence label | Preserved in answer, reported as invalid; validation fails |
 | Metrics artifact absent | Optional evaluation fields are null; required merge report absence currently produces server error |

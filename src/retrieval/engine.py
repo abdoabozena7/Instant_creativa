@@ -13,7 +13,7 @@ import numpy as np
 
 from .bm25 import BM25Index
 from .ollama_client import OllamaClient
-from .scope_guard import assess_scope
+from .scope_guard import assess_query_answerability, assess_scope
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -87,9 +87,29 @@ class RetrievalEngine:
                 "mode_requested": mode,
                 "mode_used": "scope_guard",
                 "scope": scope,
+                "answerability": {"status": "not_assessed", "clinical_features": []},
                 "results": [],
                 "latency_ms": round((time.perf_counter() - started) * 1000, 2),
                 "warnings": [],
+            }
+
+        answerability = assess_query_answerability(query)
+        if answerability["status"] == "insufficient":
+            return {
+                "query": query,
+                "mode_requested": mode,
+                "mode_used": "answerability_guard",
+                "scope": scope,
+                "answerability": answerability,
+                "filters": {
+                    "cancer_sites": cancer_sites or [],
+                    "content_types": content_types or [],
+                },
+                "results": [],
+                "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+                "warnings": [
+                    "Retrieval skipped because the decision query contained no clinical feature."
+                ],
             }
 
         allowed = np.asarray(
@@ -106,6 +126,7 @@ class RetrievalEngine:
                 "mode_requested": mode,
                 "mode_used": mode,
                 "scope": scope,
+                "answerability": answerability,
                 "results": [],
                 "latency_ms": round((time.perf_counter() - started) * 1000, 2),
                 "warnings": ["No chunks match the selected metadata filters."],
@@ -240,6 +261,7 @@ class RetrievalEngine:
             "mode_requested": mode,
             "mode_used": mode_used,
             "scope": scope,
+            "answerability": answerability,
             "filters": {"cancer_sites": cancer_sites or [], "content_types": content_types or []},
             "results": results,
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),

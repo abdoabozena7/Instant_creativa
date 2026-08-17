@@ -1,0 +1,42 @@
+{
+  "frozen_at": "2026-08-17T08:56:15.680080+00:00",
+  "architecture_sha256": "cdb7028ee6bda23453a0012b67e599943e08c6ee9fca14c4dde68e96b323b29e",
+  "policy": "No retriever, index, scope-guard, prompt, embedding model, or chat-model changes are permitted while this blind run is being scored. Any later change creates a new freeze.",
+  "retrieval_mode": "hybrid",
+  "embedding_model": "nomic-embed-text:latest",
+  "chat_model": "gpt-oss:120b-cloud",
+  "files": {
+    "src/retrieval/bm25.py": {
+      "sha256": "d5ae04edce615a0bc1055361922d60f94db0d16aa57bd0c60e56fa8ee9a2b923",
+      "bytes": 2850
+    },
+    "src/retrieval/engine.py": {
+      "sha256": "8ccdff42439bf88a9a3392be0fea53404b934df09bef8850cdb36a38a0157cee",
+      "bytes": 14100
+    },
+    "src/retrieval/generation.py": {
+      "sha256": "d0908cf8dfce069a10aceb492dbdef5ad44098a15d43bc29f1802e6991aa8bf5",
+      "bytes": 7851
+    },
+    "src/retrieval/ollama_client.py": {
+      "sha256": "73e85d0b2e92616ca5020e4cb99a8d21dad32a418c3e68587f1e5e645876a85a",
+      "bytes": 2641
+    },
+    "src/retrieval/scope_guard.py": {
+      "sha256": "c73d987ab548318db7949279857782aa29c19f16d8f424758580e71435394e31",
+      "bytes": 5707
+    },
+    "data/parsed/chunks.jsonl": {
+      "sha256": "f8324802f490e31e535fc9066f8f80d77696196bad41b258967b56af72d675eb",
+      "bytes": 774009
+    },
+    "data/index/index_manifest.json": {
+      "sha256": "a125601b52e39e59928956f8cd961164458803466b6b283deca0c7b83ef95985",
+      "bytes": 339
+    },
+    "data/index/chunk_embeddings.npy": {
+      "sha256": "f13b06e851c683773bba2fded28f551250d3bf176aea814ed9c5a9dd94aec945",
+      "bytes": 1351808
+    }
+  }
+}

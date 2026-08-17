@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app
+from src.retrieval.bm25 import BM25Index
 from src.retrieval.engine import RetrievalEngine
 from src.retrieval.generation import (
     CITATION_PATTERN,
@@ -17,7 +18,7 @@ from src.retrieval.generation import (
     normalize_citation_labels,
     validate_citation_labels,
 )
-from src.retrieval.scope_guard import assess_scope
+from src.retrieval.scope_guard import assess_query_answerability, assess_scope
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -90,6 +91,73 @@ def test_bm25_returns_the_canonical_current_recommendation_first() -> None:
     assert "canonical current recommendation" in top["score_detail"]["explanations"]
 
 
+def test_bm25_query_scaffolding_cannot_outrank_the_clinical_feature() -> None:
+    index = BM25Index(
+        [
+            "what about the patient information and what the patient should expect",
+            "pancreatic new-onset diabetes with weight loss",
+        ]
+    )
+    scores = index.scores("What about the diabetes?")
+    assert scores[1] > 0
+    assert scores[0] == 0
+    assert scores[1] > scores[0]
+
+
+@pytest.mark.parametrize("mode", ["bm25", "hybrid"])
+def test_diabetes_query_retrieves_diabetes_evidence_before_patient_support(
+    mode: str,
+) -> None:
+    engine = RetrievalEngine()
+    response = asyncio.run(
+        engine.search("What about the diabetes?", mode=mode, top_k=5)
+    )
+    top = response["results"][0]
+    assert "diabetes" in top["text"].lower()
+    assert top["chunk_id"] != "ng12_1.14.3_c01"
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "Should this patient be referred for suspected cancer?",
+        "Does referral apply to this person?",
+        "Should they enter an urgent cancer pathway?",
+        "Can the referral decision be determined for this patient?",
+        "What does NG12 recommend for this patient?",
+        "Would this patient qualify for referral?",
+        "Does this person require an urgent investigation?",
+        "What should we do for this patient?",
+        "Please tell me whether this person is eligible for a cancer pathway.",
+    ],
+)
+def test_context_free_clinical_decisions_are_insufficient(query: str) -> None:
+    answerability = assess_query_answerability(query)
+    assert answerability["status"] == "insufficient"
+    assert answerability["clinical_features"] == []
+
+
+@pytest.mark.parametrize(
+    "query, expected_feature",
+    [
+        ("Should someone with dysphagia be referred?", "dysphagia"),
+        ("Does unexplained visible haematuria need referral?", "haematuria"),
+        ("Should a patient with new-onset diabetes and weight loss get a scan?", "diabetes"),
+        ("When is a cough investigated for lung cancer?", "cough"),
+        (
+            "A 62-year-old has weight loss and new-onset diabetes. What does NG12 recommend?",
+            "diabetes",
+        ),
+    ],
+)
+def test_clinical_features_prevent_the_low_information_guard(
+    query: str, expected_feature: str
+) -> None:
+    answerability = assess_query_answerability(query)
+    assert answerability["status"] == "model_assessed"
+    assert expected_feature in answerability["clinical_features"]
+
+
 def test_out_of_scope_query_never_reaches_retrieval_results() -> None:
     engine = RetrievalEngine()
     response = asyncio.run(
@@ -97,6 +165,20 @@ def test_out_of_scope_query_never_reaches_retrieval_results() -> None:
     )
     assert response["mode_used"] == "scope_guard"
     assert response["results"] == []
+
+
+def test_context_free_decision_stops_before_retrieval_scoring() -> None:
+    engine = RetrievalEngine()
+    response = asyncio.run(
+        engine.search(
+            "Should this patient be referred for suspected cancer?",
+            mode="hybrid",
+        )
+    )
+    assert response["mode_used"] == "answerability_guard"
+    assert response["answerability"]["status"] == "insufficient"
+    assert response["results"] == []
+    assert "inferred_anchor_sites" not in response["scope"]
 
 
 def test_citation_pattern_accepts_canonical_evidence_labels() -> None:
@@ -109,11 +191,13 @@ def test_citation_pattern_accepts_canonical_evidence_labels() -> None:
 def test_citation_normalization_handles_observed_model_formatting_variants() -> None:
     answer = (
         "One[\u200bE1], two[**E2**], three[\u202fE3\u202f], "
-        "four[\u200bE4】, and grouped (E5;\u202fE6)."
+        "four[\u200bE4】, grouped (E5;\u202fE6), line ref 【E2†L1-L5】, "
+        "and bullet **E3** – support."
     )
     normalized = normalize_citation_labels(answer)
     assert normalized == (
-        "One[E1], two[E2], three[E3], four[E4], and grouped [E5] [E6]."
+        "One[E1], two[E2], three[E3], four[E4], grouped [E5] [E6], line ref [E2], "
+        "and bullet [E3] – support."
     )
     validation, warnings = validate_citation_labels(normalized, 6)
     assert validation["passed"] is True
@@ -154,6 +238,69 @@ def test_generation_normalizes_and_validates_model_citation_brackets() -> None:
     assert result["citation_validation"]["passed"] is True
 
 
+def test_low_information_decision_skips_the_generation_model() -> None:
+    class ModelMustNotRun:
+        chat_model = "must-not-run"
+
+        async def chat(self, messages: list[dict[str, str]]) -> dict:
+            raise AssertionError("The model must not receive a context-free decision query")
+
+    result = asyncio.run(
+        generate_grounded_answer(
+            "Should this person be referred for suspected cancer?",
+            [
+                {
+                    "citation": "NICE NG12 · Patient support · Page 35",
+                    "authority_priority": "primary",
+                    "content_type": "patient_support",
+                    "text": "Information for people after referral.",
+                }
+            ],
+            ModelMustNotRun(),  # type: ignore[arg-type]
+        )
+    )
+    assert result["model"] is None
+    assert result["answerability"]["status"] == "insufficient"
+    assert result["citation_validation"]["passed"] is True
+    assert result["citation_validation"]["cited_evidence_ranks"] == []
+    assert result["answer"].startswith("Insufficient information")
+
+
+def test_specific_decision_reaches_model_with_missing_fact_contract() -> None:
+    class InspectingModel:
+        chat_model = "fake-model"
+
+        async def chat(self, messages: list[dict[str, str]]) -> dict:
+            system = messages[0]["content"]
+            user = messages[1]["content"]
+            assert "patient attribute not stated" in system
+            assert "Preserve AND/OR structure exactly" in system
+            assert "do not infer them from eligibility criteria" in user
+            return {
+                "message": {
+                    "content": "The criterion depends on age, which was not supplied [E1]."
+                }
+            }
+
+    result = asyncio.run(
+        generate_grounded_answer(
+            "Should someone with unexplained visible haematuria be referred?",
+            [
+                {
+                    "citation": "NICE NG12 · Renal cancer · Recommendation 1.6.6 · Page 23",
+                    "authority_priority": "primary",
+                    "content_type": "recommendation",
+                    "text": "Refer people aged 45 and over with unexplained visible haematuria.",
+                }
+            ],
+            InspectingModel(),  # type: ignore[arg-type]
+        )
+    )
+    assert result["model"] == "fake-model"
+    assert result["answerability"]["status"] == "model_assessed"
+    assert result["citation_validation"]["passed"] is True
+
+
 def test_fastapi_exposes_health_search_metrics_and_frontend() -> None:
     with TestClient(app) as client:
         health = client.get("/api/health")
@@ -176,7 +323,7 @@ def test_fastapi_exposes_health_search_metrics_and_frontend() -> None:
         assert metrics.status_code == 200
         assert metrics.json()["evaluation"]["recommended_mode"] == "hybrid"
         assert metrics.json()["blind_e2e"]["questions"]["total"] == 44
-        assert metrics.json()["blind_e2e"]["evaluation_name"] == "blind_end_to_end_v2"
+        assert metrics.json()["blind_e2e"]["evaluation_name"] == "blind_end_to_end_v4"
         assert (
             metrics.json()["blind_e2e"]["semantic_metrics"]["status"] == "not_run"
         )
@@ -189,6 +336,19 @@ def test_fastapi_exposes_health_search_metrics_and_frontend() -> None:
         assert refusal.status_code == 200
         assert refusal.json()["model"] is None
         assert refusal.json()["retrieval"]["results"] == []
+
+        insufficient = client.post(
+            "/api/answer",
+            json={
+                "query": "Should this patient be referred for suspected cancer?",
+                "mode": "hybrid",
+            },
+        )
+        assert insufficient.status_code == 200
+        assert insufficient.json()["model"] is None
+        assert insufficient.json()["answerability"]["status"] == "insufficient"
+        assert insufficient.json()["retrieval"]["mode_used"] == "answerability_guard"
+        assert insufficient.json()["retrieval"]["results"] == []
 
         frontend = client.get("/")
         assert frontend.status_code == 200
