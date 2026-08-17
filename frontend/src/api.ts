@@ -1,4 +1,4 @@
-import type { AnswerResponse, HealthResponse, MetricsResponse, Mode, SearchResponse } from "./types";
+import type { AnswerResponse, HealthResponse, MetricsResponse, Mode, SearchResponse, VisionAnswerResponse } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -33,6 +33,18 @@ export const api = {
         mode,
         evidence_k: 6,
         cancer_sites: site ? [site] : [],
+      }),
+    }),
+  visionAnswer: (imageBase64: string, mimeType: string, caseContext: string, mode: Mode, site: string) =>
+    request<VisionAnswerResponse>("/api/vision/answer", {
+      method: "POST",
+      body: JSON.stringify({
+        image_base64: imageBase64,
+        mime_type: mimeType,
+        case_context: caseContext,
+        mode,
+        cancer_sites: site ? [site] : [],
+        privacy_confirmed: true,
       }),
     }),
 };

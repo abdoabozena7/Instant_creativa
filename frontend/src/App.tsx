@@ -9,14 +9,18 @@ import {
   Database,
   FileText,
   Gauge,
+  ImagePlus,
   Layers3,
   LoaderCircle,
+  LockKeyhole,
   Search,
   ShieldCheck,
+  ScanLine,
   Sparkles,
+  X,
   XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
 import { Presentation } from "./Presentation";
 import type {
@@ -27,6 +31,8 @@ import type {
   Mode,
   QueryOutcome,
   SearchResponse,
+  VisionMetadata,
+  VisionRefusalResponse,
 } from "./types";
 
 const sites = ["", "lung", "colorectal", "oesophageal", "stomach", "pancreatic", "bladder", "renal"];
@@ -44,12 +50,33 @@ function label(value: string) {
   return value.replaceAll("_", " ");
 }
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Image could not be read"));
+    reader.onerror = () => reject(new Error("Image could not be read"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function fileSize(bytes: number) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 type RequestKind = "answer" | "retrieve";
 type WorkflowStageStatus = "planned" | "complete" | "stopped" | "not_run" | "unknown";
 
 interface RequestDescriptor {
   kind: RequestKind;
   mode: Mode;
+  inputMethod?: "text" | "vision";
+}
+
+interface ImagePreview {
+  url: string;
+  name: string;
+  size: number;
+  caseContext: string;
 }
 
 interface WorkflowStage {
@@ -71,6 +98,11 @@ function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [metrics, setMetrics] = useState<MetricsResponse | null>(null);
   const [request, setRequest] = useState<RequestDescriptor | null>(null);
+  const [privacyConfirmed, setPrivacyConfirmed] = useState(false);
+  const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
+  const [vision, setVision] = useState<VisionMetadata | null>(null);
+  const [visionRefusal, setVisionRefusal] = useState<VisionRefusalResponse | null>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     Promise.all([api.health(), api.metrics()])
@@ -82,7 +114,7 @@ function App() {
   }, []);
 
   const activeRetrieval = answer?.retrieval ?? search;
-  const outcome = answer?.outcome ?? search?.outcome ?? null;
+  const outcome = answer?.outcome ?? search?.outcome ?? visionRefusal?.outcome ?? null;
   const evidenceVisible = outcome === "grounded_answer" || outcome === "retrieval_results";
   const results = evidenceVisible ? (answer?.retrieval.results ?? search?.results ?? []) : [];
 
@@ -97,12 +129,13 @@ function App() {
 
   async function run(withAnswer: boolean) {
     if (query.trim().length < 3) return;
-    setRequest({ kind: withAnswer ? "answer" : "retrieve", mode });
+    setRequest({ kind: withAnswer ? "answer" : "retrieve", mode, inputMethod: "text" });
     setLoading(true);
     setError(null);
     setSelected(null);
     setSearch(null);
     setAnswer(null);
+    setVisionRefusal(null);
     try {
       if (withAnswer) {
         const response = await api.answer(query, mode, site);
@@ -118,6 +151,57 @@ function App() {
       setMetrics(await api.metrics());
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unknown request error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function clearVisionInput() {
+    setImagePreview(null);
+    setVision(null);
+    setVisionRefusal(null);
+    if (imageInput.current) imageInput.current.value = "";
+  }
+
+  async function analyzeImage(file: File) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!privacyConfirmed) {
+      setError("Confirm that the image is de-identified before cloud analysis.");
+      return;
+    }
+    if (!allowedTypes.includes(file.type)) {
+      setError("Use a JPEG, PNG, or WebP export. DICOM and PDF are not supported in this bonus.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setError("The image is larger than the 8 MB limit.");
+      return;
+    }
+
+    const dataUrl = await fileToDataUrl(file);
+    const imageBase64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+    setImagePreview({ url: dataUrl, name: file.name, size: file.size, caseContext: query.trim() });
+    setRequest({ kind: "answer", mode, inputMethod: "vision" });
+    setLoading(true);
+    setError(null);
+    setSelected(null);
+    setSearch(null);
+    setAnswer(null);
+    setVision(null);
+    setVisionRefusal(null);
+    try {
+      const response = await api.visionAnswer(imageBase64, file.type, query.trim(), mode, site);
+      setVision(response.vision);
+      if (response.query) setQuery(response.query);
+      if (!("retrieval" in response)) {
+        setVisionRefusal(response);
+      } else {
+        setAnswer(response);
+        setSelected(response.outcome === "grounded_answer" ? response.retrieval.results[0] ?? null : null);
+        setMetrics(await api.metrics());
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Image analysis failed");
     } finally {
       setLoading(false);
     }
@@ -195,6 +279,27 @@ function App() {
                   aria-label="NG12 question"
                   rows={2}
                 />
+                <input
+                  ref={imageInput}
+                  className="image-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    event.currentTarget.value = "";
+                    if (file) void analyzeImage(file);
+                  }}
+                  aria-label="Upload a de-identified clinical image"
+                />
+                <button
+                  className="vision-button"
+                  onClick={() => imageInput.current?.click()}
+                  disabled={loading || !privacyConfirmed || health?.vision?.available !== true}
+                  title={health?.vision?.available !== true ? "Restart the API with GEMINI_API_KEY to enable image analysis" : "Combine the typed case with a de-identified image"}
+                >
+                  <ImagePlus size={17} />
+                  <span>Case + image</span>
+                </button>
                 <button className="answer-button" onClick={() => void run(true)} disabled={loading}>
                   {loading ? <LoaderCircle className="spin" size={18} /> : <Sparkles size={17} />}
                   Answer with evidence
@@ -214,8 +319,27 @@ function App() {
                 <button className="evidence-only" onClick={() => void run(false)} disabled={loading}>
                   Retrieve only <ChevronRight size={15} />
                 </button>
+                <label className="privacy-confirm">
+                  <input
+                    type="checkbox"
+                    checked={privacyConfirmed}
+                    onChange={(event) => setPrivacyConfirmed(event.target.checked)}
+                  />
+                  <LockKeyhole size={13} />
+                  De-identified · cloud processing
+                </label>
                 <span className="shortcut">Ctrl ↵ to answer</span>
               </div>
+              <AnimatePresence>
+                {imagePreview && (
+                  <VisionTrace
+                    preview={imagePreview}
+                    vision={vision}
+                    loading={loading && request?.inputMethod === "vision"}
+                    onClear={clearVisionInput}
+                  />
+                )}
+              </AnimatePresence>
               <div className="example-row">
                 <span>Try</span>
                 {examples.slice(1).map((example) => (
@@ -223,7 +347,7 @@ function App() {
                 ))}
               </div>
               <AnimatePresence>
-                {request && (loading || error || activeRetrieval) && (
+                {request && (loading || error || activeRetrieval || visionRefusal) && (
                   <RequestWorkflow
                     key="request-workflow"
                     request={request}
@@ -237,6 +361,13 @@ function App() {
             </section>
 
             {error && <div className="error-banner"><CircleAlert size={18} /> {error}</div>}
+
+            {visionRefusal && (
+              <div className="vision-refusal">
+                <ScanLine size={22} />
+                <div><strong>Image stopped before NG12 retrieval</strong><p>{visionRefusal.answer}</p></div>
+              </div>
+            )}
 
             <AnimatePresence>
               {activeRetrieval && (
@@ -279,6 +410,49 @@ function App() {
   );
 }
 
+function VisionTrace({ preview, vision, loading, onClear }: {
+  preview: ImagePreview;
+  vision: VisionMetadata | null;
+  loading: boolean;
+  onClear: () => void;
+}) {
+  return (
+    <motion.section
+      className="vision-trace"
+      initial={{ opacity: 0, y: -8, height: 0 }}
+      animate={{ opacity: 1, y: 0, height: "auto" }}
+      exit={{ opacity: 0, y: -6, height: 0 }}
+      transition={{ duration: 0.24, ease: "easeOut" }}
+      aria-live="polite"
+    >
+      <div className="vision-preview">
+        <img src={preview.url} alt="Uploaded de-identified clinical input" />
+        <span><b>{preview.name}</b><small>{fileSize(preview.size)}</small></span>
+      </div>
+      <div className="vision-copy">
+        <span className="vision-kicker"><ScanLine size={14} /> {loading ? "Vision interpreting" : vision ? label(vision.image_kind) : "Vision input"}</span>
+        {!!preview.caseContext && <small className="vision-case">Case: {preview.caseContext}</small>}
+        {loading ? (
+          <p>Converting visible clinical information into a bounded NG12 query…</p>
+        ) : vision ? (
+          <>
+            <strong>{vision.extracted_query || "No safe NG12 query was extracted."}</strong>
+            <p>{vision.limitations}</p>
+            {!!vision.uncertainties.length && <small>Uncertainty: {vision.uncertainties.join(" · ")}</small>}
+          </>
+        ) : (
+          <p>The image is ready for the optional cloud adapter.</p>
+        )}
+      </div>
+      <span className={`vision-state ${vision?.status ?? "pending"}`}>
+        {loading ? <LoaderCircle className="spin" size={14} /> : vision?.status === "ready" ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
+        {loading ? "Extracting" : vision?.status ?? "Pending"}
+      </span>
+      <button className="vision-clear" onClick={onClear} aria-label="Remove uploaded image"><X size={15} /></button>
+    </motion.section>
+  );
+}
+
 function RequestWorkflow({ request, loading, error, outcome, answer }: {
   request: RequestDescriptor;
   loading: boolean;
@@ -286,9 +460,11 @@ function RequestWorkflow({ request, loading, error, outcome, answer }: {
   outcome: QueryOutcome | null;
   answer: AnswerResponse | null;
 }) {
-  const stageStatus = (stage: "safety" | "scope" | "retrieval" | "ranking" | "evidence" | "generation" | "release"): WorkflowStageStatus => {
+  const stageStatus = (stage: "vision" | "safety" | "scope" | "retrieval" | "ranking" | "evidence" | "generation" | "release"): WorkflowStageStatus => {
     if (loading) return "planned";
     if (error || !outcome) return "unknown";
+    if (stage === "vision") return outcome === "vision_refusal" ? "stopped" : "complete";
+    if (outcome === "vision_refusal") return "not_run";
 
     const stoppedBeforeRetrieval = ["safety_refusal", "scope_refusal", "insufficient_information"].includes(outcome);
     if (stage === "safety") return outcome === "safety_refusal" ? "stopped" : "complete";
@@ -311,6 +487,7 @@ function RequestWorkflow({ request, loading, error, outcome, answer }: {
   };
 
   const stages = [
+    ...(request.inputMethod === "vision" ? [{ id: "vision" as const, label: "Vision extraction" }] : []),
     { id: "safety" as const, label: "Instruction safety" },
     { id: "scope" as const, label: "Scope + specificity" },
     { id: "retrieval" as const, label: `${request.mode.toUpperCase()} retrieval` },
@@ -324,8 +501,8 @@ function RequestWorkflow({ request, loading, error, outcome, answer }: {
 
   const summary = loading
     ? {
-        title: request.kind === "answer" ? "Preparing an evidence-bound response" : "Preparing a traceable evidence set",
-        detail: "These are planned stages while the request is in flight. Observed states appear only after the API responds.",
+        title: request.inputMethod === "vision" ? "Translating image into a bounded query" : request.kind === "answer" ? "Preparing an evidence-bound response" : "Preparing a traceable evidence set",
+        detail: request.inputMethod === "vision" ? "The optional Vision adapter runs first; only a safe in-scope text query can enter the existing pipeline." : "These are planned stages while the request is in flight. Observed states appear only after the API responds.",
       }
     : workflowSummary(outcome, error);
 
@@ -436,6 +613,10 @@ function workflowSummary(outcome: QueryOutcome | null, error: string | null) {
     generation_rejected: {
       title: "Generated response withheld",
       detail: "Generation ran, but the citation release gate rejected the output before it reached the UI.",
+    },
+    vision_refusal: {
+      title: "Stopped at the Vision boundary",
+      detail: "The image did not produce a safe query for one of the seven configured cancer sites, so the NG12 core did not run.",
     },
     no_results: {
       title: "No evidence assembled",

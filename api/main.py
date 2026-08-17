@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
 import json
 import statistics
 import time
@@ -9,6 +11,7 @@ from collections import deque
 from pathlib import Path
 from typing import Literal
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -16,6 +19,12 @@ from pydantic import BaseModel, Field
 
 from src.retrieval.engine import PROJECT_ROOT, RetrievalEngine
 from src.retrieval.generation import generate_grounded_answer
+from src.vision import GeminiVisionClient, VisionExtraction
+
+
+ALLOWED_IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+MAX_IMAGE_BASE64_LENGTH = 11_200_000
 
 
 class SearchRequest(BaseModel):
@@ -28,6 +37,15 @@ class SearchRequest(BaseModel):
 
 class AnswerRequest(SearchRequest):
     evidence_k: int = Field(default=6, ge=1, le=10)
+
+
+class VisionAnswerRequest(BaseModel):
+    image_base64: str = Field(min_length=4, max_length=MAX_IMAGE_BASE64_LENGTH)
+    mime_type: str = Field(min_length=3, max_length=100)
+    mode: Literal["bm25", "dense", "hybrid"] = "hybrid"
+    cancer_sites: list[str] = Field(default_factory=list)
+    case_context: str = Field(default="", max_length=1000)
+    privacy_confirmed: bool = False
 
 
 class RuntimeTelemetry:
@@ -84,6 +102,43 @@ app.add_middleware(
 
 engine = RetrievalEngine()
 telemetry = RuntimeTelemetry()
+vision_client = GeminiVisionClient()
+
+
+def _decode_and_validate_image(image_base64: str, mime_type: str) -> bytes:
+    if mime_type not in ALLOWED_IMAGE_MIME_TYPES:
+        raise HTTPException(status_code=415, detail="Only JPEG, PNG, and WebP images are supported.")
+    try:
+        image_bytes = base64.b64decode(image_base64, validate=True)
+    except (binascii.Error, ValueError) as error:
+        raise HTTPException(status_code=400, detail="Image data is not valid base64.") from error
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="The uploaded image is empty.")
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="Image exceeds the 8 MB limit.")
+    signatures = {
+        "image/jpeg": image_bytes.startswith(b"\xff\xd8\xff"),
+        "image/png": image_bytes.startswith(b"\x89PNG\r\n\x1a\n"),
+        "image/webp": image_bytes.startswith(b"RIFF") and image_bytes[8:12] == b"WEBP",
+    }
+    if not signatures[mime_type]:
+        raise HTTPException(
+            status_code=400,
+            detail="Image bytes do not match the declared media type.",
+        )
+    return image_bytes
+
+
+def _vision_public_result(extraction: VisionExtraction, model: str) -> dict:
+    return {
+        "status": "ready" if extraction.can_handoff else "refused",
+        "model": model,
+        **extraction.model_dump(),
+        "limitations": (
+            "Radiology images are converted to a neutral, unverified description; "
+            "this feature does not diagnose or replace a radiologist."
+        ),
+    }
 
 
 @app.get("/api/health")
@@ -96,6 +151,12 @@ async def health() -> dict:
         "embedding_model": engine.ollama.embedding_model,
         "chat_model": engine.ollama.chat_model,
         "ollama": ollama,
+        "vision": {
+            "available": vision_client.configured,
+            "model": vision_client.model,
+            "accepted_mime_types": sorted(ALLOWED_IMAGE_MIME_TYPES),
+            "max_image_bytes": MAX_IMAGE_BYTES,
+        },
     }
 
 
@@ -248,6 +309,77 @@ async def answer(request: AnswerRequest) -> dict:
         "safety_note": (
             "Evidence lookup only. This demo does not diagnose or replace clinical judgement."
         ),
+    }
+
+
+@app.post("/api/vision/answer")
+async def vision_answer(request: VisionAnswerRequest) -> dict:
+    """Translate one de-identified image, then reuse the unchanged text answer path."""
+
+    started = time.perf_counter()
+    if not request.privacy_confirmed:
+        raise HTTPException(
+            status_code=400,
+            detail="Confirm that the image is de-identified before cloud analysis.",
+        )
+    _decode_and_validate_image(request.image_base64, request.mime_type)
+    if not vision_client.configured:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Image analysis is not configured. Set GEMINI_API_KEY; the text-only "
+                "NG12 core is still available."
+            ),
+        )
+    try:
+        extraction = await vision_client.analyze(
+            image_base64=request.image_base64,
+            mime_type=request.mime_type,
+            case_context=request.case_context,
+        )
+    except (ValueError, json.JSONDecodeError) as error:
+        raise HTTPException(status_code=502, detail=f"Vision response was invalid: {error}") from error
+    except httpx.TimeoutException as error:
+        raise HTTPException(status_code=503, detail="Vision service timed out.") from error
+    except httpx.HTTPStatusError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Vision service rejected the request with status {error.response.status_code}.",
+        ) from error
+    except (RuntimeError, httpx.HTTPError) as error:
+        raise HTTPException(status_code=503, detail=f"Vision service unavailable: {error}") from error
+
+    vision = _vision_public_result(extraction, vision_client.model)
+    if not extraction.can_handoff:
+        return {
+            "query": extraction.extracted_query,
+            "outcome": "vision_refusal",
+            "answer": (
+                "The image could not be mapped safely to the configured NG12 scope. "
+                "Upload a de-identified report or image related to lung, colorectal, "
+                "oesophageal, stomach, pancreatic, bladder, or renal cancer."
+            ),
+            "model": None,
+            "vision": vision,
+            "warnings": ["The existing retrieval and generation pipeline was not called."],
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety_note": "Image understanding is not a diagnosis or radiology report.",
+        }
+
+    core_response = await answer(
+        AnswerRequest(
+            query=extraction.extracted_query,
+            mode=request.mode,
+            evidence_k=6,
+            cancer_sites=request.cancer_sites or extraction.cancer_sites,
+        )
+    )
+    return {
+        **core_response,
+        "vision": vision,
+        "input_method": "vision_adapter",
+        "case_context": request.case_context,
+        "latency_ms": round((time.perf_counter() - started) * 1000, 2),
     }
 
 

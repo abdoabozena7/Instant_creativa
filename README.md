@@ -152,6 +152,22 @@ $env:OLLAMA_EMBED_MODEL = "nomic-embed-text:latest"
 $env:OLLAMA_CHAT_MODEL = "gpt-oss:120b-cloud"
 ```
 
+The optional **Case + image** bonus uses a separate Gemini Vision adapter. It never changes
+the text-only NG12 core and remains disabled when no key is configured. For local demo use,
+provide the key only through the process environment:
+
+```powershell
+$env:GEMINI_API_KEY = "your-local-key"
+$env:GEMINI_VISION_MODEL = "gemini-3.5-flash-lite"
+```
+
+Only de-identified JPEG, PNG, or WebP images up to 8 MB should be uploaded. Type the case
+context first, then choose **Case + image**. The adapter combines that context with a bounded
+text extraction from the image and sends the resulting query through the existing safety,
+scope, retrieval, generation, and citation gates. Raw radiology images receive a neutral,
+unverified visual description, not a diagnosis. DICOM and PDF inputs are intentionally not
+accepted in this bonus.
+
 Ensure Ollama is running and the models are available:
 
 ```powershell
@@ -212,6 +228,7 @@ FastAPI endpoints:
 - `GET /api/health` — corpus, index, Ollama, and model readiness.
 - `POST /api/search` — ranked evidence without generation.
 - `POST /api/answer` — retrieval followed by citation-constrained `gpt-oss:120b-cloud` generation.
+- `POST /api/vision/answer` — optional de-identified case + image adapter followed by the unchanged answer path.
 - `GET /api/metrics` — corpus, evaluation, reconciliation, and runtime telemetry.
 - `GET /api/chunks/{chunk_id}` — direct stable-chunk inspection.
 - `GET /docs` — interactive OpenAPI documentation.

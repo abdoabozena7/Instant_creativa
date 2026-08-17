@@ -6,7 +6,20 @@ export type QueryOutcome =
   | "scope_refusal"
   | "insufficient_information"
   | "generation_rejected"
+  | "vision_refusal"
   | "no_results";
+
+export interface VisionMetadata {
+  status: "ready" | "refused";
+  model: string;
+  image_kind: "clinical_document" | "radiology_image" | "unsupported";
+  cancer_sites: string[];
+  extracted_query: string;
+  observed_text: string;
+  observed_findings: string[];
+  uncertainties: string[];
+  limitations: string;
+}
 
 export interface QuerySafety {
   status: "allowed" | "blocked";
@@ -82,7 +95,24 @@ export interface AnswerResponse {
   warnings: string[];
   safety_note?: string;
   ollama_metrics?: Record<string, number>;
+  vision?: VisionMetadata;
+  input_method?: "vision_adapter";
+  case_context?: string;
 }
+
+export interface VisionRefusalResponse {
+  query: string;
+  outcome: "vision_refusal";
+  answer: string;
+  model: null;
+  vision: VisionMetadata;
+  warnings: string[];
+  latency_ms: number;
+  safety_note: string;
+}
+
+export type VisionAnswerSuccessResponse = AnswerResponse & { vision: VisionMetadata };
+export type VisionAnswerResponse = VisionAnswerSuccessResponse | VisionRefusalResponse;
 
 export interface HealthResponse {
   status: string;
@@ -94,6 +124,12 @@ export interface HealthResponse {
     available: boolean;
     embedding_model_ready?: boolean;
     chat_model_ready?: boolean;
+  };
+  vision?: {
+    available: boolean;
+    model: string;
+    accepted_mime_types: string[];
+    max_image_bytes: number;
   };
 }
 
