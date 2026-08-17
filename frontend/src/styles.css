@@ -62,6 +62,29 @@ button { color: inherit; }
 .example-row button { border: 0; background: none; color: #9ab5b0; padding: 0 9px; border-left: 1px solid rgba(255,255,255,.12); cursor: pointer; max-width: 340px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .example-row button:hover { color: white; }
 
+.request-workflow { position: relative; z-index: 1; overflow: hidden; border: 1px solid rgba(215,235,230,.22); background: rgba(4,19,18,.38); border-radius: 3px; }
+.workflow-summary { display: grid; grid-template-columns: 20px minmax(0,1fr) auto; gap: 11px; align-items: start; padding: 16px 18px 12px; }
+.workflow-summary-icon { display: grid; place-items: center; color: #59d8c5; margin-top: 1px; }
+.workflow-summary strong { display: block; color: #f6f7f2; font-size: 12px; font-weight: 700; }
+.workflow-summary p { margin: 5px 0 0; color: #9db7b2; font-size: 10px; line-height: 1.5; }
+.workflow-state { align-self: start; padding: 3px 6px; border: 1px solid rgba(89,216,197,.3); color: #79d8ca; font: 650 8px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.workflow-stages { display: flex; flex-wrap: wrap; gap: 0; margin: 0; padding: 0 18px 16px; list-style: none; }
+.workflow-stages li { position: relative; flex: 1 1 112px; display: grid; grid-template-columns: 15px minmax(0,1fr); grid-template-rows: auto auto; column-gap: 5px; align-items: center; min-width: 112px; padding: 6px 14px 3px 0; color: #d7e6e2; font-size: 9px; white-space: nowrap; }
+.workflow-stages li:not(:last-child)::after { content: ""; position: absolute; right: 4px; top: 14px; width: 6px; height: 1px; background: rgba(196,218,213,.26); }
+.workflow-stage-icon { grid-row: 1 / 3; width: 16px; height: 16px; display: grid; place-items: center; color: #52d2be; }
+.workflow-stage-icon > span { width: 14px; height: 14px; border: 1px solid currentColor; border-radius: 50%; }
+.workflow-stages small { grid-column: 2; margin-top: 2px; color: #73928c; font: 7px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.workflow-stages li.planned .workflow-stage-icon { color: #89a6a1; }
+.workflow-stages li.planned .workflow-stage-icon > span { border-style: dashed; animation: workflow-pulse 1.4s ease-in-out infinite; }
+.workflow-stages li.stopped { color: #f1c0ae; }
+.workflow-stages li.stopped .workflow-stage-icon, .workflow-stages li.stopped small { color: #e48b6b; }
+.workflow-stages li.not_run, .workflow-stages li.unknown { color: #718783; }
+.workflow-stages li.not_run .workflow-stage-icon, .workflow-stages li.unknown .workflow-stage-icon { color: #58706b; }
+.workflow-stages li.not_run .workflow-stage-icon > span, .workflow-stages li.unknown .workflow-stage-icon > span { border-color: currentColor; }
+.workflow-stages li.sequence-hidden { opacity: 0; transform: translateX(-7px); }
+.workflow-stages li.sequence-visible { opacity: 1; transform: translateX(0); transition: opacity .24s ease-out, transform .24s ease-out; }
+@keyframes workflow-pulse { 50% { opacity: .35; transform: scale(.84); } }
+
 .error-banner { margin: 18px 0; padding: 13px 16px; background: #f3ded9; color: #7d2d23; display: flex; align-items: center; gap: 9px; font-size: 13px; }
 .result-zone { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 28px; margin-top: 32px; align-items: start; }
 .result-zone.guard-only { grid-template-columns: minmax(0, 1fr); }
@@ -322,6 +345,7 @@ button { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .story-scroller { scroll-behavior: auto; }
   .orbit-ring, .question-signal i, .evaluation-arrow { animation: none !important; }
+  .workflow-stages li { transition: none !important; }
 }
 
 @media (max-width: 1050px) {
@@ -357,6 +381,11 @@ button { color: inherit; }
   .answer-button { grid-column: 1/3; min-height: 45px; justify-content: center; }
   .query-controls { flex-wrap: wrap; }
   .shortcut, .example-row { display: none; }
+  .workflow-summary { grid-template-columns: 20px minmax(0,1fr); padding: 14px 14px 10px; }
+  .workflow-state { display: none; }
+  .workflow-stages { display: grid; grid-template-columns: 1fr 1fr; padding: 0 14px 14px; }
+  .workflow-stages li { min-width: 0; padding-right: 8px; }
+  .workflow-stages li::after { display: none; }
   .answer-audit { flex-wrap: wrap; }
   .evidence-row { grid-template-columns: 35px 1fr auto; }
   .score { display: none; }

@@ -44,6 +44,20 @@ function label(value: string) {
   return value.replaceAll("_", " ");
 }
 
+type RequestKind = "answer" | "retrieve";
+type WorkflowStageStatus = "planned" | "complete" | "stopped" | "not_run" | "unknown";
+
+interface RequestDescriptor {
+  kind: RequestKind;
+  mode: Mode;
+}
+
+interface WorkflowStage {
+  id: string;
+  label: string;
+  status: WorkflowStageStatus;
+}
+
 function App() {
   const [view, setView] = useState<"story" | "search" | "metrics">("story");
   const [query, setQuery] = useState(examples[0]);
@@ -56,6 +70,7 @@ function App() {
   const [selected, setSelected] = useState<EvidenceResult | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [metrics, setMetrics] = useState<MetricsResponse | null>(null);
+  const [request, setRequest] = useState<RequestDescriptor | null>(null);
 
   useEffect(() => {
     Promise.all([api.health(), api.metrics()])
@@ -82,9 +97,12 @@ function App() {
 
   async function run(withAnswer: boolean) {
     if (query.trim().length < 3) return;
+    setRequest({ kind: withAnswer ? "answer" : "retrieve", mode });
     setLoading(true);
     setError(null);
     setSelected(null);
+    setSearch(null);
+    setAnswer(null);
     try {
       if (withAnswer) {
         const response = await api.answer(query, mode, site);
@@ -204,6 +222,18 @@ function App() {
                   <button key={example} onClick={() => setQuery(example)}>{example}</button>
                 ))}
               </div>
+              <AnimatePresence>
+                {request && (loading || error || activeRetrieval) && (
+                  <RequestWorkflow
+                    key="request-workflow"
+                    request={request}
+                    loading={loading}
+                    error={error}
+                    outcome={outcome}
+                    answer={answer}
+                  />
+                )}
+              </AnimatePresence>
             </section>
 
             {error && <div className="error-banner"><CircleAlert size={18} /> {error}</div>}
@@ -247,6 +277,175 @@ function App() {
       </AnimatePresence>
     </div>
   );
+}
+
+function RequestWorkflow({ request, loading, error, outcome, answer }: {
+  request: RequestDescriptor;
+  loading: boolean;
+  error: string | null;
+  outcome: QueryOutcome | null;
+  answer: AnswerResponse | null;
+}) {
+  const stageStatus = (stage: "safety" | "scope" | "retrieval" | "ranking" | "evidence" | "generation" | "release"): WorkflowStageStatus => {
+    if (loading) return "planned";
+    if (error || !outcome) return "unknown";
+
+    const stoppedBeforeRetrieval = ["safety_refusal", "scope_refusal", "insufficient_information"].includes(outcome);
+    if (stage === "safety") return outcome === "safety_refusal" ? "stopped" : "complete";
+    if (stage === "scope") {
+      if (outcome === "safety_refusal") return "not_run";
+      return outcome === "scope_refusal" || outcome === "insufficient_information" ? "stopped" : "complete";
+    }
+    if (stage === "retrieval" || stage === "ranking") return stoppedBeforeRetrieval ? "not_run" : "complete";
+    if (stage === "evidence") {
+      if (stoppedBeforeRetrieval) return "not_run";
+      return outcome === "no_results" ? "stopped" : "complete";
+    }
+    if (stage === "generation") {
+      if (outcome === "grounded_answer" || outcome === "generation_rejected") return "complete";
+      return "not_run";
+    }
+    if (outcome === "grounded_answer" && answer?.citation_validation.passed) return "complete";
+    if (outcome === "generation_rejected") return "stopped";
+    return "not_run";
+  };
+
+  const stages = [
+    { id: "safety" as const, label: "Instruction safety" },
+    { id: "scope" as const, label: "Scope + specificity" },
+    { id: "retrieval" as const, label: `${request.mode.toUpperCase()} retrieval` },
+    { id: "ranking" as const, label: "Authority ranking" },
+    { id: "evidence" as const, label: "Evidence assembly" },
+    ...(request.kind === "answer" ? [
+      { id: "generation" as const, label: "Grounded generation" },
+      { id: "release" as const, label: "Citation release gate" },
+    ] : []),
+  ].map((stage) => ({ ...stage, status: stageStatus(stage.id) }));
+
+  const summary = loading
+    ? {
+        title: request.kind === "answer" ? "Preparing an evidence-bound response" : "Preparing a traceable evidence set",
+        detail: "These are planned stages while the request is in flight. Observed states appear only after the API responds.",
+      }
+    : workflowSummary(outcome, error);
+
+  return (
+    <motion.section
+      className={`request-workflow ${loading ? "in-flight" : "observed"}`}
+      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+      animate={{ opacity: 1, height: "auto", marginTop: 20 }}
+      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      aria-live="polite"
+      aria-busy={loading}
+    >
+      <div className="workflow-summary">
+        <span className="workflow-summary-icon" aria-hidden="true">
+          {loading ? <LoaderCircle className="spin" size={18} /> : outcome === "grounded_answer" || outcome === "retrieval_results" ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}
+        </span>
+        <div>
+          <strong>{summary.title}</strong>
+          <p>{summary.detail}</p>
+        </div>
+        <span className="workflow-state">{loading ? "In flight" : "Observed"}</span>
+      </div>
+      <WorkflowStageList
+        key={`${loading ? "planned" : outcome ?? "unknown"}-${request.kind}-${request.mode}`}
+        stages={stages}
+        cadenceMs={loading ? 330 : 160}
+      />
+    </motion.section>
+  );
+}
+
+function WorkflowStageList({ stages, cadenceMs }: { stages: WorkflowStage[]; cadenceMs: number }) {
+  const [visibleCount, setVisibleCount] = useState(1);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisibleCount(stages.length);
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setVisibleCount((current) => {
+        if (current >= stages.length) {
+          window.clearInterval(timer);
+          return current;
+        }
+        return current + 1;
+      });
+    }, cadenceMs);
+    return () => window.clearInterval(timer);
+  }, [cadenceMs, stages.length]);
+
+  return (
+    <ol className="workflow-stages" aria-label="Request execution workflow">
+      {stages.map((stage, index) => (
+        <li
+          key={stage.id}
+          className={`${stage.status} ${index < visibleCount ? "sequence-visible" : "sequence-hidden"}`}
+          title={workflowStatusLabel(stage.status)}
+        >
+          <span className="workflow-stage-icon" aria-hidden="true">
+            {stage.status === "complete" ? <CheckCircle2 size={16} /> : stage.status === "stopped" ? <XCircle size={16} /> : <span />}
+          </span>
+          <span>{stage.label}</span>
+          <small>{workflowStatusLabel(stage.status)}</small>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function workflowStatusLabel(status: WorkflowStageStatus) {
+  return {
+    planned: "Planned",
+    complete: "Complete",
+    stopped: "Stopped",
+    not_run: "Not run",
+    unknown: "Unconfirmed",
+  }[status];
+}
+
+function workflowSummary(outcome: QueryOutcome | null, error: string | null) {
+  if (error) return {
+    title: "Request status unavailable",
+    detail: "The API request failed, so no execution stage is reported as complete.",
+  };
+  const summaries: Record<QueryOutcome, { title: string; detail: string }> = {
+    grounded_answer: {
+      title: "Evidence-bound response released",
+      detail: "The answer passed the deterministic citation gate; every displayed label resolves to ranked evidence.",
+    },
+    retrieval_results: {
+      title: "Evidence retrieval complete",
+      detail: "The ranked passages are ready. Open any result to inspect its full text, provenance, and score trace.",
+    },
+    safety_refusal: {
+      title: "Stopped at instruction safety",
+      detail: "The request was blocked before scope analysis, retrieval, or model generation.",
+    },
+    scope_refusal: {
+      title: "Stopped at the scope guard",
+      detail: "The request was outside the configured NG12 scope, so retrieval and generation did not run.",
+    },
+    insufficient_information: {
+      title: "Stopped before retrieval",
+      detail: "The question needs a specific clinical feature before evidence can be selected safely.",
+    },
+    generation_rejected: {
+      title: "Generated response withheld",
+      detail: "Generation ran, but the citation release gate rejected the output before it reached the UI.",
+    },
+    no_results: {
+      title: "No evidence assembled",
+      detail: "Retrieval and ranking completed, but no passage matched the query and active filters.",
+    },
+  };
+  return outcome ? summaries[outcome] : {
+    title: "Request status unavailable",
+    detail: "No observed execution result was returned.",
+  };
 }
 
 function OutcomePanel({ outcome, answer, retrieval }: {
