@@ -15,6 +15,7 @@ ARCHITECTURE_FILES = [
     "src/retrieval/engine.py",
     "src/retrieval/generation.py",
     "src/retrieval/ollama_client.py",
+    "src/retrieval/query_safety.py",
     "src/retrieval/scope_guard.py",
     "data/parsed/chunks.jsonl",
     "data/index/index_manifest.json",
@@ -54,7 +55,7 @@ def main() -> int:
         "frozen_at": datetime.now(timezone.utc).isoformat(),
         "architecture_sha256": aggregate.hexdigest(),
         "policy": (
-            "No retriever, index, scope-guard, prompt, embedding model, or chat-model changes "
+            "No retriever, index, query-safety guard, scope guard, prompt, embedding model, or chat-model changes "
             "are permitted while this blind run is being scored. Any later change creates a new freeze."
         ),
         "retrieval_mode": "hybrid",

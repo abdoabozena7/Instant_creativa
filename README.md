@@ -60,6 +60,7 @@ data/
     evaluation_freeze_v2.json
     evaluation_freeze_v4.json
     evaluation_freeze_v6.json
+    evaluation_freeze_v8.json
     blind_questions_v1.jsonl
     blind_gold_v1.jsonl
     blind_run_v1.jsonl
@@ -70,6 +71,8 @@ data/
     blind_e2e_report_v4.json
     blind_run_v6.jsonl
     blind_e2e_report_v6.json
+    blind_run_v8.jsonl
+    blind_e2e_report_v8.json
     adjudication_packets_v1.jsonl
     adjudication_template_v1.csv
     multi_judge_manifest_v1.json
@@ -264,7 +267,7 @@ All 122 current records remain exact, unsplit logical units. Supporting records 
 
 ## Validation
 
-The automated suite currently has 85 passing tests. It checks page completeness and provenance, footer removal, exact scoped recommendation IDs, excluded sites, recommendation boundaries, multi-site symptom relationships, safety-netting and definitions, record/chunk identity, canonical authority, audit-only historical recommendations, reciprocal evidence links, token limits, output/report counts, embedding dimensions and normalization, scope and minimum-answerability guards, vague-assessment negatives, concrete-feature positive controls, BM25/hybrid regression behavior, citation normalization, primary-source ranking, FastAPI endpoints, metrics, production frontend serving, frozen-architecture integrity, blind/gold separation, balanced case coverage, preservation of historical failures, and isolated optional evaluation tooling.
+The automated suite currently has 130 passing tests. It checks page completeness and provenance, footer removal, exact scoped recommendation IDs, excluded sites, recommendation boundaries, multi-site symptom relationships, safety-netting and definitions, record/chunk identity, canonical authority, audit-only historical recommendations, reciprocal evidence links, token limits, output/report counts, embedding dimensions and normalization, scope, minimum-answerability and instruction-safety guards, English/Arabic adversarial negatives, benign safety positive controls, fail-closed generation, BM25/hybrid regression behavior, citation normalization, primary-source ranking, FastAPI endpoints, metrics, production frontend serving, frozen-architecture integrity, blind/gold separation, balanced case coverage, preservation of historical failures, and isolated optional evaluation tooling.
 
 Known limitations are explicit rather than hidden:
 
@@ -327,7 +330,11 @@ Another rehearsal question—“A patient has some stomach issues, is this serio
 
 The full 44-case v6 regression run preserves scope 100%, correct refusal 100%, false refusal 0%, 37 retrieval-scored cases, Recall@1 75.68%, Recall@5 97.30%, MRR@6 86.04%, current-guideline accuracy 100%, and citation-label validity 100%. End-to-end latency was 4.19 s P50 and 9.47 s P95. Semantic judging and human review were not run; v6 is a regression run, not a new independent blind evaluation.
 
-The dashboard and `/api/metrics` expose v6 as the current deterministic result. V1, v2, and v4 remain historical evidence and are never overwritten or relabeled. Optional semantic tooling is outside setup/runtime; future behavior changes require a new versioned freeze/run/report.
+Prompt-injection rehearsal then exposed a separate control-flow defect: explicit requests to override instructions, bypass retrieved evidence, fabricate citations, or reveal hidden configuration reached retrieval before the model refused or produced an invalidly cited response. V8 adds a Unicode-normalized deterministic instruction-safety guard before scope, embedding, retrieval, and generation. It recognizes control-plane intent rather than memorizing the two screenshots, covers English and Arabic, and is protected by 30 adversarial variants plus 11 benign clinical/methodology controls. Guarded responses have an explicit `safety_refusal` outcome, `model=null`, zero evidence, and citation validation marked not applicable. Independently, any generated output without valid in-range evidence labels is withheld rather than displayed with a warning.
+
+The full 44-case v8 regression preserves scope 100%, correct refusal 100%, false refusal 0%, 37 retrieval-scored cases, Recall@1 75.68%, Recall@5 97.30%, MRR@6 86.04%, current-guideline accuracy 100%, and citation-label validity 100%. End-to-end latency was 4.76 s P50 and 9.22 s P95. Semantic judging and human review were not run; v8 is a regression run, not a new independent blind evaluation.
+
+The dashboard and `/api/metrics` expose v8 as the current deterministic result. V1, v2, v4, and v6 remain historical evidence and are never overwritten or relabeled. Optional semantic tooling is outside setup/runtime; future behavior changes require a new versioned freeze/run/report.
 
 The Retrieval workspace presents ranked results as explicit clickable evidence rows. Selecting an `[E#]` citation or row opens the full source passage, current/supporting status, page-level provenance, stable chunk ID, and score explanation in one inspector; mobile selection scrolls to the same inspector. A reranker was not added: the independent development benchmark already gives hybrid 100% Recall@1 and MRR, so there is no measured headroom, while using the historical blind set to tune a reranker would invalidate its role as evaluation evidence.
 
@@ -339,4 +346,4 @@ Core architecture development is closed after the architecture and fresh-clone a
 
 Allowed changes from this point are only localized fixes for bugs reproduced during submission rehearsal or Instructor Defense rehearsal. Every such fix must retain the same regression discipline and create a new evaluation identity when it changes frozen architecture behavior.
 
-The clean-clone path and live evidence flow have passed. Architecture development closed again after the measured v6 rehearsal fix; further changes still require a reproduced bug and a new versioned regression run.
+The clean-clone path and live evidence flow have passed. Architecture development closed again after the measured v8 prompt-injection fix; further changes still require a reproduced bug and a new versioned regression run.

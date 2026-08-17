@@ -30,9 +30,11 @@ The guarantee is made before ranking and prompting. Historical recommendation re
 
 ## 5. Why is scope classification deterministic rather than an LLM call?
 
-The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching. The full v6 regression run measured 100% scope, 100% correct refusal, and 0% false refusal.
+The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching. The full v8 regression run measured 100% scope, 100% correct refusal, and 0% false refusal.
 
 **Likely follow-up:** What happens with “Should this patient be referred?” or “The patient has stomach issues—is this serious?” A separate minimum-answerability check returns “insufficient information” before retrieval or generation. It requires a concrete symptom/sign, not merely a site, age qualifier, or vague word. It does not memorize those sentences or encode NG12 eligibility rules; questions containing pain, vomiting, dysphagia, haematemesis, a mass, blood, or another concrete feature continue to grounded generation.
+
+**Likely follow-up:** What prevents prompt injection? A separate Unicode-normalized instruction-safety guard runs before scope and answerability. It blocks explicit attempts to override system/developer instructions, bypass supplied evidence, fabricate citations or patient facts, manipulate 2015/2026 authority, force validation, or extract secrets. It is deterministic and bilingual for the demonstrated English/Arabic attacks. Thirty adversarial variants and eleven benign controls protect both attack detection and false-refusal behavior. A blocked request produces no embedding, retrieval, model call, evidence list, or citation status. If generation independently returns an uncited or out-of-range response, that output is withheld.
 
 ## 6. What does “section-aware chunking” actually preserve?
 

@@ -114,13 +114,19 @@ async def execute_questions(
         retrieval = await engine.search(
             case["question"], mode="hybrid", top_k=evidence_k
         )
-        if retrieval["scope"]["status"] == "out_of_scope":
+        if retrieval["outcome"] in {"scope_refusal", "safety_refusal"}:
+            guard = (
+                retrieval["scope"]
+                if retrieval["outcome"] == "scope_refusal"
+                else retrieval["safety"]
+            )
             generation = {
-                "answer": retrieval["scope"]["message"],
+                "answer": guard["message"],
                 "model": None,
                 "latency_ms": 0.0,
                 "citation_validation": {
-                    "passed": True,
+                    "applicable": False,
+                    "passed": None,
                     "cited_evidence_ranks": [],
                     "invalid_evidence_ranks": [],
                     "available_evidence_count": 0,
@@ -226,7 +232,10 @@ def score_and_prepare_adjudication(
         scope_correct = actual_scope == expected_scope
         scope_checks.append(scope_correct)
         expected_refusal = gold["expected_behavior"] == "refuse"
-        actual_refusal = actual_scope == "out_of_scope"
+        actual_refusal = retrieval.get("outcome") in {
+            "scope_refusal",
+            "safety_refusal",
+        }
         if expected_refusal:
             correct_refusals.append(actual_refusal)
         else:
@@ -257,8 +266,9 @@ def score_and_prepare_adjudication(
             )
             current_checks.append(current_correct)
 
+        citation_applicable = generation["citation_validation"].get("applicable", True)
         citation_valid = bool(generation["citation_validation"]["passed"])
-        if not actual_refusal:
+        if not actual_refusal and citation_applicable:
             citation_checks.append(citation_valid)
             generation_latencies.append(float(generation["latency_ms"]))
         total_latencies.append(float(row["total_latency_ms"]))
@@ -270,7 +280,7 @@ def score_and_prepare_adjudication(
             "scope_correct": scope_correct,
             "retrieval_rank": rank,
             "current_guideline_correct": current_correct,
-            "citation_labels_valid": citation_valid,
+            "citation_labels_valid": citation_valid if citation_applicable else None,
             "top_chunk_id": (
                 retrieval["results"][0]["chunk_id"] if retrieval["results"] else None
             ),
@@ -384,7 +394,7 @@ def score_and_prepare_adjudication(
             "citation_labels": [
                 item
                 for item in diagnostics
-                if not item["citation_labels_valid"]
+                if item["citation_labels_valid"] is False
                 and item["expected_behavior"] != "refuse"
             ],
         },

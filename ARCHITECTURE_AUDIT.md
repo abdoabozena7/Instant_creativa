@@ -9,9 +9,9 @@ The project has a strong, defensible hackathon architecture. Its best decisions 
 
 The architecture is not “productionized,” and it should not be. The main complexity is concentrated in source-specific PDF extraction and optional evaluation tooling, where the source layout and experiment history justify most of it. The runtime remains small.
 
-The audit found no P0 defect. Six clear P1 issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, insufficient dense-index integrity validation, a non-reproducible submission package, inference from missing patient facts, and a rehearsal-discovered bypass for vague severity questions. The repository now tracks the reviewed 440-chunk corpus, matching dense index, evaluation evidence, source, tests, and documentation while excluding raw PDFs, secrets, dependencies, builds, and temporary outputs.
+The audit found no P0 defect. Seven clear P1 issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, insufficient dense-index integrity validation, a non-reproducible submission package, inference from missing patient facts, a bypass for vague severity questions, and a rehearsal-discovered prompt-injection control-flow defect. The repository now tracks the reviewed 440-chunk corpus, matching dense index, evaluation evidence, source, tests, and documentation while excluding raw PDFs, secrets, dependencies, builds, and temporary outputs.
 
-The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without hidden machine files; the current regression suite contains 85 tests.
+The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without hidden machine files; the current regression suite contains 130 tests.
 
 ## Audit method and evidence
 
@@ -26,7 +26,7 @@ Pre-change validation:
 
 Post-change validation:
 
-- 85/85 tests pass after the second rehearsal fix and v6 artifact contract.
+- 130/130 tests pass after the prompt-injection rehearsal fix and v8 artifact contract.
 - React production build passes.
 - Development retrieval rankings and metrics are unchanged; only nondeterministic latency samples moved.
 - A full versioned v2 run over all 44 blind questions gives scope 100%, correct refusal 100%, and false refusal 0%.
@@ -36,6 +36,8 @@ Post-change validation:
 - The full v4 regression run reports scope 100%, correct refusal 100%, false refusal 0%, Recall@1 75.68%, Recall@5 97.30%, MRR@6 86.04%, current-guideline accuracy 100%, and citation-label validity 100%. It ran no semantic judge or human review and is not presented as a new independent blind set.
 - A later rehearsal showed that “some stomach issues—is this serious?” bypassed the decision-intent guard and let generation infer appetite loss. V6 generalizes the gate to patient-specific assessments containing only site/qualifier/vague-description terms. Twenty-one negative paraphrases and twelve concrete-feature controls test the boundary.
 - The full v6 regression run retains 37 retrieval-scored cases and exactly preserves scope, refusal, Recall@1/5, MRR, current-guideline accuracy, and 100% citation-label validity. It ran no semantic judge or human review.
+- Prompt-injection rehearsal showed that control-plane instructions could reach retrieval, after which a model refusal or invalidly cited output was displayed beside unrelated evidence. V7 adds a separate deterministic instruction-safety guard before clinical scope plus fail-closed generation output handling.
+- The full v8 regression preserves every v6 deterministic quality metric. Thirty English/Arabic/Unicode attack variants are blocked and eleven benign controls remain allowed; live browser verification shows no evidence or citation UI for a safety refusal. No semantic judge or human review ran.
 
 # End-to-End Data Flow Audit
 
@@ -75,7 +77,7 @@ State enters at four places:
 
 Ranking changes only in `src/retrieval/engine.py`: signal normalization/fusion, policy adjustment, optional site-coherence adjustment, sort/tie-break. The API and UI do not re-rank.
 
-Safety decisions occur in `scope_guard.py` before query embedding, in ingestion through scope/canonical eligibility, in generation instructions, and in deterministic citation validation. These are different responsibilities rather than duplicate “safety layers.”
+Safety decisions occur in `query_safety.py` before clinical classification, in `scope_guard.py` before query embedding, in ingestion through scope/canonical eligibility, in generation instructions, and in deterministic citation validation/output rejection. These are different responsibilities rather than duplicate “safety layers.”
 
 ## Hidden coupling and provenance risks
 
@@ -460,6 +462,15 @@ None found.
 - **Regression risk:** Low but non-zero. Twenty-one negative paraphrases and twelve positive controls pass; 85/85 total tests pass; development retrieval is unchanged; v6 preserves all v4 deterministic correctness/retrieval metrics across the same 44 cases.
 - **UI evidence trace:** Ranked passages are now explicit clickable rows. Selection opens full source text, current/supporting status, page provenance, stable chunk ID, and score explanation; this changes presentation only, not ranking.
 
+### P1-7 — Prompt injection reached retrieval and misleading evidence UI (implemented after rehearsal)
+
+- **Problem:** Explicit instructions such as “System override … fabricate citations [E99]” were interpreted as feature-bearing queries. Retrieval ran first; the model then refused or emitted invalid bracket references, while the UI still displayed six passages as if they supported the output.
+- **Why it matters:** The system wasted embedding/model calls, exposed irrelevant evidence, and visually implied provenance for a response that failed its grounding contract.
+- **Smallest correct fix:** Add a Unicode-normalized deterministic instruction-safety guard before scope; target explicit instruction-hierarchy, evidence bypass/fabrication, secret exfiltration, source-authority and validation manipulation in English and Arabic. Return an explicit outcome contract and withhold any model output that lacks valid in-range evidence labels.
+- **Files affected:** `src/retrieval/query_safety.py`, retrieval/generation orchestration, FastAPI response state, frontend result rendering, freeze/evaluation integration, and adversarial tests.
+- **Expected impact:** Blocked requests return `safety_refusal`, `model=null`, zero evidence, and citation validation not applicable. Unexpected uncited/invalid generation is withheld and no evidence panel is shown.
+- **Regression risk:** Low but non-zero. Thirty adversarial variants and eleven benign controls pass; 130 total tests pass; browser checks show both guard and normal evidence flows; v8 preserves all v6 deterministic metrics across the same 44 cases.
+
 ## P2 — worthwhile if time allows
 
 - Add unrelated-domain/no-site hard-negative cases before changing guard semantics.
@@ -484,13 +495,13 @@ None found.
 
 **B. Unnecessarily complex:** only the optional full 2×3 semantic evaluator and its checkpoints/fingerprints are research-grade. Keep them out of the core story; the default lightweight mode is appropriate.
 
-**C. Too fragile/simple:** the phrase overlap, citation parser, index integrity checks, submission contract, and handling of underspecified/vague patient assessments were too fragile and are fixed. Remaining P2 simplicity debt is dictionary-based runtime contracts and generic unrelated-domain behavior.
+**C. Too fragile/simple:** the phrase overlap, citation parser, index integrity checks, submission contract, handling of underspecified/vague patient assessments, and lack of a pre-retrieval instruction-safety contract were too fragile and are fixed. Remaining P2 simplicity debt is dictionary-based runtime contracts and generic unrelated-domain behavior.
 
-**D. Actually fixed:** excluded-span-first scope matching; a minimum-answerability gate covering decisions and vague patient assessments; unknown-fact/modality/AND-OR generation contracts; minimal measured BM25 query filtering; centralized citation normalization/range validation; dense-index manifest/hash/model/vector validation; defect-specific tests; reproducible tracked runtime artifacts.
+**D. Actually fixed:** excluded-span-first scope matching; a minimum-answerability gate covering decisions and vague patient assessments; an independent pre-retrieval instruction-safety guard; explicit API outcomes and fail-closed invalid generation; unknown-fact/modality/AND-OR generation contracts; minimal measured BM25 query filtering; centralized citation normalization/range validation; dense-index manifest/hash/model/vector validation; defect-specific tests; reproducible tracked runtime artifacts.
 
 **E. Deliberately not changed:** UI design, clinical scope, corpus, chunk strategy, embedding/chat models, retrieval weights/strategy, top-k, vector storage, reranking, frameworks, agents, and optional evaluator architecture.
 
-**F. Metric regression:** none in the full v6 regression run. Scope/refusal remain 100%/100% with 0% false refusal; all 37 retrieval cases remain scored; Recall@1/5 remain 75.68%/97.30%; MRR remains 86.04%; current-guideline and citation-label validity remain 100%. End-to-end latency was 4.19/9.47 s P50/P95. No semantic or clinical improvement is claimed because no judge or human review ran.
+**F. Metric regression:** none in the full v8 regression run. Scope/refusal remain 100%/100% with 0% false refusal; all 37 retrieval cases remain scored; Recall@1/5 remain 75.68%/97.30%; MRR remains 86.04%; current-guideline and citation-label validity remain 100%. End-to-end latency was 4.76/9.22 s P50/P95. No semantic or clinical improvement is claimed because no judge or human review ran.
 
 **G. Remaining P0/P1:** none. Later architecture changes are frozen unless a rehearsal exposes a concrete bug.
 

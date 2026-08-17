@@ -167,6 +167,35 @@ def test_vague_assessment_fix_v6_preserves_all_deterministic_metrics() -> None:
     assert report["semantic_metrics"]["status"] == "not_run"
 
 
+def test_instruction_safety_fix_v8_preserves_all_deterministic_metrics() -> None:
+    freeze = json.loads(
+        (EVAL_DIR / "evaluation_freeze_v8.json").read_text(encoding="utf-8")
+    )
+    run = load_jsonl("blind_run_v8.jsonl")
+    report = json.loads(
+        (EVAL_DIR / "blind_e2e_report_v8.json").read_text(encoding="utf-8")
+    )
+    metrics = report["deterministic_metrics"]
+
+    assert "src/retrieval/query_safety.py" in freeze["files"]
+    assert len(run) == 44
+    assert {row["architecture_sha256"] for row in run} == {
+        freeze["architecture_sha256"]
+    }
+    assert metrics["scope_classification_accuracy"] == 1.0
+    assert metrics["correct_refusal_rate"] == 1.0
+    assert metrics["false_refusal_rate"] == 0.0
+    assert metrics["retrieval_queries_scored"] == 37
+    assert metrics["retrieval_recall_at_1"] == 0.7568
+    assert metrics["retrieval_recall_at_5"] == 0.973
+    assert metrics["retrieval_mrr_at_6"] == 0.8604
+    assert metrics["current_guideline_accuracy"] == 1.0
+    assert metrics["citation_label_validity_rate"] == 1.0
+    assert report["failures"]["scope"] == []
+    assert report["failures"]["citation_labels"] == []
+    assert report["semantic_metrics"]["status"] == "not_run"
+
+
 def test_semantic_scores_are_not_promoted_before_human_adjudication() -> None:
     report = json.loads(
         (EVAL_DIR / "blind_e2e_report_v1.json").read_text(encoding="utf-8")

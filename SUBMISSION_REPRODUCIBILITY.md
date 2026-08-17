@@ -5,7 +5,7 @@ Result: **PASS**
 
 ## Submission decision
 
-The submission ships the exact reviewed runtime snapshot: 440 structured chunks, their provenance/merge records, the matching 768-dimensional dense index and manifest, and versioned v1/v2/v4/v6 evaluation evidence. Together these artifacts are small enough for Git and remove any dependency on hidden source PDFs or a machine-specific corpus build during judging.
+The submission ships the exact reviewed runtime snapshot: 440 structured chunks, their provenance/merge records, the matching 768-dimensional dense index and manifest, and versioned v1/v2/v4/v6/v8 evaluation evidence. Together these artifacts are small enough for Git and remove any dependency on hidden source PDFs or a machine-specific corpus build during judging.
 
 The raw NICE PDFs are not required to run the snapshot and are not tracked. They may be supplied locally to rebuild the corpus when redistribution rules permit. A rebuild is a new corpus snapshot; it must be re-evaluated rather than relabeled as either versioned blind result.
 
@@ -50,7 +50,7 @@ The README-only path then completed:
 1. Bootstrap and artifact integrity verification.
 2. Runtime load of exactly 440 chunks and the matching dense index.
 3. React production build.
-4. 85 passing tests.
+4. 130 passing tests.
 5. FastAPI startup and ready health response.
 6. Frontend HTTP response.
 7. Hybrid search for `renal cancer visible haematuria age 45`.
@@ -60,6 +60,8 @@ The README-only path then completed:
 11. Clean tracked working tree after the rehearsal.
 
 The v6 regression verifies both context-free decisions and vague patient-specific assessments. “A patient has some stomach issues, is this serious?” returns `insufficient` through `answerability_guard` with `model=null` and zero evidence; it does not reach retrieval or generation. The original clean-clone procedure remains unchanged because the corpus, index, dependencies, and setup command did not change.
+
+The v8 regression adds the frozen instruction-safety module to the architecture fingerprint. Explicit prompt injection now returns `safety_refusal` before clinical scope, with `model=null`, zero evidence, and citation validation not applicable. The 44-case regression preserves all v6 deterministic quality metrics and runs no semantic judge or human review.
 
 ## Bugs exposed by rehearsal
 

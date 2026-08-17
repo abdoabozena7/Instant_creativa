@@ -11,8 +11,10 @@ flowchart TD
     C --> D["Explicit source reconciliation"]
     D --> E["Structured, section-aware chunks"]
     E --> F["BM25 index + normalized embedding matrix"]
-    Q["User question"] --> G["Deterministic query guard"]
-    G -->|"excluded-only"| R["Controlled refusal"]
+    Q["User question"] --> S["Instruction-safety guard"]
+    S -->|"control-plane instruction"| X["Controlled safety refusal"]
+    S -->|"allowed"| G["Scope + answerability guards"]
+    G -->|"excluded-only"| R["Controlled scope refusal"]
     G -->|"patient assessment with no concrete feature"| U["Controlled insufficient-information response"]
     G -->|"in scope + answerable/partial"| H["Weighted hybrid retrieval"]
     F --> H
@@ -22,6 +24,7 @@ flowchart TD
     K --> L["FastAPI response"]
     R --> L
     U --> L
+    X --> L
     L --> M["React evidence console"]
 ```
 
@@ -44,6 +47,7 @@ flowchart LR
 
     subgraph Runtime["Demo runtime"]
         API["api/main.py\nrequest schemas + orchestration"] --> RE["retrieval/engine.py"]
+        RE --> QS["retrieval/query_safety.py\ninstruction hierarchy + provenance"]
         RE --> SG["retrieval/scope_guard.py\nscope + minimum answerability"]
         RE --> BM["retrieval/bm25.py"]
         RE --> OC["retrieval/ollama_client.py\nquery embedding"]
@@ -91,8 +95,8 @@ Primary artifacts are:
 For the concrete question, “Should a 45-year-old with visible haematuria be referred for suspected renal cancer?”:
 
 1. `AnswerRequest` in `api/main.py` validates the string, mode, evidence count, and optional filters.
-2. `RetrievalEngine.search()` trims whitespace, clamps top-k, calls `assess_scope()`, then calls `assess_query_answerability()`.
-3. The scope guard returns `status=in_scope`, `selected_sites=["renal"]`, and no excluded sites. The answerability guard sees the concrete haematuria feature, so the query continues. An excluded-only query or a patient-specific assessment containing only a site, qualifiers, and vague descriptors returns before embedding, retrieval, or generation.
+2. `RetrievalEngine.search()` trims whitespace, clamps top-k, and calls `assess_query_safety()` before any clinical classification. Explicit attempts to override instructions, bypass evidence, fabricate provenance, change source authority, or extract secrets return `outcome=safety_refusal` with no embedding, retrieval, or model call.
+3. Allowed queries continue to `assess_scope()` and `assess_query_answerability()`. The scope guard returns `status=in_scope`, `selected_sites=["renal"]`, and no excluded sites. The answerability guard sees the concrete haematuria feature, so the query continues. An excluded-only query or a patient-specific assessment containing only a site, qualifiers, and vague descriptors returns before embedding, retrieval, or generation.
 4. `BM25Index.scores()` computes lexical scores over retrieval text containing section, subsection, recommendation ID, sites, content type, and source text. Query-only filtering removes the measured non-clinical scaffold terms `what`, `about`, and `the`; document tokens and all other query terms are unchanged.
 5. `OllamaClient.embed()` creates a normalized query vector using `search_query:` prefixing. Exact matrix multiplication produces cosine scores against 440 vectors.
 6. The engine max-normalizes allowed BM25 scores, maps dense cosine scores from `[-1,1]` into `[0,1]`, and calculates `0.55 × BM25 + 0.45 × dense`.
@@ -101,7 +105,7 @@ For the concrete question, “Should a 45-year-old with visible haematuria be re
 9. `/api/answer` passes the first six ranked results to `generate_grounded_answer()`. Evidence labels `[E1]` through `[E6]` are assigned from this list before the prompt is created.
 10. The prompt marks each block with its evidence label, full citation, authority, content type, and verbatim chunk text. The model is instructed to use only those blocks.
 11. `normalize_citation_labels()` canonicalizes observed formatting variants. `validate_citation_labels()` verifies every canonical label is within the supplied evidence range. It does not claim semantic entailment.
-12. FastAPI returns the generated answer, citation-validation result, complete retrieval response, warnings, latency, model, and safety note. The React UI resolves a clicked `[E#]` by array rank to the corresponding result and displays its stable `chunk_id` and provenance.
+12. FastAPI returns an explicit outcome, the generated answer, citation-validation result, complete retrieval response, warnings, latency, model, and safety note. Invalid or uncited model output is withheld with `outcome=generation_rejected`; the public response contains no evidence list in that state. The React UI renders guard outcomes separately and resolves a clicked `[E#]` only for a grounded answer.
 
 ## Runtime schemas and contracts
 
@@ -130,9 +134,11 @@ For the concrete question, “Should a 45-year-old with visible haematuria be re
 ## Safety and authority invariants
 
 1. Excluded-only site phrases are refused before embedding, retrieval, or generation.
-2. In a mixed query, excluded phrases are removed before in-scope phrase detection, preventing “gall bladder” from also becoming “bladder.”
-3. A patient-specific decision or severity/uncertainty assessment containing no concrete clinical feature returns a controlled insufficient-information response before retrieval or generation. Site names, age/duration qualifiers, and generic words such as “issues” are not treated as symptoms. The gate detects missing input shape; it does not encode eligibility criteria.
-4. Partially specified questions continue to evidence-grounded generation, where absent patient attributes remain unknown and recommendation modality plus AND/OR structure must be preserved.
+2. Explicit control-plane instructions are normalized for Unicode/invisible formatting and refused before scope, embedding, retrieval, or generation. The rule targets instruction hierarchy, provenance, authority manipulation, and secret extraction; it is not a general semantic classifier.
+3. In a mixed query, excluded phrases are removed before in-scope phrase detection, preventing “gall bladder” from also becoming “bladder.”
+4. A patient-specific decision or severity/uncertainty assessment containing no concrete clinical feature returns a controlled insufficient-information response before retrieval or generation. Site names, age/duration qualifiers, and generic words such as “issues” are not treated as symptoms. The gate detects missing input shape; it does not encode eligibility criteria.
+5. Partially specified questions continue to evidence-grounded generation, where absent patient attributes remain unknown and recommendation modality plus AND/OR structure must be preserved.
+6. A model response without at least one valid in-range evidence label, or with any fabricated label, is withheld instead of being displayed beside unrelated retrieval results.
 5. Historical recommendation text is never present in `chunks.jsonl`.
 6. Supporting 2015 evidence can retrieve, but its metadata and prompt label remain `supporting`.
 7. Retrieval decides which evidence is supplied; generation cannot request additional corpus content.

@@ -13,6 +13,7 @@ import numpy as np
 
 from .bm25 import BM25Index
 from .ollama_client import OllamaClient
+from .query_safety import assess_query_safety
 from .scope_guard import assess_query_answerability, assess_scope
 
 
@@ -80,12 +81,42 @@ class RetrievalEngine:
         if len(query) < 3:
             raise ValueError("Query must contain at least 3 characters")
         top_k = max(1, min(top_k, 20))
+        safety = assess_query_safety(query)
+        if safety["status"] == "blocked":
+            return {
+                "query": query,
+                "outcome": "safety_refusal",
+                "mode_requested": mode,
+                "mode_used": "instruction_safety_guard",
+                "safety": safety,
+                "scope": {
+                    "status": "not_assessed",
+                    "selected_sites": [],
+                    "excluded_sites": [],
+                    "message": None,
+                },
+                "answerability": {
+                    "status": "not_assessed",
+                    "clinical_features": [],
+                },
+                "filters": {
+                    "cancer_sites": cancer_sites or [],
+                    "content_types": content_types or [],
+                },
+                "results": [],
+                "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+                "warnings": [
+                    "Retrieval skipped by the deterministic instruction-safety guard."
+                ],
+            }
         scope = assess_scope(query)
         if scope["status"] == "out_of_scope":
             return {
                 "query": query,
+                "outcome": "scope_refusal",
                 "mode_requested": mode,
                 "mode_used": "scope_guard",
+                "safety": safety,
                 "scope": scope,
                 "answerability": {"status": "not_assessed", "clinical_features": []},
                 "results": [],
@@ -97,8 +128,10 @@ class RetrievalEngine:
         if answerability["status"] == "insufficient":
             return {
                 "query": query,
+                "outcome": "insufficient_information",
                 "mode_requested": mode,
                 "mode_used": "answerability_guard",
+                "safety": safety,
                 "scope": scope,
                 "answerability": answerability,
                 "filters": {
@@ -123,8 +156,10 @@ class RetrievalEngine:
         if not allowed.any():
             return {
                 "query": query,
+                "outcome": "no_results",
                 "mode_requested": mode,
                 "mode_used": mode,
+                "safety": safety,
                 "scope": scope,
                 "answerability": answerability,
                 "results": [],
@@ -258,8 +293,10 @@ class RetrievalEngine:
             results.append(chunk)
         return {
             "query": query,
+            "outcome": "retrieval_results",
             "mode_requested": mode,
             "mode_used": mode_used,
+            "safety": safety,
             "scope": scope,
             "answerability": answerability,
             "filters": {"cancer_sites": cancer_sites or [], "content_types": content_types or []},

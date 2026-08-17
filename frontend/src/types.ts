@@ -1,4 +1,18 @@
 export type Mode = "hybrid" | "bm25" | "dense";
+export type QueryOutcome =
+  | "retrieval_results"
+  | "grounded_answer"
+  | "safety_refusal"
+  | "scope_refusal"
+  | "insufficient_information"
+  | "generation_rejected"
+  | "no_results";
+
+export interface QuerySafety {
+  status: "allowed" | "blocked";
+  reason_codes: string[];
+  message: string | null;
+}
 
 export interface ScoreDetail {
   base_score: number;
@@ -31,13 +45,20 @@ export interface EvidenceResult {
 
 export interface SearchResponse {
   query: string;
+  outcome: QueryOutcome;
   mode_requested: Mode;
   mode_used: string;
+  safety: QuerySafety;
   scope: {
-    status: "in_scope" | "out_of_scope";
+    status: "in_scope" | "out_of_scope" | "not_assessed";
     selected_sites: string[];
     excluded_sites: string[];
     message: string | null;
+  };
+  answerability: {
+    status: "model_assessed" | "insufficient" | "not_assessed";
+    clinical_features: string[];
+    message?: string;
   };
   results: EvidenceResult[];
   latency_ms: number;
@@ -46,12 +67,14 @@ export interface SearchResponse {
 
 export interface AnswerResponse {
   query: string;
+  outcome: QueryOutcome;
   answer: string;
   model: string | null;
   latency_ms: number;
   retrieval: SearchResponse;
   citation_validation: {
-    passed: boolean;
+    applicable: boolean;
+    passed: boolean | null;
     cited_evidence_ranks: number[];
     invalid_evidence_ranks: number[];
     available_evidence_count: number;
@@ -203,6 +226,7 @@ export interface MetricsResponse {
     searches: number;
     answers: number;
     scope_refusals: number;
+    safety_refusals: number;
     citation_validation_pass_rate: number | null;
     search_latency: { count: number; p50_ms: number; p95_ms: number };
     answer_latency: { count: number; p50_ms: number; p95_ms: number };

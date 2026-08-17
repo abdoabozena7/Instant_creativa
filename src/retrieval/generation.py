@@ -7,6 +7,7 @@ import time
 from typing import Any
 
 from .ollama_client import OllamaClient
+from .query_safety import assess_query_safety
 from .scope_guard import assess_query_answerability
 
 
@@ -72,18 +73,45 @@ async def generate_grounded_answer(
     ollama: OllamaClient,
 ) -> dict[str, Any]:
     started = time.perf_counter()
+    safety = assess_query_safety(query)
+    if safety["status"] == "blocked":
+        return {
+            "answer": safety["message"],
+            "model": None,
+            "response_status": "safety_refusal",
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety": safety,
+            "answerability": {
+                "status": "not_assessed",
+                "clinical_features": [],
+            },
+            "citation_validation": {
+                "applicable": False,
+                "passed": None,
+                "cited_evidence_ranks": [],
+                "invalid_evidence_ranks": [],
+                "available_evidence_count": 0,
+            },
+            "warnings": [
+                "Generation skipped by the deterministic instruction-safety guard."
+            ],
+            "ollama_metrics": {},
+        }
     answerability = assess_query_answerability(query)
     if answerability["status"] == "insufficient":
         return {
             "answer": answerability["message"],
             "model": None,
+            "response_status": "insufficient_information",
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety": safety,
             "answerability": answerability,
             "citation_validation": {
-                "passed": True,
+                "applicable": False,
+                "passed": None,
                 "cited_evidence_ranks": [],
                 "invalid_evidence_ranks": [],
-                "available_evidence_count": len(results),
+                "available_evidence_count": 0,
             },
             "warnings": [
                 "Generation skipped because the patient assessment contained no concrete clinical feature."
@@ -119,10 +147,21 @@ async def generate_grounded_answer(
     answer = response.get("message", {}).get("content", "").strip()
     answer = normalize_citation_labels(answer)
     citation_validation, warnings = validate_citation_labels(answer, len(results))
+    response_status = (
+        "grounded_answer" if citation_validation["passed"] else "generation_rejected"
+    )
+    if response_status == "generation_rejected":
+        answer = (
+            "The model response was withheld because it did not satisfy the "
+            "evidence-citation contract. Please rephrase the clinical question."
+        )
+        warnings.append("Ungrounded model output was not returned to the user.")
     return {
         "answer": answer,
         "model": ollama.chat_model,
+        "response_status": response_status,
         "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+        "safety": safety,
         "answerability": answerability,
         "citation_validation": citation_validation,
         "warnings": warnings,
@@ -179,6 +218,7 @@ def validate_citation_labels(
     if invalid_citations:
         warnings.append(f"Invalid evidence labels were generated: {invalid_citations}")
     return {
+        "applicable": True,
         "passed": bool(valid_citations) and not invalid_citations,
         "cited_evidence_ranks": valid_citations,
         "invalid_evidence_ranks": invalid_citations,

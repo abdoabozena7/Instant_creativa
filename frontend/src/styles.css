@@ -64,6 +64,7 @@ button { color: inherit; }
 
 .error-banner { margin: 18px 0; padding: 13px 16px; background: #f3ded9; color: #7d2d23; display: flex; align-items: center; gap: 9px; font-size: 13px; }
 .result-zone { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 28px; margin-top: 32px; align-items: start; }
+.result-zone.guard-only { grid-template-columns: minmax(0, 1fr); }
 .result-main { min-width: 0; }
 .answer-block { border-bottom: 1px solid var(--line); padding: 3px 0 29px; margin-bottom: 28px; }
 .answer-copy { margin-top: 14px; max-width: 920px; white-space: pre-wrap; font: 18px/1.72 Georgia, "Times New Roman", serif; }
@@ -72,9 +73,15 @@ button { color: inherit; }
 .answer-audit span { display: flex; align-items: center; gap: 5px; }
 .answer-audit .passed { color: #137261; }
 .answer-audit .failed { color: #a94334; }
-.scope-refusal { display: flex; gap: 14px; padding: 28px 0; color: #8a3b30; }
-.scope-refusal h2 { margin: 0 0 5px; font: 500 24px Georgia, serif; }
-.scope-refusal p { margin: 0; color: var(--muted); }
+.guard-response { display: grid; grid-template-columns: 42px minmax(0, 720px); gap: 15px; padding: 30px 0 34px; border-top: 3px solid #a7523d; border-bottom: 1px solid var(--line); color: #8a3b30; }
+.guard-response .guard-icon { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; }
+.guard-response .section-kicker { color: currentColor; }
+.guard-response h2 { margin: 8px 0 7px; color: var(--ink); font: 500 28px Georgia, serif; }
+.guard-response p { max-width: 720px; margin: 0; color: #4f5a56; font-size: 14px; line-height: 1.65; }
+.guard-response small { display: block; margin-top: 17px; color: var(--muted); font: 600 9px ui-monospace, monospace; letter-spacing: .05em; text-transform: uppercase; }
+.guard-response.insufficient_information, .guard-response.no_results { color: #8b6838; border-top-color: var(--warm); }
+.guard-response.scope_refusal { color: #8a3b30; }
+.guard-response.generation_rejected { color: #a94334; }
 .list-header { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; }
 .list-header h2 { margin: 6px 0 0; font: 500 25px Georgia, serif; }
 .list-header p { margin: 7px 0 0; color: var(--muted); font-size: 11px; }

@@ -25,6 +25,7 @@ import type {
   HealthResponse,
   MetricsResponse,
   Mode,
+  QueryOutcome,
   SearchResponse,
 } from "./types";
 
@@ -65,8 +66,10 @@ function App() {
       .catch((reason: Error) => setError(reason.message));
   }, []);
 
-  const results = answer?.retrieval.results ?? search?.results ?? [];
   const activeRetrieval = answer?.retrieval ?? search;
+  const outcome = answer?.outcome ?? search?.outcome ?? null;
+  const evidenceVisible = outcome === "grounded_answer" || outcome === "retrieval_results";
+  const results = evidenceVisible ? (answer?.retrieval.results ?? search?.results ?? []) : [];
 
   function openEvidence(result: EvidenceResult | null) {
     setSelected(result);
@@ -87,12 +90,12 @@ function App() {
         const response = await api.answer(query, mode, site);
         setAnswer(response);
         setSearch(null);
-        setSelected(response.retrieval.results[0] ?? null);
+        setSelected(response.outcome === "grounded_answer" ? response.retrieval.results[0] ?? null : null);
       } else {
         const response = await api.search(query, mode, site);
         setSearch(response);
         setAnswer(null);
-        setSelected(response.results[0] ?? null);
+        setSelected(response.outcome === "retrieval_results" ? response.results[0] ?? null : null);
       }
       setMetrics(await api.metrics());
     } catch (reason) {
@@ -208,23 +211,22 @@ function App() {
             <AnimatePresence>
               {activeRetrieval && (
                 <motion.section
-                  className="result-zone"
+                  className={`result-zone ${evidenceVisible ? "" : "guard-only"}`}
                   initial={{ opacity: 0, y: 18 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.32 }}
                 >
                   <div className="result-main">
-                    {answer && <AnswerBlock answer={answer} onCitation={(rank) => openEvidence(results[rank - 1] ?? null)} />}
-                    {activeRetrieval.scope.status === "out_of_scope" ? (
-                      <div className="scope-refusal">
-                        <XCircle size={24} />
-                        <div><h2>Outside configured scope</h2><p>{activeRetrieval.scope.message}</p></div>
-                      </div>
-                    ) : (
+                    {outcome === "grounded_answer" && answer && (
+                      <AnswerBlock answer={answer} onCitation={(rank) => openEvidence(results[rank - 1] ?? null)} />
+                    )}
+                    {evidenceVisible ? (
                       <EvidenceList results={results} selected={selected} onSelect={openEvidence} retrieval={activeRetrieval} />
+                    ) : (
+                      <OutcomePanel outcome={outcome} answer={answer} retrieval={activeRetrieval} />
                     )}
                   </div>
-                  <EvidenceInspector result={selected} />
+                  {evidenceVisible && <EvidenceInspector result={selected} />}
                 </motion.section>
               )}
             </AnimatePresence>
@@ -244,6 +246,52 @@ function App() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function OutcomePanel({ outcome, answer, retrieval }: {
+  outcome: QueryOutcome | null;
+  answer: AnswerResponse | null;
+  retrieval: SearchResponse;
+}) {
+  const content: Record<string, { title: string; message: string; detail: string }> = {
+    safety_refusal: {
+      title: "Unsafe instruction blocked",
+      message: retrieval.safety.message ?? "This request cannot enter the evidence workflow.",
+      detail: "Retrieval not run · Model not called · Citation validation not applicable",
+    },
+    scope_refusal: {
+      title: "Outside configured scope",
+      message: retrieval.scope.message ?? "This question is outside the configured NG12 sites.",
+      detail: "Retrieval not run · Model not called",
+    },
+    insufficient_information: {
+      title: "More clinical detail needed",
+      message: answer?.answer ?? retrieval.answerability.message ?? "Add a specific symptom or sign before asking for an assessment.",
+      detail: "Retrieval not run · Model not called · No evidence assigned",
+    },
+    generation_rejected: {
+      title: "Ungrounded model output blocked",
+      message: answer?.answer ?? "The generated response did not meet the citation contract.",
+      detail: "Model output withheld · Retrieved passages not presented as supporting evidence",
+    },
+    no_results: {
+      title: "No matching evidence",
+      message: "No passage matched the current query and metadata filters.",
+      detail: "Try removing a filter or making the clinical feature more specific",
+    },
+  };
+  const state = content[outcome ?? "no_results"] ?? content.no_results;
+  return (
+    <section className={`guard-response ${outcome ?? "no_results"}`} aria-live="polite">
+      <span className="guard-icon">{outcome === "safety_refusal" ? <ShieldCheck size={25} /> : <XCircle size={25} />}</span>
+      <div>
+        <span className="section-kicker">Request outcome</span>
+        <h2>{state.title}</h2>
+        <p>{state.message}</p>
+        <small>{state.detail}</small>
+      </div>
+    </section>
   );
 }
 

@@ -37,6 +37,8 @@ class RuntimeTelemetry:
         self.search_count = 0
         self.answer_count = 0
         self.scope_refusal_count = 0
+        self.safety_refusal_count = 0
+        self.citation_check_count = 0
         self.citation_pass_count = 0
 
     @staticmethod
@@ -56,9 +58,10 @@ class RuntimeTelemetry:
             "searches": self.search_count,
             "answers": self.answer_count,
             "scope_refusals": self.scope_refusal_count,
+            "safety_refusals": self.safety_refusal_count,
             "citation_validation_pass_rate": (
-                round(self.citation_pass_count / self.answer_count, 4)
-                if self.answer_count
+                round(self.citation_pass_count / self.citation_check_count, 4)
+                if self.citation_check_count
                 else None
             ),
             "search_latency": self._summary(self.search_latencies),
@@ -135,6 +138,8 @@ async def search(request: SearchRequest) -> dict:
     latency = (time.perf_counter() - started) * 1000
     telemetry.search_count += 1
     telemetry.search_latencies.append(latency)
+    if response["outcome"] == "safety_refusal":
+        telemetry.safety_refusal_count += 1
     if response["scope"]["status"] == "out_of_scope":
         telemetry.scope_refusal_count += 1
     return response
@@ -158,15 +163,41 @@ async def answer(request: AnswerRequest) -> dict:
 
     telemetry.search_count += 1
     telemetry.search_latencies.append(retrieval["latency_ms"])
+    if retrieval["outcome"] == "safety_refusal":
+        telemetry.safety_refusal_count += 1
+        return {
+            "query": request.query,
+            "outcome": "safety_refusal",
+            "answer": retrieval["safety"]["message"],
+            "model": None,
+            "retrieval": retrieval,
+            "safety": retrieval["safety"],
+            "citation_validation": {
+                "applicable": False,
+                "passed": None,
+                "cited_evidence_ranks": [],
+                "invalid_evidence_ranks": [],
+                "available_evidence_count": 0,
+            },
+            "warnings": [
+                "Retrieval and generation skipped by the deterministic instruction-safety guard."
+            ],
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety_note": (
+                "Evidence lookup only. This demo does not diagnose or replace clinical judgement."
+            ),
+        }
     if retrieval["scope"]["status"] == "out_of_scope":
         telemetry.scope_refusal_count += 1
         return {
             "query": request.query,
+            "outcome": "scope_refusal",
             "answer": retrieval["scope"]["message"],
             "model": None,
             "retrieval": retrieval,
             "citation_validation": {
-                "passed": True,
+                "applicable": False,
+                "passed": None,
                 "cited_evidence_ranks": [],
                 "invalid_evidence_ranks": [],
                 "available_evidence_count": 0,
@@ -180,9 +211,9 @@ async def answer(request: AnswerRequest) -> dict:
         )
         telemetry.answer_count += 1
         telemetry.answer_latencies.append(generation["latency_ms"])
-        telemetry.citation_pass_count += 1
         return {
             "query": request.query,
+            "outcome": "insufficient_information",
             **generation,
             "retrieval": retrieval,
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),
@@ -201,12 +232,18 @@ async def answer(request: AnswerRequest) -> dict:
         raise HTTPException(status_code=503, detail=f"Ollama generation unavailable: {error}") from error
     telemetry.answer_count += 1
     telemetry.answer_latencies.append(generation["latency_ms"])
+    telemetry.citation_check_count += 1
     if generation["citation_validation"]["passed"]:
         telemetry.citation_pass_count += 1
+    outcome = generation["response_status"]
+    public_retrieval = retrieval
+    if outcome == "generation_rejected":
+        public_retrieval = {**retrieval, "results": []}
     return {
         "query": request.query,
+        "outcome": outcome,
         **generation,
-        "retrieval": retrieval,
+        "retrieval": public_retrieval,
         "latency_ms": round((time.perf_counter() - started) * 1000, 2),
         "safety_note": (
             "Evidence lookup only. This demo does not diagnose or replace clinical judgement."
@@ -219,7 +256,7 @@ def metrics() -> dict:
     merge_path = PROJECT_ROOT / "data" / "parsed" / "merge_report.json"
     evaluation_path = PROJECT_ROOT / "data" / "eval" / "retrieval_metrics.json"
     blind_evaluation_path = (
-        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v6.json"
+        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v8.json"
     )
     multi_judge_path = (
         PROJECT_ROOT / "data" / "eval" / "multi_judge_report_v1.json"
