@@ -43,14 +43,14 @@ The command creates the Python environment, installs dependencies, verifies the 
 
 ## Clean-clone rehearsal
 
-The repository was cloned with `git clone --no-local` into a new directory under the Windows temporary folder, outside the development workspace. Before setup, the clone contained no raw PDFs, `.env`, virtual environment, `node_modules`, frontend build, output directory, or other ignored local state.
+The pushed repository was cloned from GitHub into a new `D:\projects\COMPETITIONS\ng12_fresh_clone_6b2fcb6` directory, outside the development workspace. Before setup, the clone contained no raw PDFs, `.env`, virtual environment, `node_modules`, frontend build, output directory, or other ignored local state.
 
 The README-only path then completed:
 
 1. Bootstrap and artifact integrity verification.
 2. Runtime load of exactly 440 chunks and the matching dense index.
 3. React production build.
-4. 41 passing tests.
+4. 63 passing tests.
 5. FastAPI startup and ready health response.
 6. Frontend HTTP response.
 7. Hybrid search for `renal cancer visible haematuria age 45`.
@@ -59,9 +59,11 @@ The README-only path then completed:
 10. Grounded answer generation with valid deterministic citation binding.
 11. Clean tracked working tree after the rehearsal.
 
+The post-fix rehearsal also verified the v4 byte-level fingerprint after Git checkout. A generic patient-specific referral question returned `insufficient` through `answerability_guard` with `model=null` and zero evidence; it did not reach retrieval or generation.
+
 ## Bugs exposed by rehearsal
 
-- Windows converted JSONL line endings to CRLF, which correctly caused the dense-index manifest hash check to fail. `.gitattributes` now enforces LF for JSONL so committed chunk bytes remain identical across platforms.
+- Windows converted JSONL line endings to CRLF, which correctly caused the dense-index manifest hash check to fail. `.gitattributes` now pins checkout endings for JSONL and every byte-hashed freeze input, so committed runtime fingerprints remain identical across platforms.
 - PowerShell did not automatically stop on a failed native verifier. The bootstrap now checks every native exit code and fails immediately.
 - One test depended on a generated, ignored adjudication workbook. It now verifies the tracked workbook inputs and builder instead, keeping the generated workbook optional.
 

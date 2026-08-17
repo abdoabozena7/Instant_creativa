@@ -261,7 +261,7 @@ All 122 current records remain exact, unsplit logical units. Supporting records 
 
 ## Validation
 
-The automated suite currently has 38 passing tests. It checks page completeness and provenance, footer removal, exact scoped recommendation IDs, excluded sites, recommendation boundaries, multi-site symptom relationships, safety-netting and definitions, record/chunk identity, canonical authority, audit-only historical recommendations, reciprocal evidence links, token limits, output/report counts, embedding dimensions and normalization, scope refusals, citation normalization, primary-source ranking, FastAPI endpoints, metrics, production frontend serving, frozen-architecture integrity, blind/gold separation, balanced case coverage, preservation of known evaluation failures, fail-closed human-adjudication scoring, decomposed multi-judge task counts, absence-claim instructions, secret-safe Gemini configuration, full multi-judge consensus, and conditional fail-closed hackathon judging.
+The automated suite currently has 63 passing tests. It checks page completeness and provenance, footer removal, exact scoped recommendation IDs, excluded sites, recommendation boundaries, multi-site symptom relationships, safety-netting and definitions, record/chunk identity, canonical authority, audit-only historical recommendations, reciprocal evidence links, token limits, output/report counts, embedding dimensions and normalization, scope and minimum-answerability guards, BM25/hybrid regression behavior, citation normalization, primary-source ranking, FastAPI endpoints, metrics, production frontend serving, frozen-architecture integrity, blind/gold separation, balanced case coverage, preservation of historical failures, and isolated optional evaluation tooling.
 
 Known limitations are explicit rather than hidden:
 
@@ -330,4 +330,4 @@ Core architecture development is closed after the architecture and fresh-clone a
 
 Allowed changes from this point are only localized fixes for bugs reproduced during submission rehearsal or Instructor Defense rehearsal. Every such fix must retain the same regression discipline and create a new evaluation identity when it changes frozen architecture behavior.
 
-The remaining pre-presentation work is operational rehearsal: run the clean-clone path, exercise the live evidence flow, and rehearse the ten questions in `ARCHITECTURE_DECISIONS.md`.
+The clean-clone path and live evidence flow have passed after the v4 rehearsal fix. The only remaining pre-presentation work is rehearsal of the ten questions in `ARCHITECTURE_DECISIONS.md`; architecture development is closed unless the rehearsal or live demo reproduces a concrete bug.
