@@ -422,31 +422,6 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
         </section>
       )}
 
-      {provisional && (
-        <section className={`semantic-section ${automated ? "superseded-triage" : ""}`}>
-          <div className="semantic-heading">
-            <div>
-              <span className="section-kicker">Model-assisted triage</span>
-              <h2>Grounding signals await human review</h2>
-            </div>
-            <span className="pending-review"><CircleAlert size={15} /> Not an official score</span>
-          </div>
-          <p className="semantic-warning">The generator model judged its own outputs. These figures prioritize the {provisional.human_review_queue.length}-case review queue; they are not independent, clinical, or final.</p>
-          <div className="semantic-measures">
-            <EvalMetric label="Citation accuracy" value={provisional.citation_accuracy_provisional ?? 0} detail="Claim-to-evidence entailment" />
-            <EvalMetric label="Claim support" value={provisional.claim_support_rate_provisional ?? 0} detail={`${provisional.claims} atomic claims reviewed`} />
-            <EvalMetric label="Unsupported claims" value={provisional.unsupported_claim_rate_provisional ?? 0} detail="Strict overreach signal" warning />
-            <EvalMetric label="Behavior accuracy" value={provisional.answer_behavior_accuracy_provisional ?? 0} detail="Answer, insufficient, or refuse" />
-          </div>
-          <div className="failure-taxonomy">
-            <span>Flagged failure modes</span>
-            {Object.entries(provisional.failure_type_counts).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
-              <div key={type}><b>{label(type)}</b><i><em style={{ width: `${(count / Math.max(...Object.values(provisional.failure_type_counts))) * 100}%` }} /></i><strong>{count}</strong></div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {evaluation && (
         <section className="benchmark-section">
           <div className="benchmark-heading">
