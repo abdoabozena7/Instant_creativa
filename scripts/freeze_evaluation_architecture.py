@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 from datetime import datetime, timezone
@@ -19,7 +20,13 @@ ARCHITECTURE_FILES = [
     "data/index/index_manifest.json",
     "data/index/chunk_embeddings.npy",
 ]
-OUTPUT = PROJECT_ROOT / "data" / "eval" / "evaluation_freeze.json"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "eval" / "evaluation_freeze.json"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    return parser.parse_args()
 
 
 def sha256(path: Path) -> str:
@@ -31,6 +38,7 @@ def sha256(path: Path) -> str:
 
 
 def main() -> int:
+    args = parse_args()
     files = {}
     aggregate = hashlib.sha256()
     for relative in ARCHITECTURE_FILES:
@@ -54,8 +62,9 @@ def main() -> int:
         "chat_model": "gpt-oss:120b-cloud",
         "files": files,
     }
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    output = args.output.resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2))
     return 0
 

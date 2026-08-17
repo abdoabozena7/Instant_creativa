@@ -28,7 +28,7 @@ The guarantee is made before ranking and prompting. Historical recommendation re
 
 ## 5. Why is scope classification deterministic rather than an LLM call?
 
-The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching, producing 100% deterministic replay on the frozen scope cases.
+The project boundary is a finite configured list of included and excluded cancer sites, so phrase/token matching is cheaper, faster, reproducible, and runs before embeddings or generation. The blind baseline had 0% false refusal. The observed gall-bladder/bladder collision was a concrete phrase-overlap bug; excluded spans are now removed before included-site matching. A separate full v2 run of all 44 cases measured 100% scope, 100% correct refusal, and 0% false refusal.
 
 **Likely follow-up:** Does this understand every unrelated medical question? No. It is a narrow guard, not a clinical reasoning engine. We would add representative no-site negatives before broadening its behavior or considering an LLM.
 
@@ -58,6 +58,6 @@ It estimates semantic properties that deterministic code cannot: claim support, 
 
 ## 10. How can a judge reproduce exactly what you evaluated?
 
-The repository ships the reviewed 440 chunks, matching dense matrix and integrity manifest, and frozen evaluation evidence. The raw PDFs and machine outputs are excluded. One bootstrap command verifies hashes/model/dimensions, installs dependencies, builds the frontend, and runs 41 tests. A clean clone outside the workspace reached API, UI, search, stable evidence provenance, and a citation-valid answer without hidden files.
+The repository ships the reviewed 440 chunks, matching dense matrix and integrity manifest, and versioned evaluation evidence. The raw PDFs and machine outputs are excluded. One bootstrap command verifies hashes/model/dimensions, installs dependencies, builds the frontend, and runs 42 tests. A clean clone outside the workspace reached API, UI, search, stable evidence provenance, and a citation-valid answer without hidden files.
 
 **Likely follow-up:** Why ship generated artifacts instead of rebuilding? They are only about 8 MB, preserve the exact evaluated snapshot, and avoid requiring redistributable PDFs and Ollama embedding work during judging. Rebuild scripts remain available, but a rebuild must be treated as a newly evaluated snapshot.

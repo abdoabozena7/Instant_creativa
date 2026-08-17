@@ -50,9 +50,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_EVAL_DIR)
     parser.add_argument("--evidence-k", type=int, default=6)
     parser.add_argument(
+        "--run-name",
+        default="v1",
+        help="Version suffix for generated run/report artifacts, for example v2.",
+    )
+    parser.add_argument(
+        "--skip-adjudication-files",
+        action="store_true",
+        help="Do not emit optional human-adjudication packet and CSV files.",
+    )
+    parser.add_argument(
         "--score-only",
         action="store_true",
-        help="Reuse blind_run_v1.jsonl and regenerate reports without model calls.",
+        help="Reuse the selected versioned blind run and regenerate its report without model calls.",
     )
     return parser.parse_args()
 
@@ -191,6 +201,8 @@ def score_and_prepare_adjudication(
     *,
     freeze: dict[str, Any],
     output_dir: Path,
+    run_name: str,
+    write_adjudication_files: bool,
 ) -> dict[str, Any]:
     gold_by_id = {row["case_id"]: row for row in gold_rows}
     ranks: list[int | None] = []
@@ -306,7 +318,7 @@ def score_and_prepare_adjudication(
     retrieval_denominator = len(ranks)
     report = {
         "document": "NICE NG12",
-        "evaluation_name": "blind_end_to_end_v1",
+        "evaluation_name": f"blind_end_to_end_{run_name}",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "architecture_sha256": freeze["architecture_sha256"],
         "architecture_frozen_at": freeze["frozen_at"],
@@ -345,14 +357,14 @@ def score_and_prepare_adjudication(
             },
         },
         "semantic_metrics": {
-            "status": "pending_human_adjudication",
+            "status": "not_run",
             "citation_accuracy": None,
             "claim_support_rate": None,
             "unsupported_claim_rate": None,
             "answer_behavior_accuracy": None,
             "note": (
-                "Valid citation labels do not prove entailment. Complete the claim-level adjudication "
-                "packet before reporting these metrics."
+                "This run scores deterministic behavior only. Valid citation labels do not prove "
+                "entailment; semantic judge metrics were not run."
             ),
         },
         "failures": {
@@ -387,12 +399,15 @@ def score_and_prepare_adjudication(
         "case_diagnostics": diagnostics,
     }
 
-    packets_path = output_dir / "adjudication_packets_v1.jsonl"
-    packets_path.write_text(
-        "".join(json.dumps(packet, ensure_ascii=False) + "\n" for packet in packets),
-        encoding="utf-8",
-    )
-    _write_adjudication_csv(output_dir / "adjudication_template_v1.csv", packets)
+    if write_adjudication_files:
+        packets_path = output_dir / f"adjudication_packets_{run_name}.jsonl"
+        packets_path.write_text(
+            "".join(json.dumps(packet, ensure_ascii=False) + "\n" for packet in packets),
+            encoding="utf-8",
+        )
+        _write_adjudication_csv(
+            output_dir / f"adjudication_template_{run_name}.csv", packets
+        )
     return report
 
 
@@ -449,11 +464,13 @@ def _write_adjudication_csv(path: Path, packets: list[dict[str, Any]]) -> None:
 
 
 async def async_main(args: argparse.Namespace) -> dict[str, Any]:
+    if not re.fullmatch(r"v[1-9]\d*", args.run_name):
+        raise ValueError("--run-name must use the form v1, v2, ...")
     freeze = verify_freeze(args.freeze.resolve())
     questions = load_jsonl(args.questions.resolve())
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    run_path = output_dir / "blind_run_v1.jsonl"
+    run_path = output_dir / f"blind_run_{args.run_name}.jsonl"
     if args.score_only:
         rows = load_jsonl(run_path)
         if {row["case_id"] for row in rows} != {row["case_id"] for row in questions}:
@@ -468,9 +485,14 @@ async def async_main(args: argparse.Namespace) -> dict[str, Any]:
     # Gold is loaded only after every model response has been persisted.
     gold_rows = load_jsonl(args.gold.resolve())
     report = score_and_prepare_adjudication(
-        rows, gold_rows, freeze=freeze, output_dir=output_dir
+        rows,
+        gold_rows,
+        freeze=freeze,
+        output_dir=output_dir,
+        run_name=args.run_name,
+        write_adjudication_files=not args.skip_adjudication_files,
     )
-    report_path = output_dir / "blind_e2e_report_v1.json"
+    report_path = output_dir / f"blind_e2e_report_{args.run_name}.json"
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return report
 

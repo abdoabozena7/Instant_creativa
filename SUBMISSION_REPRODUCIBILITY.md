@@ -5,9 +5,9 @@ Result: **PASS**
 
 ## Submission decision
 
-The submission ships the exact reviewed runtime snapshot: 440 structured chunks, their provenance/merge records, the matching 768-dimensional dense index and manifest, and the frozen evaluation evidence. Together these artifacts are small enough for Git and remove any dependency on hidden source PDFs or a machine-specific corpus build during judging.
+The submission ships the exact reviewed runtime snapshot: 440 structured chunks, their provenance/merge records, the matching 768-dimensional dense index and manifest, and versioned v1/v2 evaluation evidence. Together these artifacts are small enough for Git and remove any dependency on hidden source PDFs or a machine-specific corpus build during judging.
 
-The raw NICE PDFs are not required to run the snapshot and are not tracked. They may be supplied locally to rebuild the corpus when redistribution rules permit. A rebuild is a new corpus snapshot; it must be re-evaluated rather than relabeled as the frozen v1 result.
+The raw NICE PDFs are not required to run the snapshot and are not tracked. They may be supplied locally to rebuild the corpus when redistribution rules permit. A rebuild is a new corpus snapshot; it must be re-evaluated rather than relabeled as either versioned blind result.
 
 | Category | Tracked | Generated/local |
 |---|---|---|

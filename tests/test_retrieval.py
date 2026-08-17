@@ -176,9 +176,9 @@ def test_fastapi_exposes_health_search_metrics_and_frontend() -> None:
         assert metrics.status_code == 200
         assert metrics.json()["evaluation"]["recommended_mode"] == "hybrid"
         assert metrics.json()["blind_e2e"]["questions"]["total"] == 44
+        assert metrics.json()["blind_e2e"]["evaluation_name"] == "blind_end_to_end_v2"
         assert (
-            metrics.json()["blind_e2e"]["semantic_metrics"]["status"]
-            == "pending_human_adjudication"
+            metrics.json()["blind_e2e"]["semantic_metrics"]["status"] == "not_run"
         )
         assert "multi_judge" in metrics.json()
 

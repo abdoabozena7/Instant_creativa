@@ -233,8 +233,8 @@ export function Presentation({
         <StorySlide index={6} id="failures" tone="ink">
           <StoryHeading number="06" overline="Failure analysis" title="Three failures. Three isolated fixes." copy="The blind run tells us what to change—and what not to touch." />
           <div className="failure-story">
-            <FailureBeat marker="A" before="gall bladder" fault="substring: bladder" after="phrase-level scope" metric="Correct refusal 80% → ≥95%" />
-            <FailureBeat marker="B" before="[ **E2** ]" fault="strict label parser" after="citation normalization" metric="Validity 80% → ≥98%" />
+            <FailureBeat marker="A" before="gall bladder" fault="substring: bladder" after="phrase-level scope" metric="Correct refusal 80% → 100%" />
+            <FailureBeat marker="B" before="[ **E2** ]" fault="strict label parser" after="citation normalization" metric="Validity 80% → 94.9%" />
             <FailureBeat marker="C" before="plausible conclusion" fault="not directly evidenced" after="evidence-only answer" metric="Support ↑ · overreach ↓" />
           </div>
           <div className="do-not-touch"><ShieldCheck /><p><b>Retrieval architecture stays frozen.</b> Recall@5 is already above the 95% target.</p></div>

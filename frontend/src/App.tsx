@@ -355,13 +355,17 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
   const evaluation = metrics.evaluation;
   const blind = metrics.blind_e2e;
   const deterministic = blind?.deterministic_metrics;
-  const provisional = blind?.semantic_metrics.provisional_model_assisted;
   const automated = metrics.multi_judge;
   const corpus = metrics.corpus;
+  const runLabel = blind?.evaluation_name.match(/_(v\d+)$/)?.[1] ?? "current";
+  const totalCases = blind?.questions.total ?? 0;
+  const refusalCases = blind?.questions.by_expected_behavior.refuse ?? 0;
+  const scopeFailures = blind?.failures.scope.length ?? 0;
+  const citationFailures = blind?.failures.citation_labels.length ?? 0;
   return (
     <>
       <section className="metrics-title">
-        <span className="eyebrow"><Gauge size={15} /> Frozen architecture · blind run v1</span>
+        <span className="eyebrow"><Gauge size={15} /> Frozen architecture · blind run {runLabel}</span>
         <h1>End-to-end evaluation</h1>
         <p>Forty-four unseen cases test scope, retrieval, source authority, grounded generation, citations, and refusal behavior as one system.</p>
       </section>
@@ -369,7 +373,7 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
         <div><strong>{blind?.questions.total ?? 0}</strong><span>blind cases</span></div>
         <div><strong>{pct(deterministic?.scope_classification_accuracy)}</strong><span>scope accuracy</span></div>
         <div><strong>{pct(deterministic?.retrieval_recall_at_5)}</strong><span>retrieval Recall@5</span></div>
-        <div className="metric-warning"><strong>{pct(provisional?.unsupported_claim_rate_provisional ?? undefined)}</strong><span>unsupported claims · provisional</span></div>
+        <div><strong>{pct(deterministic?.current_guideline_accuracy)}</strong><span>current-guideline accuracy</span></div>
       </section>
 
       {blind && deterministic && (
@@ -379,19 +383,19 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
             <span className="freeze-id"><ShieldCheck size={15} /> SHA {blind.architecture_sha256.slice(0, 12)}</span>
           </div>
           <div className="blind-measures">
-            <EvalMetric label="Scope classification" value={deterministic.scope_classification_accuracy} detail="43 / 44 cases" />
-            <EvalMetric label="Correct refusal" value={deterministic.correct_refusal_rate} detail="4 / 5 excluded-site cases" warning />
+            <EvalMetric label="Scope classification" value={deterministic.scope_classification_accuracy} detail={`${Math.round(deterministic.scope_classification_accuracy * totalCases)} / ${totalCases} cases`} warning={scopeFailures > 0} />
+            <EvalMetric label="Correct refusal" value={deterministic.correct_refusal_rate} detail={`${Math.round(deterministic.correct_refusal_rate * refusalCases)} / ${refusalCases} excluded-site cases`} warning={deterministic.correct_refusal_rate < 1} />
             <EvalMetric label="False refusal" value={deterministic.false_refusal_rate} detail="0 answerable cases refused" inverse />
             <EvalMetric label="Retrieval Recall@1" value={deterministic.retrieval_recall_at_1} detail={`${deterministic.retrieval_queries_scored} scored queries`} />
             <EvalMetric label="Retrieval Recall@5" value={deterministic.retrieval_recall_at_5} detail="One lung case landed at rank 6" />
             <EvalMetric label="Current source at relevant hit" value={deterministic.current_guideline_accuracy} detail="2026 won every measured check" />
-            <EvalMetric label="Citation label validity" value={deterministic.citation_label_validity_rate} detail="8 formatting variants failed" warning />
+            <EvalMetric label="Citation label validity" value={deterministic.citation_label_validity_rate} detail={citationFailures ? `${citationFailures} outputs used non-canonical labels` : "All generated labels resolved"} warning={citationFailures > 0} />
             <div className="latency-metric"><span>End-to-end latency</span><strong>{(deterministic.latency_ms.end_to_end_p50 / 1000).toFixed(2)}s</strong><small>P50 · {(deterministic.latency_ms.end_to_end_p95 / 1000).toFixed(2)}s P95</small></div>
           </div>
           <div className="failure-ledger">
-            <div><CircleAlert size={17} /><span><b>Scope</b> Gall bladder escaped the guard because “bladder” also matched.</span><strong>{blind.failures.scope.length}</strong></div>
+            <div>{scopeFailures ? <CircleAlert size={17} /> : <CheckCircle2 size={17} />}<span><b>Scope</b> {scopeFailures ? "A query crossed the configured site boundary." : "Phrase-aware exclusions correctly rejected gall bladder without matching bladder."}</span><strong>{scopeFailures}</strong></div>
             <div><Search size={17} /><span><b>Retrieval</b> One lung threshold case missed top five and appeared at rank six.</span><strong>{blind.failures.retrieval_at_5.length}</strong></div>
-            <div><BookOpen size={17} /><span><b>Citation syntax</b> Unicode spaces, bold labels, and mixed brackets broke strict validation.</span><strong>{blind.failures.citation_labels.length}</strong></div>
+            <div><BookOpen size={17} /><span><b>Citation syntax</b> {citationFailures ? "Some generated outputs still used non-canonical evidence-label formats." : "Every generated evidence label resolved."}</span><strong>{citationFailures}</strong></div>
           </div>
         </section>
       )}

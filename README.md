@@ -57,10 +57,13 @@ data/
     retrieval_cases.jsonl
     retrieval_metrics.json
     evaluation_freeze.json
+    evaluation_freeze_v2.json
     blind_questions_v1.jsonl
     blind_gold_v1.jsonl
     blind_run_v1.jsonl
     blind_e2e_report_v1.json
+    blind_run_v2.jsonl
+    blind_e2e_report_v2.json
     adjudication_packets_v1.jsonl
     adjudication_template_v1.csv
     multi_judge_manifest_v1.json
@@ -310,9 +313,11 @@ The reviewer-ready workbook remains available as the audit surface and optional 
 
 An optional same-model triage run using `gpt-oss:120b-cloud` flagged 24 cases for review and produced provisional signals: 90.65% citation accuracy, 79.10% claim support, 20.90% unsupported claims, and 81.82% behavior accuracy. These numbers are displayed as provisional only. The judge is not independent and made at least one known source-reading error, so they are neither clinical nor official evaluation results.
 
-The frozen v1 evaluation artifacts are preserved for inspection. The post-audit scope/citation fixes intentionally changed architecture files, so v1 must not be re-scored or relabeled as if it used the new code. A future evaluation must create versioned v2 freeze/run/report artifacts.
+The frozen v1 evaluation artifacts remain preserved as the honest pre-fix baseline. A separate full v2 run fingerprinted the post-audit architecture and reran the same 44 questions. Scope classification improved from 97.73% to 100%, correct refusal from 80% to 100%, and false refusal remained 0%. Retrieval was unchanged: Recall@1 75.68%, Recall@5 97.30%, MRR@6 85.59%, and current-guideline accuracy 100%. Citation-label validity on newly generated answers was 94.87% (37/39), improved from 80% but not claimed as perfect. End-to-end latency was slower in this run at 5.12 s P50 and 9.95 s P95 versus v1's 3.08 s and 5.49 s; generation is remote/model-variable and no architecture change is credited for that movement. Semantic judging and human review were not run for v2.
 
-Optional evaluation tooling remains in the repository, but no new judge run is part of setup or rehearsal. It may be used only after a separate versioned evaluation directory and freeze are deliberately prepared; it must never overwrite or impersonate v1.
+The dashboard and `/api/metrics` expose v2 as the current deterministic result. The v1 freeze/run/report remain available for before/after inspection and are never overwritten or relabeled.
+
+Optional semantic evaluation tooling remains in the repository, but no judge run is part of setup or the v2 scope-fix evaluation. Future runs must use a new versioned freeze/run/report and must never overwrite or impersonate v1 or v2.
 
 The resulting metric must be described as **automated LLM-judged groundedness**, not clinical validation. The API and dashboard expose `multi_judge_report_v1.json` automatically when the complete report exists.
 

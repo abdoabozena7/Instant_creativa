@@ -11,7 +11,7 @@ The architecture is not “productionized,” and it should not be. The main com
 
 The audit found no P0 defect. Four clear P1 issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, insufficient dense-index integrity validation, and a non-reproducible submission package. The repository now tracks the reviewed 440-chunk corpus, matching dense index, evaluation evidence, source, tests, and documentation while excluding raw PDFs, secrets, dependencies, builds, and temporary outputs.
 
-The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, 41 tests, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without untracked machine files.
+The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without hidden machine files; the current regression suite contains 42 tests.
 
 ## Audit method and evidence
 
@@ -26,12 +26,12 @@ Pre-change validation:
 
 Post-change validation:
 
-- 41/41 tests pass.
+- 42/42 tests pass.
 - React production build passes.
 - Development retrieval rankings and metrics are unchanged; only nondeterministic latency samples moved.
-- A deterministic replay over all 44 blind questions gives scope 100%, correct refusal 100%, and false refusal 0%.
-- Re-normalizing and validating the stored non-refusal answer text gives citation-label validity 100% across 39 answerable/insufficient cases.
-- The 100% post-audit values are deterministic replays, not a new end-to-end LLM run. Frozen v1 artifacts and their original 80%/97.73% results remain unchanged and honestly labeled.
+- A full versioned v2 run over all 44 blind questions gives scope 100%, correct refusal 100%, and false refusal 0%.
+- Re-normalizing stored v1 answer text gives 100% citation-label validity, but a full new v2 generation run produced two new non-canonical formats and measured 94.87%; this is reported rather than hidden.
+- Full blind v2 confirms scope 100%, correct refusal 100%, false refusal 0%, unchanged Recall@1/5 and MRR, and 100% current-guideline accuracy. Frozen v1 artifacts remain unchanged and honestly labeled.
 
 # End-to-End Data Flow Audit
 
@@ -373,7 +373,7 @@ Findings:
 | Runtime data contracts | Dictionaries link retrieval, generation, API, and UI | REMAINS P2; type public evidence/response if changed |
 | Scope semantics | No-site unrelated query is allowed | REMAINS P2; benchmark first, do not add an LLM reflexively |
 | Policy score naming | `authority_adjustment` includes intent/coherence | REMAINS P2 clarity debt |
-| Evaluation versioning | v1 freeze filenames are hard-coded and current code now differs | REMAINS P2 tooling debt; preserve v1 and create v2 for a new run |
+| Evaluation versioning | A fix must not overwrite its historical baseline | FIXED with explicit versioned freeze/run/report output and separate v2 artifacts |
 | Artifact packaging | Reviewed corpus/index/evaluation snapshot is tracked; raw PDFs and disposable outputs are excluded | FIXED and clean-clone verified |
 | Public metrics artifact errors | Required merge report read is not guarded | REMAINS P2 demo resilience issue |
 
@@ -407,7 +407,7 @@ None found.
 - **Why it matters:** The guard allowed an excluded-only clinical question to reach retrieval/generation; frozen correct refusal was 80%.
 - **Smallest correct fix:** Remove all explicitly excluded spans before running selected-site patterns; preserve separately named included sites.
 - **Files affected:** `src/retrieval/scope_guard.py`, `tests/test_retrieval.py`.
-- **Expected impact:** Deterministic blind replay: scope 97.73% → 100%; correct refusal 80% → 100%; false refusal remains 0%.
+- **Expected impact:** Full blind v2: scope 97.73% → 100%; correct refusal 80% → 100%; false refusal remains 0%.
 - **Regression risk:** Low; true mixed bladder/gall-bladder behavior is explicitly tested.
 
 ### P1-2 — Citation formatting variants failed deterministic binding (implemented)
@@ -416,7 +416,7 @@ None found.
 - **Why it matters:** UI citation resolution and syntax metric understated valid evidence references; frozen label validity was 80%.
 - **Smallest correct fix:** One deterministic group normalizer followed by one range validator; never reconstruct citations from prose.
 - **Files affected:** `src/retrieval/generation.py`, `tests/test_retrieval.py`.
-- **Expected impact:** Stored-answer deterministic replay: 80% → 100% across the 39 newly non-refused answerable/insufficient cases; entailment unchanged and not claimed.
+- **Expected impact:** Stored-v1 replay reached 100%; fresh v2 generation measured 94.87% because two newly observed formats were non-canonical. Entailment is unchanged and not claimed.
 - **Regression risk:** Low; canonical labels remain unchanged and out-of-range labels still fail.
 
 ### P1-3 — Dense index could be stale with matching row count (implemented)
@@ -467,7 +467,7 @@ None found.
 
 **E. Deliberately not changed:** UI design, clinical scope, corpus, chunk strategy, embedding/chat models, retrieval weights/strategy, top-k, vector storage, reranking, frameworks, agents, and optional evaluator architecture.
 
-**F. Metric regression:** none. Development retrieval metrics are unchanged. Deterministic post-audit replay improves the targeted scope and citation-format metrics; no semantic improvement is claimed.
+**F. Metric regression:** no correctness or retrieval metric regressed in full blind v2. Scope/refusal improved, citation-label validity improved versus v1 but remained imperfect at 94.87%, and retrieval/current-authority metrics were identical. Observed end-to-end latency increased from 3.08/5.49 s P50/P95 in v1 to 5.12/9.95 s in v2; this remote generation timing is reported without attributing it to the scope fix. No semantic improvement is claimed.
 
 **G. Remaining P0/P1:** none. Later architecture changes are frozen unless a rehearsal exposes a concrete bug.
 

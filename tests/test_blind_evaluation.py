@@ -86,6 +86,32 @@ def test_blind_report_preserves_known_deterministic_results_and_failures() -> No
     assert len(report["failures"]["citation_labels"]) == 8
 
 
+def test_post_fix_v2_rejects_gall_bladder_without_regressing_retrieval() -> None:
+    freeze = json.loads(
+        (EVAL_DIR / "evaluation_freeze_v2.json").read_text(encoding="utf-8")
+    )
+    run = load_jsonl("blind_run_v2.jsonl")
+    report = json.loads(
+        (EVAL_DIR / "blind_e2e_report_v2.json").read_text(encoding="utf-8")
+    )
+    metrics = report["deterministic_metrics"]
+    gall_bladder = next(row for row in run if row["case_id"] == "BL-U10")
+
+    assert {row["architecture_sha256"] for row in run} == {
+        freeze["architecture_sha256"]
+    }
+    assert gall_bladder["retrieval"]["scope"]["status"] == "out_of_scope"
+    assert gall_bladder["retrieval"]["results"] == []
+    assert metrics["scope_classification_accuracy"] == 1.0
+    assert metrics["correct_refusal_rate"] == 1.0
+    assert metrics["false_refusal_rate"] == 0.0
+    assert metrics["retrieval_recall_at_1"] == 0.7568
+    assert metrics["retrieval_recall_at_5"] == 0.973
+    assert metrics["retrieval_mrr_at_6"] == 0.8559
+    assert metrics["current_guideline_accuracy"] == 1.0
+    assert report["failures"]["scope"] == []
+
+
 def test_semantic_scores_are_not_promoted_before_human_adjudication() -> None:
     report = json.loads(
         (EVAL_DIR / "blind_e2e_report_v1.json").read_text(encoding="utf-8")
