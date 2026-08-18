@@ -1,0 +1,121 @@
+﻿case_id,scope_group,category,expected_behavior,question,answer,human_answer_behavior_correct,human_total_claims,human_supported_claims,human_unsupported_claims,human_citations_checked,human_citations_entailed,human_current_guideline_accuracy,human_failure_types,human_notes
+BL-L01,lung,direct,answer,A 42-year-old has unexplained haemoptysis. What action does NG12 recommend?,NG12 recommends **a suspected cancer pathway referral for lung cancer** for a person who is aged 40 and over with unexplained haemoptysis[E1][E2].,,,,,,,,,
+BL-L02,lung,age_edge,insufficient,A 39-year-old has unexplained haemoptysis. Does this evidence set specify a suspected lung cancer pathway referral?,"The current NG12 guideline states that unexplained haemoptysis triggers a suspected‑cancer pathway referral only in people aged 40 years or over. [E1][E2]  
+When the age is below 40, the age criterion is not fulfilled and the guideline does not recommend a suspected lung‑cancer pathway referral for unexplained haemoptysis alone. [E1][E2]",,,,,,,,,
+BL-L03,lung,threshold,answer,A 55-year-old who has previously smoked now has an unexplained cough. What investigation is recommended?,"Offer an urgent, direct‑access chest X‑ray to assess for lung cancer in people aged 40 and over who have ever smoked and have one or more of the following unexplained symptoms—cough, fatigue, shortness of breath, chest pain, weight loss, or appetite loss.[E6]",,,,,,,,,
+BL-L04,lung,combination,answer,A 55-year-old who has never smoked has unexplained cough and fatigue. What does NG12 advise?,"NG12 advises **offering an urgent, direct‑access chest X‑ray** to assess for lung cancer in this patient [1.1.2] [E1]; the patient is ≥ 40 years old, never smoked, and has two unexplained symptoms (cough and fatigue), meeting the “2 or more unexplained symptoms” criterion [E1]. The same action is listed for a cough with fatigue in people aged ≥ 40 years [E6].",,,,,,,,,
+BL-L05,lung,direct,answer,What should be considered for a person aged 40 or over with a persistent or recurrent chest infection?,"Consider an urgent, direct‑access chest X‑ray to assess for lung cancer in people aged 40 years or over who have a persistent or recurrent chest infection[E1][E2].",,,,,,,,,
+BL-L06,lung,missing_information,insufficient,"Someone has unexplained cough and weight loss, but their age and smoking history are not provided. Can the exact NG12 lung action be determined?","The NG12 lung‑cancer pathway recommends offering an urgent, direct access chest X‑ray to people aged ≥ 40 with two or more unexplained symptoms, or to people who have ever smoked with one or more unexplained symptoms [E1].  
+The respiratory symptom table shows that an unexplained cough together with weight loss in a person aged ≥ 40 also meets the criteria for an urgent, direct access chest X‑ray [E6].  
+If a patient’s age and smoking history are not known, it is not possible to determine whether they satisfy either set of criteria for this action [E1].",,,,,,,,,
+BL-L07,lung,supporting_evidence,answer,What does the full guideline say about the evidence quality or risk of bias behind lung cancer symptom recognition?,"The 2015 full guideline states that the evidence base for recognising lung‑cancer symptoms is generally of high quality but is limited by several sources of bias [E2][E1][E4].
+
+* **Overall quality** – QUADAS‑II assessments of the positive‑predictive‑value estimates for individual symptoms were “generally of high quality”, although the quality varied across symptoms [E2].
+* **Risk‑of‑bias concerns** – Many primary studies did not use consecutive or random patient sampling; non‑consecutive/random designs (e.g., case‑control studies) are at high risk of bias because they can inflate test‑accuracy parameters [E1][E4].
+* **Applicability** – Some studies were conducted outside UK primary‑care settings, so their applicability is limited to the extent that the populations and settings are comparable to UK general‑practice patients [E1][E4].
+* **Other threats** – Missing data, symptom‑coding and specification issues, and the use of suboptimal reference standards were also identified as validity concerns that may affect the results [E1][E4].
+
+Thus, while the guideline rates the evidence for lung‑cancer symptom PPVs as overall high quality, it highlights that the body of evidence is affected by notable risk‑of‑bias and applicability limitations [E2][E1][E4].",,,,,,,,,
+BL-L08,lung,version_conflict,answer,"For lung symptoms meeting the current criteria, should I rely on the older full-guideline wording or the current direct-access chest X-ray recommendation?",The model response was withheld because it did not satisfy the evidence-citation contract. Please rephrase the clinical question.,,,,,,,,,
+BL-L09,lung,hard_negative,insufficient,Does a normal chest X-ray definitively rule out lung cancer according to the retrieved NG12 evidence?,"No. A normal chest X‑ray does **not** definitively exclude lung cancer; false‑negative results can occur and further imaging (e.g., CT) may be required if suspicion remains [E1][E4][E5].",,,,,,,,,
+BL-L10,lung,out_of_scope,refuse,What are the NG12 referral criteria for mesothelioma?,"This NG12 demo is restricted to lung, colorectal, oesophageal, stomach, pancreatic, bladder, and renal cancer. The requested cancer site is outside the configured evidence scope.",,,,,,,,,
+BL-L11,lung,multi_site,answer,How should unexplained appetite loss be assessed when it could indicate lung or several gastrointestinal and urological cancers?,"Unexplained appetite loss is a symptom of several cancers including lung, oesophageal, stomach, colorectal, pancreatic, bladder and renal cancer [E2].
+
+- Carry out an assessment for additional symptoms, signs or findings that may help to clarify which cancer is most likely [E2].
+- Offer urgent investigation, a suspected‑cancer pathway referral, or a non‑specific‑symptoms pathway referral [E2].
+
+If the person is aged ≥ 40 years and has two or more of the listed unexplained symptoms, or is an ever‑smoker with one or more of the listed unexplained symptoms, an urgent direct‑access chest X‑ray should be offered as part of the urgent investigation [E3].",,,,,,,,,
+BL-C01,colorectal,direct,answer,Should an adult with a change in bowel habit be offered FIT to guide suspected colorectal cancer referral?,Yes. The current NG12 guideline states that adults who have a change in bowel habit should be **offered quantitative faecal immunochemical testing (FIT)** to help decide whether a suspected‑cancer referral is needed[E1].,,,,,,,,,
+BL-C02,colorectal,threshold,answer,What happens when a FIT result is exactly 10 micrograms of haemoglobin per gram of faeces?,"A FIT result of exactly 10 µg haemoglobin per gram of faeces meets the “at least 10 µg/g” threshold, so the patient should be referred on a **suspected cancer pathway referral for colorectal cancer**[E1].",,,,,,,,,
+BL-C03,colorectal,threshold_edge,answer,A symptomatic adult has a FIT result of 9 micrograms of haemoglobin per gram. What safety action does NG12 specify?,"NG12 states that for a symptomatic adult with a FIT result below 10 µg Hb/g (for example, 9 µg Hb/g) [E2].
+
+- safety‑netting processes should be in place [E2].
+- referral to an appropriate secondary‑care pathway should not be delayed when there is strong clinical concern of cancer because of ongoing unexplained symptoms (e.g., an abdominal mass) [E2].",,,,,,,,,
+BL-C04,colorectal,missing_sample,answer,What should healthcare professionals consider when a person needs extra help to return their FIT sample?,"- **Take account of the need for additional help, information or support to return the FIT sample** [1.3.4]​[E1]  
+
+- **Ensure safety‑netting processes are in place** for anyone who has not returned the sample or whose FIT result is below the referral threshold, so that a referral is not delayed if there is strong clinical concern of cancer [1.3.3]​[E4]  
+
+- **Assess the person’s need for continuing support while they wait for any referral appointment**, inviting them to contact the healthcare professional again if they have further concerns or questions [1.14.7]​[E2]  
+
+- **Consider discussing the case with a specialist (by phone or email)** if there is uncertainty about how to interpret symptoms or the FIT result, or about whether a referral is needed, to convey concerns and urgency [1.16.2]​[E3]",,,,,,,,,
+BL-C05,colorectal,direct,answer,What referral should be considered for an adult with a rectal mass?,Consider a **suspected cancer pathway referral for colorectal cancer** in an adult who has a rectal mass. [E3],,,,,,,,,
+BL-C06,colorectal,missing_information,insufficient,"An adult reports rectal bleeding, but no age or accompanying symptoms are supplied. Can the precise FIT criterion be selected?","The NG12 recommendation for offering FIT combines age with specific unexplained symptoms [E1].
+
+- Adults < 50 years with rectal bleeding **plus** abdominal pain or weight loss [E1].
+- Adults ≥ 50 years with any of rectal bleeding, abdominal pain or weight loss [E1].
+- Adults ≥ 60 years with anaemia, even without iron‑deficiency [E1].
+- Adults with an abdominal mass, a change in bowel habit, iron‑deficiency anaemia, or aged ≥ 40 years with unexplained weight loss + abdominal pain [E1].
+
+Symptom‑specific tables echo these groups [E4][E6]:
+- Rectal bleeding with unexplained abdominal pain or weight loss in adults < 50 years → offer FIT [E4].
+- Rectal bleeding (unexplained) in adults ≥ 50 years → offer FIT [E6].
+
+Because the patient’s age and any additional unexplained symptoms (abdominal pain, weight loss, anaemia, etc.) are not provided, the information needed to match one of the FIT eligibility pathways is missing [E1][E4][E6].
+
+**Missing information required**  
+1. Patient’s age (to determine < 50, ≥ 50 or ≥ 60 years category) [E1].  
+2. Presence or absence of accompanying unexplained symptoms such as abdominal pain, weight loss or anaemia [E1][E4][E6].
+
+Only when these qualifiers are known can the appropriate FIT criterion be applied [E1][E4][E6].",,,,,,,,,
+BL-C07,colorectal,screening_history,answer,Should FIT still be offered for qualifying colorectal symptoms after a previous negative NHS bowel screening FIT?,Yes. The current NG12 recommendation states that quantitative faecal immunochemical testing (FIT) should be offered to adults with qualifying colorectal symptoms **even if the person has previously had a negative FIT result through the NHS bowel cancer screening programme** [E1].,,,,,,,,,
+BL-C08,colorectal,supporting_evidence,answer,Why did the guideline committee focus on positive predictive value when judging colorectal cancer symptoms?,"The GDG stated that positive predictive value was the most important outcome when identifying which signs and symptoms predict colorectal cancer. [E1]  
+It was considered the most informative outcome for deciding which symptoms predict colorectal cancer, with false‑negative rates also identified to inform safety‑netting when a test is negative. [E1]  
+The same reasoning is described in the broader discussion of cancer symptom evaluation. [E3]",,,,,,,,,
+BL-C09,colorectal,hard_negative,insufficient,What FIT threshold does this adult NG12 evidence specify for a 12-year-old child?,"The NG12 guideline does not provide an explicit FIT positivity threshold for a 12‑year‑old child.[E3][E4][E6]  
+
+* For children and young people the guideline states that recommendations should be made “significantly below the 3 % PPV threshold, although no explicit threshold value was set” [E3].  
+* The FIT discussion in the colorectal‑cancer sections refers to adult thresholds (the 3 % PPV threshold) and does not provide a separate value for children [E4][E6].  
+
+Therefore, the guideline does not specify a numeric FIT cut‑off for a 12‑year‑old; it only indicates that a threshold lower than 3 % PPV would be used for children, without a precise numeric cut‑off.[E3]",,,,,,,,,
+BL-C10,colorectal,out_of_scope,refuse,What is the referral pathway for suspected anal cancer?,"This NG12 demo is restricted to lung, colorectal, oesophageal, stomach, pancreatic, bladder, and renal cancer. The requested cancer site is outside the configured evidence scope.",,,,,,,,,
+BL-C11,colorectal,multi_site,answer,"For unexplained appetite loss that might include colorectal cancer among several sites, what cross-cutting action is recommended?",The model response was withheld because it did not satisfy the evidence-citation contract. Please rephrase the clinical question.,,,,,,,,,
+BL-U01,upper_gi,direct,answer,What is the current NG12 action for a person with dysphagia when oesophageal cancer is suspected?,"The current NG12 guideline states that when oesophageal cancer is suspected in a person who has dysphagia, the appropriate action is to **refer the person using a suspected cancer pathway referral for oesophageal cancer**[E2].",,,,,,,,,
+BL-U02,upper_gi,age_edge,insufficient,A 54-year-old has weight loss and reflux but no dysphagia. Does the cited oesophageal recommendation meet its age threshold?,"The NG12 oesophageal cancer recommendation 1.2.1 states that, when dysphagia is absent, referral on a suspected cancer pathway is indicated only for people who are aged 55 years or older, have weight loss, and have any of upper abdominal pain, reflux or dyspepsia [E1].  
+A patient who is 54 years old does not meet the age requirement, therefore the criteria for the 1.2.1 oesophageal cancer referral are not satisfied [E1].",,,,,,,,,
+BL-U03,upper_gi,direct,answer,What investigation should be considered for haematemesis when assessing oesophageal cancer?,"Consider a **non‑urgent, direct‑access upper gastrointestinal endoscopy** to assess for oesophageal cancer in people presenting with haematemesis[E1][E6].",,,,,,,,,
+BL-U04,upper_gi,threshold,answer,A person aged 55 has treatment-resistant dyspepsia. What oesophageal investigation should be considered?,"**Consider non‑urgent, direct‑access upper gastrointestinal endoscopy** to assess for oesophageal cancer in a person aged 55 years with treatment‑resistant dyspepsia[E1][E5]",,,,,,,,,
+BL-U05,upper_gi,direct,answer,What does NG12 recommend for a 40-year-old with jaundice when pancreatic cancer is suspected?,NG12 recommends that a person aged 40 years or older who presents with jaundice be **referred using a suspected cancer pathway referral for pancreatic cancer**[E1][E6].,,,,,,,,,
+BL-U06,upper_gi,age_edge,insufficient,A 59-year-old has weight loss and back pain. Does the pancreatic CT or ultrasound recommendation meet its age threshold?,"No. The guideline for pancreatic cancer states that an urgent direct‑access CT, or an urgent direct‑access ultrasound if CT is unavailable, should be considered only in people aged 60 and over who have weight loss plus any of the listed symptoms (diarrhoea, back pain, abdominal pain, nausea, vomiting, constipation, new‑onset diabetes) [E1][E2][E3][E4]. If the patient is under 60 years old, the age criterion is not satisfied, so the recommendation does not apply [E1][E2][E3][E4].",,,,,,,,,
+BL-U07,upper_gi,combination,answer,A 60-year-old has weight loss and nausea. Which urgent investigation is recommended for possible pancreatic cancer?,"Consider an urgent, direct‑access CT scan (or, if CT is unavailable, an urgent direct‑access ultrasound scan) to assess for pancreatic cancer in a person aged 60 or over who has unexplained weight loss together with nausea[E2].",,,,,,,,,
+BL-U08,upper_gi,direct,answer,What referral should be considered for an upper abdominal mass consistent with stomach cancer?,Consider a **suspected cancer pathway referral** for a person with an upper abdominal mass consistent with stomach cancer. [E1][E3],,,,,,,,,
+BL-U09,upper_gi,direct,answer,What is the current stomach cancer referral action for dysphagia?,Refer people using a **suspected cancer pathway referral** for stomach cancer if they have dysphagia[E1].,,,,,,,,,
+BL-U10,upper_gi,out_of_scope,refuse,What does NG12 recommend for suspected gall bladder cancer with jaundice?,"This NG12 demo is restricted to lung, colorectal, oesophageal, stomach, pancreatic, bladder, and renal cancer. The requested cancer site is outside the configured evidence scope.",,,,,,,,,
+BL-U11,upper_gi,version_conflict,answer,"For dysphagia and suspected oesophageal cancer, should the older direct-endoscopy wording override the current suspected cancer pathway referral?","The 2026 NG12 guideline states that for dysphagia the appropriate action is to refer using a suspected cancer pathway referral for oesophageal cancer [E1].  
+The dysphagia symptom table also lists “Refer using a suspected cancer pathway referral” [E6].  
+The description of urgent direct‑access upper‑gastrointestinal endoscopy appears only in the 2015 rationale and is not a current recommendation [E4].  
+Therefore the older direct‑endoscopy wording does not override the current recommendation to use a suspected cancer pathway referral [E1][E6].",,,,,,,,,
+BL-R01,bladder_renal,direct,answer,A 45-year-old has unexplained visible haematuria without a urinary tract infection. What is the bladder cancer action?,Refer the patient using a suspected‑cancer pathway referral for bladder cancer. [E1][E3],,,,,,,,,
+BL-R02,bladder_renal,age_edge,insufficient,A 44-year-old has unexplained visible haematuria without UTI. Does the cited bladder recommendation meet its age threshold?,"The bladder‑cancer suspected‑cancer pathway referral (Recommendation 1.6.4) applies to people aged 45 and over who have unexplained visible haematuria without urinary‑tract infection, or visible haematuria that persists or recurs after successful treatment of infection [E1].  
+The symptom table repeats the same age threshold (45 and over) for visible unexplained haematuria [E5].  
+For a person who is 44 years old, the age requirement is not satisfied, so the referral recommendation does not apply [E1].",,,,,,,,,
+BL-R03,bladder_renal,direct,answer,"What should be considered for a 60-year-old with recurrent, persistent and unexplained urinary tract infection?","Consider a **non‑urgent referral for bladder cancer** because the person is aged 60 years or over and has a **recurrent, persistent and unexplained urinary tract infection**[E1][E2].",,,,,,,,,
+BL-R04,bladder_renal,direct,answer,What is the renal cancer referral action for someone aged 45 with unexplained visible haematuria and no UTI?,"Use a suspected cancer pathway referral for renal cancer [E1]. The guideline recommends referring people aged 45 and over who have unexplained visible haematuria without a urinary‑tract infection, or visible haematuria that persists or recurs after successful treatment of a urinary‑tract infection [E1].",,,,,,,,,
+BL-R05,bladder_renal,hard_negative,insufficient,Does the renal recommendation shown here require referral for isolated non-visible haematuria in a 45-year-old?,"No. The renal‑cancer suspected‑cancer pathway referral criterion requires visible haematuria (unexplained or persisting after a urinary‑tract infection) in people aged 45 and over [E1]. Isolated non‑visible haematuria is not a trigger for that referral [E1]. The bladder‑cancer pathway includes non‑visible haematuria only for people aged 60 and over who also have dysuria or a raised white cell count, which does not meet the criteria for a 45‑year‑old [E2].",,,,,,,,,
+BL-R06,bladder_renal,missing_information,insufficient,"A person has unexplained visible haematuria, but their age is unknown. Can the exact bladder or renal referral criterion be confirmed?","The suspected‑cancer pathway referral criteria for bladder cancer and renal cancer require the person to be aged 45 years or older and to have unexplained visible haematuria, or visible haematuria that persists or recurs after successful treatment of a urinary‑tract infection [E1][E2][E4].  
+Because the patient’s age is not documented, it is not possible to determine whether the age ≥ 45 years condition is met, so the referral threshold cannot be confirmed [E1][E2][E4].  
+The missing qualifier is age ≥ 45 years; without that information the patient does not satisfy the current referral criteria and should be managed according to the safety‑netting recommendation [E5].",,,,,,,,,
+BL-R07,bladder_renal,supporting_evidence,answer,What supporting evidence discusses positive predictive value or study limitations for haematuria and renal cancer?,"- **PPV values and age/sex variation** – In primary‑care patients, haematuria has overall PPVs of 0.65 – 6.48 % (higher in men and rising with age); the evidence is limited by inclusion of many non‑renal cancers and bias concerns [E3].
+
+- **Meta‑analysis of individual studies** – Reported PPVs range from 0.65 % (Friedlander 2014) to 6.48 % (Hippisley‑Cox 2012) across the included studies [E4].
+
+- **Evidence quality and study limitations** – The quality of evidence for PPVs varies from low to high; most studies grouped all urinary‑tract cancers, making renal‑specific estimates difficult, and did not separate visible from non‑visible haematuria [E1].
+
+- **Threshold for referral and PPV rationale** – The GDG set a referral threshold of PPV ≥ 3 %; visible haematuria in primary care exceeds this level and its PPV increases with age [E2].
+
+- **PPV as the primary outcome** – The GDG regarded PPV as the most important outcome for identifying signs and symptoms predictive of renal cancer [E5].",,,,,,,,,
+BL-R08,bladder_renal,multi_site,answer,"For visible haematuria at age 45 without UTI, how do the current bladder and renal recommendations relate?","Both the bladder‑cancer and renal‑cancer pathways use the same criterion for a 45‑year‑old with visible haematuria that is not due to a urinary‑tract infection [E1][E2].
+
+* Renal cancer – Refer using a suspected‑cancer pathway if the person is aged 45 or over and has unexplained visible haematuria without urinary‑tract infection [E1].
+* Bladder cancer – Refer using a suspected‑cancer pathway if the person is aged 45 or over and has unexplained visible haematuria without urinary‑tract infection [E2].
+
+The symptom table shows this presentation is a possible sign of bladder or renal cancer and the required action is a suspected‑cancer pathway referral [E3].
+
+Therefore, for a 45‑year‑old with visible haematuria and no urinary‑tract infection, the current guidelines for both bladder and renal cancer converge on a single recommendation: initiate a suspected‑cancer pathway referral [E1][E2][E3].",,,,,,,,,
+BL-R09,bladder_renal,out_of_scope,refuse,At what PSA level should someone be referred for suspected prostate cancer?,"This NG12 demo is restricted to lung, colorectal, oesophageal, stomach, pancreatic, bladder, and renal cancer. The requested cancer site is outside the configured evidence scope.",,,,,,,,,
+BL-R10,bladder_renal,out_of_scope,refuse,What is the urgent pathway for a painless testicular mass?,"This NG12 demo is restricted to lung, colorectal, oesophageal, stomach, pancreatic, bladder, and renal cancer. The requested cancer site is outside the configured evidence scope.",,,,,,,,,
+BL-R11,bladder_renal,multi_site,answer,What cross-cutting NG12 action applies to unexplained appetite loss when bladder and renal cancer are among several possibilities?,"Unexplained appetite loss is a symptom of several cancers, including lung, oesophageal, stomach, colorectal, pancreatic, bladder and renal cancer.[E1]
+
+For people with unexplained appetite loss, NG12 recommends both of the following actions:[E1]
+
+* Carry out an assessment for additional symptoms, signs or findings that may help to clarify which cancer is most likely.[E1][E2]  
+* Offer urgent investigation, or a suspected cancer pathway referral, or a non‑specific symptoms pathway referral.[E1][E2]",,,,,,,,,

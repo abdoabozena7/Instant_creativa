@@ -7,6 +7,7 @@ import time
 from typing import Any
 
 from .ollama_client import OllamaClient
+from .emergency_guard import assess_emergency
 from .query_safety import assess_query_safety
 from .scope_guard import assess_query_answerability
 
@@ -33,6 +34,10 @@ _STANDALONE_EVIDENCE_LABEL = re.compile(
     rf"(?={_CITATION_SPACE}[–—:-])",
     re.IGNORECASE,
 )
+_WORD = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ0-9]+")
+_MARKDOWN_SEPARATOR = re.compile(r"^\|?[\s:|-]+\|?$")
+_HEADING_ONLY = re.compile(r"^(?:#{1,6}\s+|\*\*[^*]+\*\*\s*$)")
+_SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9*])")
 SYSTEM_PROMPT = """You are the NG12 Evidence Console, a retrieval-grounded assistant.
 Use only the supplied evidence. The 2026 current guideline is authoritative for clinical
 actions, thresholds, urgency, and wording. The 2015 full guideline is supporting context
@@ -64,6 +69,8 @@ Rules:
    historical evidence, or unrelated workflow guidance unless the question asks for it.
 14. Preserve AND/OR structure exactly. When the evidence says "any of the following", one
    listed feature is sufficient; do not imply that additional listed features are required.
+15. Every clinical sentence, bullet, and table data row must end with one or more evidence
+   labels. Do not add an uncited summary, comparison, conclusion, or absence claim.
 """
 
 
@@ -95,6 +102,35 @@ async def generate_grounded_answer(
             "warnings": [
                 "Generation skipped by the deterministic instruction-safety guard."
             ],
+            "ollama_metrics": {},
+        }
+    emergency = assess_emergency(query)
+    if emergency["status"] == "redirect":
+        return {
+            "answer": emergency["message"],
+            "model": None,
+            "response_status": "emergency_redirect",
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety": safety,
+            "emergency": emergency,
+            "answerability": {
+                "status": "not_assessed",
+                "clinical_features": [],
+            },
+            "citation_validation": {
+                "applicable": False,
+                "passed": None,
+                "label_validation_passed": None,
+                "claim_coverage_passed": None,
+                "claim_units_checked": 0,
+                "cited_claim_units": 0,
+                "citation_coverage_rate": None,
+                "uncited_claim_units": [],
+                "cited_evidence_ranks": [],
+                "invalid_evidence_ranks": [],
+                "available_evidence_count": 0,
+            },
+            "warnings": ["Generation skipped by the deterministic emergency guard."],
             "ollama_metrics": {},
         }
     answerability = assess_query_answerability(query)
@@ -147,6 +183,42 @@ async def generate_grounded_answer(
     answer = response.get("message", {}).get("content", "").strip()
     answer = normalize_citation_labels(answer)
     citation_validation, warnings = validate_citation_labels(answer, len(results))
+    citation_repair_attempted = False
+    initial_citation_coverage_rate = citation_validation["citation_coverage_rate"]
+    if (
+        citation_validation["label_validation_passed"]
+        and not citation_validation["claim_coverage_passed"]
+    ):
+        citation_repair_attempted = True
+        repair_prompt = (
+            "Rewrite the draft below without changing its clinical meaning or recommendation "
+            "modality. Use only the supplied evidence. Every prose sentence, list item, and "
+            "table data row must end with one or more supplied evidence labels. Delete any "
+            "unsupported statement. Return only the repaired answer, with no preamble.\n\n"
+            f"Draft:\n{answer}\n\nEvidence:\n\n" + "\n\n".join(evidence_blocks)
+        )
+        repair_response = await ollama.chat(
+            [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": repair_prompt},
+            ]
+        )
+        repaired_answer = normalize_citation_labels(
+            repair_response.get("message", {}).get("content", "").strip()
+        )
+        repaired_validation, repaired_warnings = validate_citation_labels(
+            repaired_answer, len(results)
+        )
+        if repaired_validation["passed"]:
+            answer = repaired_answer
+            citation_validation = repaired_validation
+            warnings = ["A single citation-coverage repair pass was applied."]
+            response = repair_response
+        else:
+            citation_validation = repaired_validation
+            warnings = repaired_warnings
+            response = repair_response
+            warnings.append("The bounded citation-coverage repair pass did not satisfy release checks.")
     response_status = (
         "grounded_answer" if citation_validation["passed"] else "generation_rejected"
     )
@@ -164,6 +236,8 @@ async def generate_grounded_answer(
         "safety": safety,
         "answerability": answerability,
         "citation_validation": citation_validation,
+        "citation_repair_attempted": citation_repair_attempted,
+        "initial_citation_coverage_rate": initial_citation_coverage_rate,
         "warnings": warnings,
         "ollama_metrics": {
             key: response.get(key)
@@ -212,15 +286,65 @@ def validate_citation_labels(
             if value < 1 or value > available_evidence_count
         }
     )
+    claim_units = _claim_units(answer)
+    uncited_claim_units = [unit for unit in claim_units if not CITATION_PATTERN.search(unit)]
+    cited_claim_units = len(claim_units) - len(uncited_claim_units)
+    citation_coverage_rate = (
+        round(cited_claim_units / len(claim_units), 4) if claim_units else 0.0
+    )
+    label_validation_passed = bool(valid_citations) and not invalid_citations
+    claim_coverage_passed = bool(claim_units) and not uncited_claim_units
     warnings: list[str] = []
     if not valid_citations:
         warnings.append("The generated answer did not include a valid evidence citation.")
     if invalid_citations:
         warnings.append(f"Invalid evidence labels were generated: {invalid_citations}")
+    if uncited_claim_units:
+        warnings.append(
+            f"Clinical claim units without evidence labels: {len(uncited_claim_units)}"
+        )
     return {
         "applicable": True,
-        "passed": bool(valid_citations) and not invalid_citations,
+        "passed": label_validation_passed and claim_coverage_passed,
+        "label_validation_passed": label_validation_passed,
+        "claim_coverage_passed": claim_coverage_passed,
+        "claim_units_checked": len(claim_units),
+        "cited_claim_units": cited_claim_units,
+        "citation_coverage_rate": citation_coverage_rate,
+        "uncited_claim_units": uncited_claim_units,
         "cited_evidence_ranks": valid_citations,
         "invalid_evidence_ranks": invalid_citations,
         "available_evidence_count": available_evidence_count,
     }, warnings
+
+
+def _claim_units(answer: str) -> list[str]:
+    """Extract visible prose units that must carry a citation label.
+
+    This is a deterministic coverage check, not semantic entailment. Markdown headings,
+    table headers, and separators are excluded; prose sentences, bullets, and data rows
+    remain independently checkable.
+    """
+
+    lines = [line.strip() for line in answer.splitlines() if line.strip()]
+    table_header_indexes = {
+        index - 1
+        for index, line in enumerate(lines)
+        if index > 0 and _MARKDOWN_SEPARATOR.fullmatch(line)
+    }
+    units: list[str] = []
+    for index, line in enumerate(lines):
+        if index in table_header_indexes or _MARKDOWN_SEPARATOR.fullmatch(line):
+            continue
+        if _HEADING_ONLY.match(line):
+            continue
+        if line.startswith("|") and line.endswith("|"):
+            if len(_WORD.findall(CITATION_PATTERN.sub("", line))) >= 4:
+                units.append(line)
+            continue
+        cleaned = re.sub(r"^(?:[-*+]\s+|\d+[.)]\s+)", "", line).strip()
+        for sentence in _SENTENCE_BOUNDARY.split(cleaned):
+            sentence = sentence.strip()
+            if len(_WORD.findall(CITATION_PATTERN.sub("", sentence))) >= 4:
+                units.append(sentence)
+    return units

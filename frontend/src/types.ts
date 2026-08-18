@@ -3,6 +3,7 @@ export type QueryOutcome =
   | "retrieval_results"
   | "grounded_answer"
   | "safety_refusal"
+  | "emergency_redirect"
   | "scope_refusal"
   | "insufficient_information"
   | "generation_rejected"
@@ -23,6 +24,12 @@ export interface VisionMetadata {
 
 export interface QuerySafety {
   status: "allowed" | "blocked";
+  reason_codes: string[];
+  message: string | null;
+}
+
+export interface EmergencyAssessment {
+  status: "clear" | "redirect" | "not_assessed";
   reason_codes: string[];
   message: string | null;
 }
@@ -62,6 +69,7 @@ export interface SearchResponse {
   mode_requested: Mode;
   mode_used: string;
   safety: QuerySafety;
+  emergency: EmergencyAssessment;
   scope: {
     status: "in_scope" | "out_of_scope" | "not_assessed";
     selected_sites: string[];
@@ -88,6 +96,12 @@ export interface AnswerResponse {
   citation_validation: {
     applicable: boolean;
     passed: boolean | null;
+    label_validation_passed?: boolean | null;
+    claim_coverage_passed?: boolean | null;
+    claim_units_checked?: number;
+    cited_claim_units?: number;
+    citation_coverage_rate?: number | null;
+    uncited_claim_units?: string[];
     cited_evidence_ranks: number[];
     invalid_evidence_ranks: number[];
     available_evidence_count: number;
@@ -164,12 +178,15 @@ export interface MetricsResponse {
       recall_at_1: number;
       recall_at_3: number;
       recall_at_5: number;
+      precision_at_3: number;
+      precision_at_5: number;
       mrr_at_10: number;
       canonical_top1_accuracy: number;
       out_of_scope_refusal_accuracy: number;
       latency_ms: { p50: number; p95: number };
       recall_at_5_by_category: Record<string, number>;
-    }>; 
+    }>;
+    precision_definition: string;
   } | null;
   blind_e2e: {
     evaluation_name: string;
@@ -189,9 +206,13 @@ export interface MetricsResponse {
       retrieval_recall_at_1: number;
       retrieval_recall_at_3: number;
       retrieval_recall_at_5: number;
+      retrieval_precision_at_3?: number;
+      retrieval_precision_at_5?: number;
       retrieval_mrr_at_6: number;
       current_guideline_accuracy: number;
       citation_label_validity_rate: number;
+      claim_citation_coverage_rate?: number;
+      citation_release_pass_rate?: number;
       latency_ms: {
         end_to_end_p50: number;
         end_to_end_p95: number;
@@ -263,6 +284,7 @@ export interface MetricsResponse {
     answers: number;
     scope_refusals: number;
     safety_refusals: number;
+    emergency_redirects: number;
     citation_validation_pass_rate: number | null;
     search_latency: { count: number; p50_ms: number; p95_ms: number };
     answer_latency: { count: number; p50_ms: number; p95_ms: number };

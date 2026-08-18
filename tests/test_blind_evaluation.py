@@ -196,6 +196,36 @@ def test_instruction_safety_fix_v8_preserves_all_deterministic_metrics() -> None
     assert report["semantic_metrics"]["status"] == "not_run"
 
 
+def test_emergency_and_claim_coverage_v12_artifacts_match_current_freeze() -> None:
+    freeze = json.loads(
+        (EVAL_DIR / "evaluation_freeze_v12.json").read_text(encoding="utf-8")
+    )
+    run = load_jsonl("blind_run_v12.jsonl")
+    report = json.loads(
+        (EVAL_DIR / "blind_e2e_report_v12.json").read_text(encoding="utf-8")
+    )
+    metrics = report["deterministic_metrics"]
+
+    assert "src/retrieval/emergency_guard.py" in freeze["files"]
+    assert len(run) == 44
+    assert {row["architecture_sha256"] for row in run} == {
+        freeze["architecture_sha256"]
+    }
+    assert report["evaluation_name"] == "blind_end_to_end_v12"
+    assert metrics["scope_classification_accuracy"] == 1.0
+    assert metrics["correct_refusal_rate"] == 1.0
+    assert metrics["false_refusal_rate"] == 0.0
+    assert metrics["retrieval_recall_at_5"] == 0.973
+    assert metrics["retrieval_precision_at_3"] == 0.3423
+    assert metrics["retrieval_precision_at_5"] == 0.2108
+    assert metrics["current_guideline_accuracy"] == 1.0
+    assert metrics["citation_label_validity_rate"] == 1.0
+    assert metrics["claim_citation_coverage_rate"] == 0.985
+    assert metrics["citation_release_pass_rate"] == 0.9487
+    assert len(report["failures"]["claim_citation_coverage"]) == 2
+    assert report["semantic_metrics"]["status"] == "not_run"
+
+
 def test_semantic_scores_are_not_promoted_before_human_adjudication() -> None:
     report = json.loads(
         (EVAL_DIR / "blind_e2e_report_v1.json").read_text(encoding="utf-8")

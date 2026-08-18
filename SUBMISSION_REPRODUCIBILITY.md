@@ -1,11 +1,11 @@
 # Submission and Reproducibility Audit
 
-Audit date: 17 August 2026  
+Audit date: 18 August 2026
 Result: **PASS**
 
 ## Submission decision
 
-The submission ships the exact reviewed runtime snapshot: 440 structured chunks, their provenance/merge records, the matching 768-dimensional dense index and manifest, and versioned v1/v2/v4/v6/v8 evaluation evidence. Together these artifacts are small enough for Git and remove any dependency on hidden source PDFs or a machine-specific corpus build during judging.
+The submission ships the exact reviewed runtime snapshot: 440 structured chunks, their provenance/merge records, the matching 768-dimensional dense index and manifest, and versioned evaluation evidence through v12. Together these artifacts are small enough for Git and remove any dependency on hidden source PDFs or a machine-specific corpus build during judging.
 
 The raw NICE PDFs are not required to run the snapshot and are not tracked. They may be supplied locally to rebuild the corpus when redistribution rules permit. A rebuild is a new corpus snapshot; it must be re-evaluated rather than relabeled as either versioned blind result.
 
@@ -62,6 +62,8 @@ The README-only path then completed:
 The v6 regression verifies both context-free decisions and vague patient-specific assessments. “A patient has some stomach issues, is this serious?” returns `insufficient` through `answerability_guard` with `model=null` and zero evidence; it does not reach retrieval or generation. The original clean-clone procedure remains unchanged because the corpus, index, dependencies, and setup command did not change.
 
 The v8 regression adds the frozen instruction-safety module to the architecture fingerprint. Explicit prompt injection now returns `safety_refusal` before clinical scope, with `model=null`, zero evidence, and citation validation not applicable. The 44-case regression preserves all v6 deterministic quality metrics and runs no semantic judge or human review.
+
+The v12 fingerprint adds the deterministic emergency guard and complete claim-unit citation release contract. Its 44-case regression preserves scope/refusal/retrieval/source metrics, measures strict Precision@3/5, and reports 98.50% claim citation coverage with a 94.87% complete release pass. Two remaining failures are withheld. Semantic entailment remains `not_run`; deterministic coverage is not relabeled as groundedness.
 
 ## Bugs exposed by rehearsal
 

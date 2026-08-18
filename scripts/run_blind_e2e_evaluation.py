@@ -212,11 +212,15 @@ def score_and_prepare_adjudication(
 ) -> dict[str, Any]:
     gold_by_id = {row["case_id"]: row for row in gold_rows}
     ranks: list[int | None] = []
+    precision_at_3: list[float] = []
+    precision_at_5: list[float] = []
     current_checks: list[bool] = []
     scope_checks: list[bool] = []
     correct_refusals: list[bool] = []
     false_refusals: list[bool] = []
     citation_checks: list[bool] = []
+    citation_coverage_checks: list[float] = []
+    citation_release_checks: list[bool] = []
     total_latencies: list[float] = []
     generation_latencies: list[float] = []
     by_group: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -256,6 +260,12 @@ def score_and_prepare_adjudication(
                 None,
             )
             ranks.append(rank)
+            precision_at_3.append(
+                sum(relevant(result, gold) for result in retrieval["results"][:3]) / 3
+            )
+            precision_at_5.append(
+                sum(relevant(result, gold) for result in retrieval["results"][:5]) / 5
+            )
 
         current_correct = None
         if gold.get("current_required") and rank:
@@ -267,9 +277,20 @@ def score_and_prepare_adjudication(
             current_checks.append(current_correct)
 
         citation_applicable = generation["citation_validation"].get("applicable", True)
-        citation_valid = bool(generation["citation_validation"]["passed"])
+        citation_valid = bool(
+            generation["citation_validation"].get(
+                "label_validation_passed", generation["citation_validation"]["passed"]
+            )
+        )
+        citation_release_valid = bool(generation["citation_validation"]["passed"])
+        citation_coverage = generation["citation_validation"].get(
+            "citation_coverage_rate"
+        )
         if not actual_refusal and citation_applicable:
             citation_checks.append(citation_valid)
+            citation_release_checks.append(citation_release_valid)
+            if citation_coverage is not None:
+                citation_coverage_checks.append(float(citation_coverage))
             generation_latencies.append(float(generation["latency_ms"]))
         total_latencies.append(float(row["total_latency_ms"]))
         diagnostic = {
@@ -279,8 +300,20 @@ def score_and_prepare_adjudication(
             "expected_behavior": gold["expected_behavior"],
             "scope_correct": scope_correct,
             "retrieval_rank": rank,
+            "precision_at_3": (
+                round(precision_at_3[-1], 4) if scored_retrieval else None
+            ),
+            "precision_at_5": (
+                round(precision_at_5[-1], 4) if scored_retrieval else None
+            ),
             "current_guideline_correct": current_correct,
             "citation_labels_valid": citation_valid if citation_applicable else None,
+            "claim_citation_coverage": (
+                citation_coverage if citation_applicable else None
+            ),
+            "citation_release_passed": (
+                citation_release_valid if citation_applicable else None
+            ),
             "top_chunk_id": (
                 retrieval["results"][0]["chunk_id"] if retrieval["results"] else None
             ),
@@ -352,12 +385,24 @@ def score_and_prepare_adjudication(
             "retrieval_recall_at_5": round(
                 sum(rank is not None and rank <= 5 for rank in ranks) / retrieval_denominator, 4
             ),
+            "retrieval_precision_at_3": round(
+                sum(precision_at_3) / retrieval_denominator, 4
+            ),
+            "retrieval_precision_at_5": round(
+                sum(precision_at_5) / retrieval_denominator, 4
+            ),
             "retrieval_mrr_at_6": round(
                 sum(1 / rank if rank else 0 for rank in ranks) / retrieval_denominator, 4
             ),
             "current_guideline_accuracy": round(sum(current_checks) / len(current_checks), 4),
             "citation_label_validity_rate": round(
                 sum(citation_checks) / len(citation_checks), 4
+            ),
+            "claim_citation_coverage_rate": round(
+                sum(citation_coverage_checks) / len(citation_coverage_checks), 4
+            ),
+            "citation_release_pass_rate": round(
+                sum(citation_release_checks) / len(citation_release_checks), 4
             ),
             "latency_ms": {
                 "end_to_end_p50": round(statistics.median(total_latencies), 2),
@@ -395,6 +440,13 @@ def score_and_prepare_adjudication(
                 item
                 for item in diagnostics
                 if item["citation_labels_valid"] is False
+                and item["expected_behavior"] != "refuse"
+            ],
+            "claim_citation_coverage": [
+                item
+                for item in diagnostics
+                if item["citation_release_passed"] is False
+                and item["citation_labels_valid"] is True
                 and item["expected_behavior"] != "refuse"
             ],
         },

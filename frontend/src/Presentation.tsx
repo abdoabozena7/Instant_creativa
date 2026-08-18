@@ -11,7 +11,6 @@ import {
   FileCheck2,
   FileText,
   Fingerprint,
-  Gauge,
   GitCompareArrows,
   Play,
   Search,
@@ -30,9 +29,11 @@ const chapters = [
   ["pipeline", "Evidence pipeline"],
   ["retrieval", "Why hybrid"],
   ["safety", "Safety logic"],
-  ["blind", "Blind baseline"],
+  ["blind", "Recall baseline"],
+  ["precision", "Precision ceiling"],
   ["failures", "What failed"],
   ["evaluation", "Evaluation mode"],
+  ["confidence", "Confidence & gates"],
   ["experiments", "Measured fixes"],
   ["demo", "Live evidence"],
 ] as const;
@@ -45,6 +46,16 @@ const pipeline = [
   { label: "Guard", detail: "Scope + authority", icon: ShieldCheck },
   { label: "Answer", detail: "Claim + evidence", icon: Sparkles },
 ];
+
+const v13Precision = {
+  observed: .3784,
+  ceiling: .4054,
+  ceilingRealized: .9333,
+  goldHits: 42,
+  attainableGoldHits: 45,
+  totalSlots: 111,
+  remainingGain: .027,
+} as const;
 
 function percent(value: number | undefined, digits = 1) {
   return value == null ? "—" : `${(value * 100).toFixed(value === 1 ? 0 : digits)}%`;
@@ -197,11 +208,12 @@ export function Presentation({
         </StorySlide>
 
         <StorySlide index={4} id="safety">
-          <StoryHeading number="04" overline="Safety logic" title="Before generation, the system decides whether it should answer." copy="Scope and source authority are deterministic gates—not suggestions to the language model." />
+          <StoryHeading number="04" overline="Safety logic" title="Before retrieval, the system decides whether it should proceed." copy="Instruction safety, urgent-care redirection, scope, and source authority are deterministic gates—not suggestions to the language model." />
           <div className="safety-flow">
             <div className="question-signal"><span>Question</span><motion.i animate={{ x: [0, 25, 0] }} transition={{ repeat: Infinity, duration: 2 }} /></div>
             <Split size={32} />
             <motion.div className="safety-branch accepted" whileInView={{ x: 0, opacity: 1 }} initial={{ x: -30, opacity: 0 }}><Check /><b>In scope</b><span>Lung · colorectal · upper GI · bladder · renal</span></motion.div>
+            <motion.div className="safety-branch emergency" whileInView={{ x: 0, opacity: 1 }} initial={{ x: 30, opacity: 0 }}><CircleAlert /><b>Emergency</b><span>Redirect before retrieval and generation</span></motion.div>
             <motion.div className="safety-branch refused" whileInView={{ x: 0, opacity: 1 }} initial={{ x: 30, opacity: 0 }}><ShieldCheck /><b>Out of scope</b><span>Refuse before retrieval and generation</span></motion.div>
           </div>
           <div className="authority-rule"><span>2026 action</span><motion.i initial={{ width: 0 }} whileInView={{ width: "100%" }} viewport={{ once: true }} /><span>2015 context</span><b>Never reversed</b></div>
@@ -219,7 +231,7 @@ export function Presentation({
               <RateRing value={deterministic?.retrieval_recall_at_1 ?? .7568} label="Top 1" detail="correct evidence first" />
               <ArrowRight size={28} />
               <RateRing value={deterministic?.retrieval_recall_at_5 ?? .973} label="Top 5" detail="correct evidence present" accent />
-              <p>Measured hit rate on 37 retrieval-scored blind cases—not a clinical probability.</p>
+              <p>Recall asks one question only: did at least one accepted evidence passage appear within the retrieval cutoff?</p>
             </div>
           </div>
           <div className="blind-metrics-line">
@@ -230,21 +242,59 @@ export function Presentation({
           </div>
         </StorySlide>
 
-        <StorySlide index={6} id="failures" tone="ink">
-          <StoryHeading number="06" overline="Failure analysis" title="Four failures. Four isolated fixes." copy="Measured failures and rehearsal bugs tell us what to change—and what not to touch." />
+        <StorySlide index={6} id="precision" tone="ink">
+          <StoryHeading
+            number="06"
+            overline="Strict precision · v13"
+            title="The system captured nearly all of the score it could earn."
+            copy="The frozen evaluation contains 45 results that can receive strict credit. The system found 42 of them; only three attainable results remain."
+          />
+          <motion.div
+            className="precision-focus"
+            initial={{ opacity: 0, y: 26 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: .55 }}
+            transition={{ duration: .65, ease: "easeOut" }}
+          >
+            <div className="precision-hero">
+              <span>Attainable score realized</span>
+              <strong>{percent(v13Precision.ceilingRealized, 2)}</strong>
+            </div>
+            <div className="precision-explainer">
+              <span>What it means</span>
+              <p>
+                The system recovered <b>{v13Precision.goldHits}</b> of the <b>{v13Precision.attainableGoldHits}</b> results that the evaluation can actually reward.
+                Just <b>{v13Precision.attainableGoldHits - v13Precision.goldHits}</b> remain.
+              </p>
+              <div className="precision-progress" aria-label="42 of 45 attainable results recovered">
+                <motion.i
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${v13Precision.ceilingRealized * 100}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.1, delay: .25, ease: "easeOut" }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </StorySlide>
+
+        <StorySlide index={7} id="failures" tone="ink">
+          <StoryHeading number="07" overline="Failure analysis" title="Six failures. Six isolated fixes." copy="Measured failures and rehearsal bugs tell us what to change—and what not to touch." />
           <div className="failure-story">
             <FailureBeat marker="A" before="gall bladder" fault="substring: bladder" after="phrase-level scope" metric="Correct refusal 80% → 100%" />
             <FailureBeat marker="B" before="[ **E2** ]" fault="strict label parser" after="citation normalization" metric="Validity 80% → 100%" />
             <FailureBeat marker="C" before="Some stomach issues—is this serious?" fault="vague patient description" after="minimum-answerability gate" metric="No retrieval · no model call" />
             <FailureBeat marker="D" before="System override · fabricate [E99]" fault="control-plane instruction" after="instruction-safety guard" metric="Blocked before retrieval" />
+            <FailureBeat marker="E" before="Heavy bleeding · faint" fault="entered generation" after="emergency redirect" metric="No retrieval · no model" />
+            <FailureBeat marker="F" before="Uncited comparison" fault="label-only validation" after="claim coverage gate" metric="Every released unit cited" />
           </div>
           <div className="do-not-touch"><ShieldCheck /><p><b>Retrieval architecture stays frozen.</b> Recall@5 is already above the 95% target.</p></div>
         </StorySlide>
 
-        <StorySlide index={7} id="evaluation">
-          <StoryHeading number="07" overline="Hackathon evaluation mode" title="Computer scores facts. Gemini judges meaning." copy="The sophisticated multi-judge runner remains available, but the presentation path is deliberately lightweight." />
+        <StorySlide index={8} id="evaluation">
+          <StoryHeading number="08" overline="Hackathon evaluation mode" title="Computer scores facts. Gemini judges meaning." copy="The sophisticated multi-judge runner remains available, but the presentation path is deliberately lightweight." />
           <div className="evaluation-split">
-            <div className="eval-lane deterministic-lane"><span>Deterministic</span><strong>Exact</strong>{["Scope", "Recall@K", "MRR", "2026 priority", "Citation syntax", "Latency"].map((item) => <p key={item}><Check size={14} />{item}</p>)}</div>
+            <div className="eval-lane deterministic-lane"><span>Deterministic</span><strong>Exact</strong>{["Scope", "Recall@K", "Precision@K", "MRR", "Claim citation coverage", "Latency"].map((item) => <p key={item}><Check size={14} />{item}</p>)}</div>
             <motion.div className="evaluation-arrow" animate={{ opacity: [.3, 1, .3] }} transition={{ repeat: Infinity, duration: 1.8 }}><ArrowRight /></motion.div>
             <div className="eval-lane judge-lane"><span>Independent judge</span><strong>Semantic</strong>{["Claim support", "Citation entailment", "Overreach"].map((item) => <p key={item}><Sparkles size={14} />{item}</p>)}</div>
             <div className="conditional-judge"><CircleAlert size={17} /><p><b>Gemini · one pass</b>Primary decision</p><ArrowDown /><p><b>Second judge only if needed</b>Any primary failure · disagreement fails closed</p></div>
@@ -252,8 +302,41 @@ export function Presentation({
           <div className="evaluation-policy">SUPPORTED = pass <i /> PARTIAL · UNSUPPORTED · CONTRADICTED · UNCERTAIN = fail</div>
         </StorySlide>
 
-        <StorySlide index={8} id="experiments" tone="soft">
-          <StoryHeading number="08" overline="Failure-driven development" title="One change. Same 44 cases. One decision." copy="Every experiment is accepted or rejected against a frozen baseline." />
+        <StorySlide index={9} id="confidence" tone="ink">
+          <StoryHeading
+            number="09"
+            overline="Confidence & thresholds"
+            title="No invented confidence score. Release depends on measured gates."
+            copy="Retrieval scores order evidence; they are not diagnostic probabilities. Confidence comes from frozen evaluation results and deterministic release checks."
+          />
+          <div className="confidence-layout">
+            <section className="confidence-signals" aria-label="Measured confidence signals">
+              <span className="confidence-label">Measured confidence signals</span>
+              <div>
+                <ConfidenceSignal value={percent(deterministic?.retrieval_recall_at_5 ?? .973)} label="Evidence found" detail="Blind Recall@5" />
+                <ConfidenceSignal value={percent(deterministic?.scope_classification_accuracy ?? .9773)} label="Scope routed" detail="Blind accuracy" />
+                <ConfidenceSignal value={percent(deterministic?.current_guideline_accuracy ?? 1)} label="Current source" detail="2026 selected" />
+                <ConfidenceSignal value={percent(v13Precision.ceilingRealized, 2)} label="Ceiling realized" detail="42 / 45 attainable hits" />
+              </div>
+            </section>
+
+            <section className="threshold-ledger" aria-label="Runtime thresholds">
+              <span className="confidence-label">Runtime thresholds</span>
+              <ThresholdRow value="8" label="Evidence passages returned" detail="Top-K used by the answer path" />
+              <ThresholdRow value="20" label="Candidates reranked" detail="First-stage candidate pool" />
+              <ThresholdRow value="0.75" label="Anchor activation" detail="Minimum ranking score" />
+              <ThresholdRow value="100%" label="Citation release gate" detail="Valid labels and every claim cited" />
+            </section>
+          </div>
+          <div className="confidence-foot">
+            <span><b>Hybrid weights</b>55% BM25 · 45% dense</span>
+            <span><b>Acceptance thresholds</b>Recall@5 ≥95% · correct refusal ≥95% · false refusal ≤2% · citation validity ≥98%</span>
+            <span><ShieldCheck size={16} /><b>Fail closed</b>No calibrated clinical confidence is claimed.</span>
+          </div>
+        </StorySlide>
+
+        <StorySlide index={10} id="experiments" tone="soft">
+          <StoryHeading number="10" overline="Failure-driven development" title="One change. Same 44 cases. One decision." copy="Every experiment is accepted or rejected against a frozen baseline." />
           <div className="experiment-track">
             <Experiment marker="A" title="Scope matching" target="Correct refusal ≥95%" guardrail="False refusal 0–2%" />
             <Experiment marker="B" title="Citation normalization" target="Validity ≥98%" guardrail="No retrieval change" />
@@ -262,17 +345,17 @@ export function Presentation({
           <div className="decision-loop"><span>Baseline</span><ArrowRight /><span>Change one thing</span><ArrowRight /><span>Run same cases</span><ArrowRight /><span>Keep or revert</span></div>
         </StorySlide>
 
-        <StorySlide index={9} id="demo" tone="ink">
+        <StorySlide index={11} id="demo" tone="ink">
           <div className="final-stage">
             <span className="story-overline">Now show, don’t tell</span>
             <h2>Ask a real question.<br />Open every piece of evidence.</h2>
-            <p>The live console exposes the answer, recommendation ID, page, authority, retrieval score, and exact NICE wording.</p>
+            <p>Run the prepared direct, comparison, safe-refusal, and emergency cases; then open the cited NICE wording.</p>
             <button onClick={onOpenDemo}><Play size={18} /> Open live retrieval</button>
             <div className="final-proof">
               <span><Database />{health?.corpus_chunks ?? 440}<small>chunks</small></span>
               <span><Target />{percent(deterministic?.retrieval_recall_at_5 ?? .973)}<small>blind Recall@5</small></span>
+              <span><GitCompareArrows />{percent(v13Precision.observed, 2)}<small>v13 strict Precision@3</small></span>
               <span><ShieldCheck />{percent(deterministic?.current_guideline_accuracy ?? 1)}<small>current source</small></span>
-              <span><Gauge />{((deterministic?.latency_ms.end_to_end_p50 ?? 3080) / 1000).toFixed(2)}s<small>end-to-end P50</small></span>
             </div>
           </div>
         </StorySlide>
@@ -318,4 +401,20 @@ function FailureBeat({ marker, before, fault, after, metric }: { marker: string;
 
 function Experiment({ marker, title, target, guardrail }: { marker: string; title: string; target: string; guardrail: string }) {
   return <motion.div className="experiment" initial={{ y: 30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }}><b>{marker}</b><span>{title}</span><strong>{target}</strong><small>{guardrail}</small></motion.div>;
+}
+
+function ConfidenceSignal({ value, label, detail }: { value: string; label: string; detail: string }) {
+  return (
+    <motion.div initial={{ y: 24, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }}>
+      <strong>{value}</strong><span>{label}</span><small>{detail}</small>
+    </motion.div>
+  );
+}
+
+function ThresholdRow({ value, label, detail }: { value: string; label: string; detail: string }) {
+  return (
+    <motion.div initial={{ x: 28, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }}>
+      <strong>{value}</strong><span><b>{label}</b><small>{detail}</small></span>
+    </motion.div>
+  );
 }

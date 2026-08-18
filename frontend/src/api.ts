@@ -44,7 +44,6 @@ export const api = {
         case_context: caseContext,
         mode,
         cancer_sites: site ? [site] : [],
-        privacy_confirmed: true,
       }),
     }),
 };

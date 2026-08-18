@@ -33,6 +33,7 @@ class SearchRequest(BaseModel):
     top_k: int = Field(default=8, ge=1, le=20)
     cancer_sites: list[str] = Field(default_factory=list)
     content_types: list[str] = Field(default_factory=list)
+    rerank: bool = True
 
 
 class AnswerRequest(SearchRequest):
@@ -44,8 +45,7 @@ class VisionAnswerRequest(BaseModel):
     mime_type: str = Field(min_length=3, max_length=100)
     mode: Literal["bm25", "dense", "hybrid"] = "hybrid"
     cancer_sites: list[str] = Field(default_factory=list)
-    case_context: str = Field(default="", max_length=1000)
-    privacy_confirmed: bool = False
+    case_context: str = Field(min_length=3, max_length=1000)
 
 
 class RuntimeTelemetry:
@@ -56,6 +56,7 @@ class RuntimeTelemetry:
         self.answer_count = 0
         self.scope_refusal_count = 0
         self.safety_refusal_count = 0
+        self.emergency_redirect_count = 0
         self.citation_check_count = 0
         self.citation_pass_count = 0
 
@@ -77,6 +78,7 @@ class RuntimeTelemetry:
             "answers": self.answer_count,
             "scope_refusals": self.scope_refusal_count,
             "safety_refusals": self.safety_refusal_count,
+            "emergency_redirects": self.emergency_redirect_count,
             "citation_validation_pass_rate": (
                 round(self.citation_pass_count / self.citation_check_count, 4)
                 if self.citation_check_count
@@ -89,7 +91,7 @@ class RuntimeTelemetry:
 
 app = FastAPI(
     title="NG12 Evidence Console API",
-    version="0.3.0",
+    version="0.4.0",
     description="Authority-aware retrieval and grounded answering over a narrow NG12 corpus.",
 )
 app.add_middleware(
@@ -164,6 +166,11 @@ async def health() -> dict:
 def config() -> dict:
     return {
         "modes": ["hybrid", "bm25", "dense"],
+        "reranker": {
+            "default_enabled": True,
+            "candidate_k": 20,
+            "method": "idf_query_coverage_and_content_intent",
+        },
         "cancer_sites": [
             "lung",
             "colorectal",
@@ -191,6 +198,7 @@ async def search(request: SearchRequest) -> dict:
             top_k=request.top_k,
             cancer_sites=request.cancer_sites,
             content_types=request.content_types,
+            rerank=request.rerank,
         )
     except (ValueError, OSError) as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
@@ -201,6 +209,8 @@ async def search(request: SearchRequest) -> dict:
     telemetry.search_latencies.append(latency)
     if response["outcome"] == "safety_refusal":
         telemetry.safety_refusal_count += 1
+    if response["outcome"] == "emergency_redirect":
+        telemetry.emergency_redirect_count += 1
     if response["scope"]["status"] == "out_of_scope":
         telemetry.scope_refusal_count += 1
     return response
@@ -216,6 +226,7 @@ async def answer(request: AnswerRequest) -> dict:
             top_k=request.evidence_k,
             cancer_sites=request.cancer_sites,
             content_types=request.content_types,
+            rerank=request.rerank,
         )
     except (ValueError, OSError) as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
@@ -248,6 +259,36 @@ async def answer(request: AnswerRequest) -> dict:
                 "Evidence lookup only. This demo does not diagnose or replace clinical judgement."
             ),
         }
+    if retrieval["outcome"] == "emergency_redirect":
+        telemetry.emergency_redirect_count += 1
+        return {
+            "query": request.query,
+            "outcome": "emergency_redirect",
+            "answer": retrieval["emergency"]["message"],
+            "model": None,
+            "retrieval": retrieval,
+            "emergency": retrieval["emergency"],
+            "citation_validation": {
+                "applicable": False,
+                "passed": None,
+                "label_validation_passed": None,
+                "claim_coverage_passed": None,
+                "claim_units_checked": 0,
+                "cited_claim_units": 0,
+                "citation_coverage_rate": None,
+                "uncited_claim_units": [],
+                "cited_evidence_ranks": [],
+                "invalid_evidence_ranks": [],
+                "available_evidence_count": 0,
+            },
+            "warnings": [
+                "Retrieval and generation skipped by the deterministic emergency guard."
+            ],
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety_note": (
+                "Emergency redirect only. This demo does not diagnose or provide urgent care."
+            ),
+        }
     if retrieval["scope"]["status"] == "out_of_scope":
         telemetry.scope_refusal_count += 1
         return {
@@ -265,6 +306,9 @@ async def answer(request: AnswerRequest) -> dict:
             },
             "warnings": ["Generation skipped by the deterministic scope guard."],
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "safety_note": (
+                "Evidence lookup only. This demo does not diagnose or replace clinical judgement."
+            ),
         }
     if retrieval.get("answerability", {}).get("status") == "insufficient":
         generation = await generate_grounded_answer(
@@ -314,14 +358,9 @@ async def answer(request: AnswerRequest) -> dict:
 
 @app.post("/api/vision/answer")
 async def vision_answer(request: VisionAnswerRequest) -> dict:
-    """Translate one de-identified image, then reuse the unchanged text answer path."""
+    """Add attachment context to a required question, then reuse the text answer path."""
 
     started = time.perf_counter()
-    if not request.privacy_confirmed:
-        raise HTTPException(
-            status_code=400,
-            detail="Confirm that the image is de-identified before cloud analysis.",
-        )
     _decode_and_validate_image(request.image_base64, request.mime_type)
     if not vision_client.configured:
         raise HTTPException(
@@ -388,7 +427,7 @@ def metrics() -> dict:
     merge_path = PROJECT_ROOT / "data" / "parsed" / "merge_report.json"
     evaluation_path = PROJECT_ROOT / "data" / "eval" / "retrieval_metrics.json"
     blind_evaluation_path = (
-        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v8.json"
+        PROJECT_ROOT / "data" / "eval" / "blind_e2e_report_v12.json"
     )
     multi_judge_path = (
         PROJECT_ROOT / "data" / "eval" / "multi_judge_report_v1.json"

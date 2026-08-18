@@ -1,6 +1,6 @@
 # NG12 RAG Full Architecture Audit
 
-Audit date: 17 August 2026  
+Audit date: 18 August 2026
 Scope: repository source, generated schemas/artifacts, runtime, frontend integration, evaluation tooling, tests, dependencies, and submission structure.
 
 ## Executive verdict
@@ -11,7 +11,7 @@ The architecture is not “productionized,” and it should not be. The main com
 
 The audit found no P0 defect. Seven clear P1 issues were small enough to fix safely: the gall-bladder overlap, fragile citation-label formatting, insufficient dense-index integrity validation, a non-reproducible submission package, inference from missing patient facts, a bypass for vague severity questions, and a rehearsal-discovered prompt-injection control-flow defect. The repository now tracks the reviewed 440-chunk corpus, matching dense index, evaluation evidence, source, tests, and documentation while excluding raw PDFs, secrets, dependencies, builds, and temporary outputs.
 
-The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without hidden machine files; the current regression suite contains 130 tests.
+The project is ready for an instructor architecture review and clone-based submission. A clean-clone rehearsal outside the development workspace completed bootstrap, frontend build, API startup, search, evidence lookup, citation validation, and generated answering without hidden machine files. The 18 August handoff also adds an emergency redirect, claim-unit release validation, strict Precision@K reporting, and a rounded evidence-first UI.
 
 ## Audit method and evidence
 
@@ -38,6 +38,7 @@ Post-change validation:
 - The full v6 regression run retains 37 retrieval-scored cases and exactly preserves scope, refusal, Recall@1/5, MRR, current-guideline accuracy, and 100% citation-label validity. It ran no semantic judge or human review.
 - Prompt-injection rehearsal showed that control-plane instructions could reach retrieval, after which a model refusal or invalidly cited output was displayed beside unrelated evidence. V7 adds a separate deterministic instruction-safety guard before clinical scope plus fail-closed generation output handling.
 - The full v8 regression preserves every v6 deterministic quality metric. Thirty English/Arabic/Unicode attack variants are blocked and eleven benign controls remain allowed; live browser verification shows no evidence or citation UI for a safety refusal. No semantic judge or human review ran.
+- The v12 regression preserves scope 100%, correct refusal 100%, false refusal 0%, Recall@5 97.30%, and current-source accuracy 100%. It additionally measures strict Precision@3/5 at 34.23%/21.08%, claim citation coverage at 98.50%, and complete citation release pass at 94.87%. Two residual claim-coverage failures are withheld; semantic entailment remains unrun and unclaimed.
 
 # End-to-End Data Flow Audit
 

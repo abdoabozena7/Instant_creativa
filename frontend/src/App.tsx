@@ -1,22 +1,20 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
-  ArrowRight,
   BookOpen,
   CheckCircle2,
   ChevronRight,
   CircleAlert,
   Database,
-  FileText,
   Gauge,
   ImagePlus,
   Layers3,
   LoaderCircle,
-  LockKeyhole,
   Search,
   ShieldCheck,
   ScanLine,
   Sparkles,
+  Target,
   X,
   XCircle,
 } from "lucide-react";
@@ -36,10 +34,23 @@ import type {
 } from "./types";
 
 const sites = ["", "lung", "colorectal", "oesophageal", "stomach", "pancreatic", "bladder", "renal"];
-const examples = [
-  "What does NG12 recommend for unexplained haemoptysis in someone aged 40 or over?",
-  "When should adults be offered quantitative FIT for suspected colorectal cancer?",
-  "Why did the committee use positive predictive value for colorectal symptoms?",
+const demoCases = [
+  {
+    label: "Direct",
+    query: "What does NG12 recommend for unexplained haemoptysis in someone aged 40 or over?",
+  },
+  {
+    label: "Compare",
+    query: "According to NG12, compare the referral criteria for unexplained visible haematuria for bladder cancer and renal cancer. Answer as two concise cited bullets.",
+  },
+  {
+    label: "Safe refusal",
+    query: "What does NG12 recommend for suspected prostate cancer?",
+  },
+  {
+    label: "Emergency",
+    query: "I am vomiting blood heavily right now and feel faint. What should I do?",
+  },
 ];
 
 function pct(value: number | undefined) {
@@ -76,7 +87,8 @@ interface ImagePreview {
   url: string;
   name: string;
   size: number;
-  caseContext: string;
+  mimeType: string;
+  base64: string;
 }
 
 interface WorkflowStage {
@@ -87,7 +99,7 @@ interface WorkflowStage {
 
 function App() {
   const [view, setView] = useState<"story" | "search" | "metrics">("story");
-  const [query, setQuery] = useState(examples[0]);
+  const [query, setQuery] = useState(demoCases[0].query);
   const [mode, setMode] = useState<Mode>("hybrid");
   const [site, setSite] = useState("");
   const [loading, setLoading] = useState(false);
@@ -98,7 +110,6 @@ function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [metrics, setMetrics] = useState<MetricsResponse | null>(null);
   const [request, setRequest] = useState<RequestDescriptor | null>(null);
-  const [privacyConfirmed, setPrivacyConfirmed] = useState(false);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
   const [vision, setVision] = useState<VisionMetadata | null>(null);
   const [visionRefusal, setVisionRefusal] = useState<VisionRefusalResponse | null>(null);
@@ -128,16 +139,37 @@ function App() {
   }
 
   async function run(withAnswer: boolean) {
-    if (query.trim().length < 3) return;
-    setRequest({ kind: withAnswer ? "answer" : "retrieve", mode, inputMethod: "text" });
+    if (query.trim().length < 3) {
+      setError("Write a clinical question before requesting a recommendation.");
+      return;
+    }
+    const useAttachment = withAnswer && imagePreview !== null;
+    setRequest({ kind: withAnswer ? "answer" : "retrieve", mode, inputMethod: useAttachment ? "vision" : "text" });
     setLoading(true);
     setError(null);
     setSelected(null);
     setSearch(null);
     setAnswer(null);
+    setVision(null);
     setVisionRefusal(null);
     try {
-      if (withAnswer) {
+      if (useAttachment) {
+        const response = await api.visionAnswer(
+          imagePreview.base64,
+          imagePreview.mimeType,
+          query.trim(),
+          mode,
+          site,
+        );
+        setVision(response.vision);
+        if (!("retrieval" in response)) {
+          setVisionRefusal(response);
+        } else {
+          setAnswer(response);
+          setSelected(response.outcome === "grounded_answer" ? response.retrieval.results[0] ?? null : null);
+          setMetrics(await api.metrics());
+        }
+      } else if (withAnswer) {
         const response = await api.answer(query, mode, site);
         setAnswer(response);
         setSearch(null);
@@ -163,12 +195,8 @@ function App() {
     if (imageInput.current) imageInput.current.value = "";
   }
 
-  async function analyzeImage(file: File) {
+  async function attachImage(file: File) {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (!privacyConfirmed) {
-      setError("Confirm that the image is de-identified before cloud analysis.");
-      return;
-    }
     if (!allowedTypes.includes(file.type)) {
       setError("Use a JPEG, PNG, or WebP export. DICOM and PDF are not supported in this bonus.");
       return;
@@ -180,31 +208,10 @@ function App() {
 
     const dataUrl = await fileToDataUrl(file);
     const imageBase64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
-    setImagePreview({ url: dataUrl, name: file.name, size: file.size, caseContext: query.trim() });
-    setRequest({ kind: "answer", mode, inputMethod: "vision" });
-    setLoading(true);
+    setImagePreview({ url: dataUrl, name: file.name, size: file.size, mimeType: file.type, base64: imageBase64 });
     setError(null);
-    setSelected(null);
-    setSearch(null);
-    setAnswer(null);
     setVision(null);
     setVisionRefusal(null);
-    try {
-      const response = await api.visionAnswer(imageBase64, file.type, query.trim(), mode, site);
-      setVision(response.vision);
-      if (response.query) setQuery(response.query);
-      if (!("retrieval" in response)) {
-        setVisionRefusal(response);
-      } else {
-        setAnswer(response);
-        setSelected(response.outcome === "grounded_answer" ? response.retrieval.results[0] ?? null : null);
-        setMetrics(await api.metrics());
-      }
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Image analysis failed");
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
@@ -256,19 +263,14 @@ function App() {
             transition={{ duration: 0.24 }}
           >
             <section className="query-stage">
-              <div className="eyebrow"><ShieldCheck size={15} /> Primary-source constrained</div>
               <div className="query-heading">
                 <div>
+                  <span className="workspace-label">NG12 evidence retrieval</span>
                   <h1>Ask the evidence.</h1>
-                  <p>Current recommendations rank first. Older evidence explains—never overrides.</p>
-                </div>
-                <div className="source-rule" aria-label="Source authority rule">
-                  <span><b>01</b> 2026 action</span>
-                  <ArrowRight size={15} />
-                  <span><b>02</b> 2015 context</span>
+                  <p>Ask a clinical question and get an answer grounded in the current NICE guidance.</p>
                 </div>
               </div>
-              <div className="query-composer">
+              <div className={`query-composer ${loading ? "is-working" : ""}`}>
                 <Search size={21} />
                 <textarea
                   value={query}
@@ -287,20 +289,20 @@ function App() {
                   onChange={(event) => {
                     const file = event.currentTarget.files?.[0];
                     event.currentTarget.value = "";
-                    if (file) void analyzeImage(file);
+                    if (file) void attachImage(file);
                   }}
                   aria-label="Upload a de-identified clinical image"
                 />
                 <button
                   className="vision-button"
                   onClick={() => imageInput.current?.click()}
-                  disabled={loading || !privacyConfirmed || health?.vision?.available !== true}
-                  title={health?.vision?.available !== true ? "Restart the API with GEMINI_API_KEY to enable image analysis" : "Combine the typed case with a de-identified image"}
+                  disabled={loading}
+                  title="Upload a de-identified JPEG, PNG, or WebP image up to 8 MB"
                 >
                   <ImagePlus size={17} />
                   <span>Case + image</span>
                 </button>
-                <button className="answer-button" onClick={() => void run(true)} disabled={loading}>
+                <button className="answer-button" onClick={() => void run(true)} disabled={loading || query.trim().length < 3}>
                   {loading ? <LoaderCircle className="spin" size={18} /> : <Sparkles size={17} />}
                   Answer with evidence
                 </button>
@@ -316,36 +318,25 @@ function App() {
                 <select value={site} onChange={(event) => setSite(event.target.value)} aria-label="Cancer site filter">
                   {sites.map((item) => <option key={item} value={item}>{item ? label(item) : "All in-scope sites"}</option>)}
                 </select>
-                <button className="evidence-only" onClick={() => void run(false)} disabled={loading}>
-                  Retrieve only <ChevronRight size={15} />
-                </button>
-                <label className="privacy-confirm">
-                  <input
-                    type="checkbox"
-                    checked={privacyConfirmed}
-                    onChange={(event) => setPrivacyConfirmed(event.target.checked)}
-                  />
-                  <LockKeyhole size={13} />
-                  De-identified · cloud processing
-                </label>
                 <span className="shortcut">Ctrl ↵ to answer</span>
+              </div>
+              <div className="example-row" aria-label="Prepared live demo cases">
+                <span>Try a case</span>
+                {demoCases.map((demo) => (
+                  <button key={demo.label} onClick={() => setQuery(demo.query)} title={demo.query}>{demo.label}</button>
+                ))}
               </div>
               <AnimatePresence>
                 {imagePreview && (
                   <VisionTrace
                     preview={imagePreview}
+                    question={query}
                     vision={vision}
                     loading={loading && request?.inputMethod === "vision"}
                     onClear={clearVisionInput}
                   />
                 )}
               </AnimatePresence>
-              <div className="example-row">
-                <span>Try</span>
-                {examples.slice(1).map((example) => (
-                  <button key={example} onClick={() => setQuery(example)}>{example}</button>
-                ))}
-              </div>
               <AnimatePresence>
                 {request && (loading || error || activeRetrieval || visionRefusal) && (
                   <RequestWorkflow
@@ -379,7 +370,7 @@ function App() {
                 >
                   <div className="result-main">
                     {outcome === "grounded_answer" && answer && (
-                      <AnswerBlock answer={answer} onCitation={(rank) => openEvidence(results[rank - 1] ?? null)} />
+                      <AnswerBlock answer={answer} evidence={results} onCitation={(rank) => openEvidence(results[rank - 1] ?? null)} />
                     )}
                     {evidenceVisible ? (
                       <EvidenceList results={results} selected={selected} onSelect={openEvidence} retrieval={activeRetrieval} />
@@ -410,8 +401,9 @@ function App() {
   );
 }
 
-function VisionTrace({ preview, vision, loading, onClear }: {
+function VisionTrace({ preview, question, vision, loading, onClear }: {
   preview: ImagePreview;
+  question: string;
   vision: VisionMetadata | null;
   loading: boolean;
   onClear: () => void;
@@ -430,23 +422,25 @@ function VisionTrace({ preview, vision, loading, onClear }: {
         <span><b>{preview.name}</b><small>{fileSize(preview.size)}</small></span>
       </div>
       <div className="vision-copy">
-        <span className="vision-kicker"><ScanLine size={14} /> {loading ? "Vision interpreting" : vision ? label(vision.image_kind) : "Vision input"}</span>
-        {!!preview.caseContext && <small className="vision-case">Case: {preview.caseContext}</small>}
+        <span className="vision-kicker"><ScanLine size={14} /> {loading ? "Analyzing attachment" : vision ? label(vision.image_kind) : "Attached context"}</span>
+        {!!question.trim() && <small className="vision-case">Question: {question.trim()}</small>}
         {loading ? (
-          <p>Converting visible clinical information into a bounded NG12 query…</p>
+          <p>Adding relevant attachment findings to your written question before the NG12 scope check…</p>
         ) : vision ? (
           <>
-            <strong>{vision.extracted_query || "No safe NG12 query was extracted."}</strong>
+            <strong>{vision.extracted_query || "No safe supporting context was extracted."}</strong>
             <p>{vision.limitations}</p>
             {!!vision.uncertainties.length && <small>Uncertainty: {vision.uncertainties.join(" · ")}</small>}
           </>
         ) : (
-          <p>The image is ready for the optional cloud adapter.</p>
+          <p>{question.trim().length >= 3
+            ? "Ready. Select “Answer with evidence” to use this attachment with the written question."
+            : "Write a clinical question to continue. An attachment cannot be submitted on its own."}</p>
         )}
       </div>
       <span className={`vision-state ${vision?.status ?? "pending"}`}>
-        {loading ? <LoaderCircle className="spin" size={14} /> : vision?.status === "ready" ? <CheckCircle2 size={14} /> : <CircleAlert size={14} />}
-        {loading ? "Extracting" : vision?.status ?? "Pending"}
+        {loading ? <LoaderCircle className="spin" size={14} /> : vision?.status === "refused" ? <CircleAlert size={14} /> : <CheckCircle2 size={14} />}
+        {loading ? "Analyzing" : vision?.status === "refused" ? "Not used" : vision ? "Used" : "Attached"}
       </span>
       <button className="vision-clear" onClick={onClear} aria-label="Remove uploaded image"><X size={15} /></button>
     </motion.section>
@@ -460,16 +454,20 @@ function RequestWorkflow({ request, loading, error, outcome, answer }: {
   outcome: QueryOutcome | null;
   answer: AnswerResponse | null;
 }) {
-  const stageStatus = (stage: "vision" | "safety" | "scope" | "retrieval" | "ranking" | "evidence" | "generation" | "release"): WorkflowStageStatus => {
+  const stageStatus = (stage: "vision" | "safety" | "emergency" | "scope" | "retrieval" | "ranking" | "evidence" | "generation" | "release"): WorkflowStageStatus => {
     if (loading) return "planned";
     if (error || !outcome) return "unknown";
     if (stage === "vision") return outcome === "vision_refusal" ? "stopped" : "complete";
     if (outcome === "vision_refusal") return "not_run";
 
-    const stoppedBeforeRetrieval = ["safety_refusal", "scope_refusal", "insufficient_information"].includes(outcome);
+    const stoppedBeforeRetrieval = ["safety_refusal", "emergency_redirect", "scope_refusal", "insufficient_information"].includes(outcome);
     if (stage === "safety") return outcome === "safety_refusal" ? "stopped" : "complete";
-    if (stage === "scope") {
+    if (stage === "emergency") {
       if (outcome === "safety_refusal") return "not_run";
+      return outcome === "emergency_redirect" ? "stopped" : "complete";
+    }
+    if (stage === "scope") {
+      if (outcome === "safety_refusal" || outcome === "emergency_redirect") return "not_run";
       return outcome === "scope_refusal" || outcome === "insufficient_information" ? "stopped" : "complete";
     }
     if (stage === "retrieval" || stage === "ranking") return stoppedBeforeRetrieval ? "not_run" : "complete";
@@ -489,6 +487,7 @@ function RequestWorkflow({ request, loading, error, outcome, answer }: {
   const stages = [
     ...(request.inputMethod === "vision" ? [{ id: "vision" as const, label: "Vision extraction" }] : []),
     { id: "safety" as const, label: "Instruction safety" },
+    { id: "emergency" as const, label: "Emergency boundary" },
     { id: "scope" as const, label: "Scope + specificity" },
     { id: "retrieval" as const, label: `${request.mode.toUpperCase()} retrieval` },
     { id: "ranking" as const, label: "Authority ranking" },
@@ -506,32 +505,51 @@ function RequestWorkflow({ request, loading, error, outcome, answer }: {
       }
     : workflowSummary(outcome, error);
 
+  const completedCount = stages.filter((stage) => stage.status === "complete").length;
+  const compactStatus = loading
+    ? `Running ${stages.length} validation checks`
+    : error
+      ? "Request status unavailable"
+      : outcome === "grounded_answer" || outcome === "retrieval_results"
+        ? `${completedCount} validation checks passed`
+        : summary.title;
+
   return (
-    <motion.section
+    <motion.details
       className={`request-workflow ${loading ? "in-flight" : "observed"}`}
+      open={loading || undefined}
       initial={{ opacity: 0, height: 0, marginTop: 0 }}
-      animate={{ opacity: 1, height: "auto", marginTop: 20 }}
+      animate={{ opacity: 1, height: "auto", marginTop: 14 }}
       exit={{ opacity: 0, height: 0, marginTop: 0 }}
       transition={{ duration: 0.28, ease: "easeOut" }}
       aria-live="polite"
       aria-busy={loading}
     >
-      <div className="workflow-summary">
+      <summary className="workflow-compact">
         <span className="workflow-summary-icon" aria-hidden="true">
           {loading ? <LoaderCircle className="spin" size={18} /> : outcome === "grounded_answer" || outcome === "retrieval_results" ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}
         </span>
-        <div>
-          <strong>{summary.title}</strong>
-          <p>{summary.detail}</p>
+        <strong>{compactStatus}</strong>
+        <span>{loading ? "View live details" : "View details"}</span>
+      </summary>
+      <div className="workflow-detail">
+        <div className="workflow-summary">
+          <span className="workflow-summary-icon" aria-hidden="true">
+            {loading ? <LoaderCircle className="spin" size={18} /> : outcome === "grounded_answer" || outcome === "retrieval_results" ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}
+          </span>
+          <div>
+            <strong>{summary.title}</strong>
+            <p>{summary.detail}</p>
+          </div>
+          <span className="workflow-state">{loading ? "In flight" : "Observed"}</span>
         </div>
-        <span className="workflow-state">{loading ? "In flight" : "Observed"}</span>
+        <WorkflowStageList
+          key={`${loading ? "planned" : outcome ?? "unknown"}-${request.kind}-${request.mode}`}
+          stages={stages}
+          cadenceMs={loading ? 330 : 160}
+        />
       </div>
-      <WorkflowStageList
-        key={`${loading ? "planned" : outcome ?? "unknown"}-${request.kind}-${request.mode}`}
-        stages={stages}
-        cadenceMs={loading ? 330 : 160}
-      />
-    </motion.section>
+    </motion.details>
   );
 }
 
@@ -602,6 +620,10 @@ function workflowSummary(outcome: QueryOutcome | null, error: string | null) {
       title: "Stopped at instruction safety",
       detail: "The request was blocked before scope analysis, retrieval, or model generation.",
     },
+    emergency_redirect: {
+      title: "Stopped for urgent care",
+      detail: "The request was redirected before scope analysis, retrieval, or model generation.",
+    },
     scope_refusal: {
       title: "Stopped at the scope guard",
       detail: "The request was outside the configured NG12 scope, so retrieval and generation did not run.",
@@ -640,6 +662,11 @@ function OutcomePanel({ outcome, answer, retrieval }: {
       message: retrieval.safety.message ?? "This request cannot enter the evidence workflow.",
       detail: "Retrieval not run · Model not called · Citation validation not applicable",
     },
+    emergency_redirect: {
+      title: "Seek urgent medical help now",
+      message: answer?.answer ?? retrieval.emergency.message ?? "Contact local emergency services now.",
+      detail: "Emergency boundary · Retrieval not run · Model not called",
+    },
     scope_refusal: {
       title: "Outside configured scope",
       message: retrieval.scope.message ?? "This question is outside the configured NG12 sites.",
@@ -664,7 +691,7 @@ function OutcomePanel({ outcome, answer, retrieval }: {
   const state = content[outcome ?? "no_results"] ?? content.no_results;
   return (
     <section className={`guard-response ${outcome ?? "no_results"}`} aria-live="polite">
-      <span className="guard-icon">{outcome === "safety_refusal" ? <ShieldCheck size={25} /> : <XCircle size={25} />}</span>
+      <span className="guard-icon">{outcome === "safety_refusal" || outcome === "emergency_redirect" ? <ShieldCheck size={25} /> : <XCircle size={25} />}</span>
       <div>
         <span className="section-kicker">Request outcome</span>
         <h2>{state.title}</h2>
@@ -675,7 +702,7 @@ function OutcomePanel({ outcome, answer, retrieval }: {
   );
 }
 
-function AnswerBlock({ answer, onCitation }: { answer: AnswerResponse; onCitation: (rank: number) => void }) {
+function AnswerBlock({ answer, evidence, onCitation }: { answer: AnswerResponse; evidence: EvidenceResult[]; onCitation: (rank: number) => void }) {
   const pieces = useMemo(() => answer.answer.split(/(\[E\d+\])/g), [answer.answer]);
   return (
     <section className="answer-block">
@@ -683,15 +710,17 @@ function AnswerBlock({ answer, onCitation }: { answer: AnswerResponse; onCitatio
       <div className="answer-copy">
         {pieces.map((piece, index) => {
           const match = piece.match(/^\[E(\d+)\]$/);
+          const evidenceRank = match ? Number(match[1]) : null;
+          const source = evidenceRank ? evidence[evidenceRank - 1] : null;
           return match ? (
             <button
               key={`${piece}-${index}`}
               className="citation-token"
-              onClick={() => onCitation(Number(match[1]))}
-              aria-label={`Open evidence ${piece.slice(1, -1)}`}
-              title="Open this evidence"
+              onClick={() => onCitation(evidenceRank!)}
+              aria-label={`Open evidence E${evidenceRank}${source ? `, page ${source.page}` : ""}`}
+              title={source ? `${source.citation} · ${source.chunk_id}` : "Open this evidence"}
             >
-              {piece}
+              E{evidenceRank}{source ? ` · p.${source.page}${source.page_end !== source.page ? `–${source.page_end}` : ""}` : ""}
             </button>
           ) : (
             <span key={index}>
@@ -709,9 +738,20 @@ function AnswerBlock({ answer, onCitation }: { answer: AnswerResponse; onCitatio
           {answer.citation_validation.passed ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}
           Citation labels {answer.citation_validation.passed ? "valid" : "need review"}
         </span>
+        <span className={answer.citation_validation.claim_coverage_passed ? "passed" : "failed"}>
+          {answer.citation_validation.claim_coverage_passed ? <CheckCircle2 size={15} /> : <CircleAlert size={15} />}
+          {pct(answer.citation_validation.citation_coverage_rate ?? undefined)} claim citation coverage
+        </span>
         <span>{answer.model ?? "deterministic guard"}</span>
         <span>{(answer.latency_ms / 1000).toFixed(2)}s total</span>
       </div>
+      {!answer.citation_validation.claim_coverage_passed && (
+        <div className="citation-warning" role="alert">
+          <CircleAlert size={18} />
+          <div><b>Citation coverage needs review</b><span>This answer should not be released until every clinical claim is linked to evidence.</span></div>
+        </div>
+      )}
+      <p className="clinical-disclaimer">{answer.safety_note ?? "Evidence lookup only. This demo does not diagnose or replace clinical judgement."}</p>
     </section>
   );
 }
@@ -755,7 +795,7 @@ function EvidenceList({ results, selected, onSelect, retrieval }: {
               <span className="evidence-excerpt">{result.text}</span>
             </span>
             <span className="evidence-row-action">
-              <span className="score"><b>{result.score.toFixed(3)}</b><small>score</small></span>
+              <span className="score" title="Ranking score, not a confidence probability"><b>{result.score.toFixed(3)}</b><small>rank score</small></span>
               <span className="open-label">Open <ChevronRight size={13} /></span>
             </span>
           </motion.button>
@@ -771,31 +811,40 @@ function EvidenceInspector({ result }: { result: EvidenceResult | null }) {
       {result ? (
         <motion.div key={result.chunk_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="inspector-heading">
-            <span className="inspector-label">Selected evidence / E{result.rank}</span>
+            <span className="inspector-label">Evidence E{result.rank}</span>
             <span className={`source-status ${result.authority_priority}`}>
               {result.source_version === "2026_current" ? "Current 2026" : "Supporting 2015"}
             </span>
           </div>
-          <h2>{result.recommendation_id ? `NG12 ${result.recommendation_id}` : result.section}</h2>
-          <p className="full-citation">{result.citation}</p>
           <section className="source-passage" aria-label="Full evidence passage">
-            <h3><FileText size={14} /> Full source passage</h3>
+            <h2>{result.recommendation_id ? `NG12 ${result.recommendation_id}` : result.section}</h2>
             <p>{result.text}</p>
           </section>
-          <dl>
-            <div><dt>Authority</dt><dd>{result.authority_priority}</dd></div>
-            <div><dt>Source</dt><dd>{result.source_version === "2026_current" ? "Current guideline" : "Full guideline"}</dd></div>
-            <div><dt>Content</dt><dd>{label(result.content_type)}</dd></div>
-            <div><dt>Sites</dt><dd>{result.cancer_sites.map(label).join(", ") || "Cross-cutting"}</dd></div>
-            <div><dt>Tokens</dt><dd>{result.token_count}</dd></div>
-          </dl>
-          <div className="score-anatomy">
-            <h3>Why this ranked</h3>
-            <div><span>Base retrieval</span><b>{result.score_detail.base_score.toFixed(3)}</b></div>
-            <div><span>Authority adjustment</span><b>+{result.score_detail.authority_adjustment.toFixed(3)}</b></div>
-            {result.score_detail.explanations.map((item) => <p key={item}><CheckCircle2 size={13} /> {item}</p>)}
-          </div>
-          <p className="chunk-id">{result.chunk_id}</p>
+          <p className="evidence-source-line">
+            {result.recommendation_id ? `NG12 ${result.recommendation_id}` : label(result.content_type)} · {result.section} · p.{result.page}{result.page_end !== result.page ? `–${result.page_end}` : ""} · {result.source_version === "2026_current" ? "Current 2026" : "Supporting 2015"}
+          </p>
+          <p className="full-citation">{result.citation}</p>
+          <details className="technical-details">
+            <summary>Provenance and ranking details</summary>
+            <dl className="evidence-details">
+              <div><dt>Page</dt><dd>{result.page}{result.page_end !== result.page ? `–${result.page_end}` : ""}</dd></div>
+              <div><dt>Section</dt><dd>{result.section}</dd></div>
+              <div><dt>Subsection</dt><dd>{result.subsection || "—"}</dd></div>
+              <div><dt>Recommendation</dt><dd>{result.recommendation_id || "Context passage"}</dd></div>
+              <div><dt>Authority</dt><dd>{label(result.authority_priority)}</dd></div>
+              <div><dt>Version</dt><dd>{result.source_version === "2026_current" ? "Current guideline · 2026" : "Full guideline · 2015"}</dd></div>
+              <div><dt>Content</dt><dd>{label(result.content_type)}</dd></div>
+              <div><dt>Sites</dt><dd>{result.cancer_sites.map(label).join(", ") || "Cross-cutting"}</dd></div>
+              <div className="detail-wide"><dt>Chunk ID</dt><dd className="detail-chunk-id">{result.chunk_id}</dd></div>
+            </dl>
+            <div className="score-anatomy">
+              <h3>Why this ranked</h3>
+              <div><span>Base retrieval</span><b>{result.score_detail.base_score.toFixed(3)}</b></div>
+              <div><span>Authority adjustment</span><b>+{result.score_detail.authority_adjustment.toFixed(3)}</b></div>
+              {result.score_detail.explanations.map((item) => <p key={item}><CheckCircle2 size={13} /> {item}</p>)}
+            </div>
+            <p className="chunk-id">{result.token_count} tokens · stable evidence identity shown above</p>
+          </details>
         </motion.div>
       ) : (
         <div className="inspector-empty"><Layers3 size={28} /><h2>Select evidence</h2><p>Inspect provenance, authority, score components, and stable chunk identity.</p></div>
@@ -808,12 +857,16 @@ function ReadinessStrip({ health, metrics }: { health: HealthResponse | null; me
   const evaluation = metrics?.evaluation;
   const blind = metrics?.blind_e2e;
   return (
-    <section className="readiness-strip">
-      <div><Database size={18} /><b>{health?.corpus_chunks ?? 440}</b><span>retrieval chunks</span></div>
-      <div><Gauge size={18} /><b>{pct(blind?.deterministic_metrics.retrieval_recall_at_5 ?? evaluation?.modes.hybrid.recall_at_5)}</b><span>blind Recall@5</span></div>
-      <div><ShieldCheck size={18} /><b>{pct(blind?.deterministic_metrics.correct_refusal_rate ?? evaluation?.modes.hybrid.out_of_scope_refusal_accuracy)}</b><span>blind correct refusal</span></div>
-      <div><Activity size={18} /><b>{health?.dense_index_ready ? "768d" : "—"}</b><span>exact cosine index</span></div>
-    </section>
+    <details className="readiness-details">
+      <summary>System and evaluation details</summary>
+      <section className="readiness-strip">
+        <div><Database size={18} /><b>{health?.corpus_chunks ?? 440}</b><span>retrieval chunks</span></div>
+        <div><Gauge size={18} /><b>{pct(blind?.deterministic_metrics.retrieval_recall_at_5 ?? evaluation?.modes.hybrid.recall_at_5)}</b><span>blind Recall@5</span></div>
+        <div><Target size={18} /><b>{pct(blind?.deterministic_metrics.retrieval_precision_at_3 ?? evaluation?.modes.hybrid.precision_at_3)}</b><span>strict Precision@3</span></div>
+        <div><ShieldCheck size={18} /><b>{pct(blind?.deterministic_metrics.correct_refusal_rate ?? evaluation?.modes.hybrid.out_of_scope_refusal_accuracy)}</b><span>blind correct refusal</span></div>
+        <div><Activity size={18} /><b>{health?.dense_index_ready ? "768d" : "—"}</b><span>exact cosine index</span></div>
+      </section>
+    </details>
   );
 }
 
@@ -822,6 +875,8 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
   const evaluation = metrics.evaluation;
   const blind = metrics.blind_e2e;
   const deterministic = blind?.deterministic_metrics;
+  const strictPrecisionAt3 = deterministic?.retrieval_precision_at_3
+    ?? evaluation?.modes.hybrid.precision_at_3;
   const automated = metrics.multi_judge;
   const corpus = metrics.corpus;
   const runLabel = blind?.evaluation_name.match(/_(v\d+)$/)?.[1] ?? "current";
@@ -840,6 +895,7 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
         <div><strong>{blind?.questions.total ?? 0}</strong><span>blind cases</span></div>
         <div><strong>{pct(deterministic?.scope_classification_accuracy)}</strong><span>scope accuracy</span></div>
         <div><strong>{pct(deterministic?.retrieval_recall_at_5)}</strong><span>retrieval Recall@5</span></div>
+        <div><strong>{pct(strictPrecisionAt3)}</strong><span>strict Precision@3</span></div>
         <div><strong>{pct(deterministic?.current_guideline_accuracy)}</strong><span>current-guideline accuracy</span></div>
       </section>
 
@@ -855,6 +911,9 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
             <EvalMetric label="False refusal" value={deterministic.false_refusal_rate} detail="0 answerable cases refused" inverse />
             <EvalMetric label="Retrieval Recall@1" value={deterministic.retrieval_recall_at_1} detail={`${deterministic.retrieval_queries_scored} scored queries`} />
             <EvalMetric label="Retrieval Recall@5" value={deterministic.retrieval_recall_at_5} detail="One lung case landed at rank 6" />
+            {deterministic.retrieval_precision_at_3 != null && <EvalMetric label="Strict Precision@3" value={deterministic.retrieval_precision_at_3} detail="Gold-matching passages ÷ 3" />}
+            {deterministic.claim_citation_coverage_rate != null && <EvalMetric label="Claim citation coverage" value={deterministic.claim_citation_coverage_rate} detail="Released claim units with evidence labels" />}
+            {deterministic.citation_release_pass_rate != null && <EvalMetric label="Citation release pass" value={deterministic.citation_release_pass_rate} detail="Answers passing the complete citation contract" warning={deterministic.citation_release_pass_rate < .95} />}
             <EvalMetric label="Current source at relevant hit" value={deterministic.current_guideline_accuracy} detail="2026 won every measured check" />
             <EvalMetric label="Citation label validity" value={deterministic.citation_label_validity_rate} detail={citationFailures ? `${citationFailures} outputs used non-canonical labels` : "All generated labels resolved"} warning={citationFailures > 0} />
             <div className="latency-metric"><span>End-to-end latency</span><strong>{(deterministic.latency_ms.end_to_end_p50 / 1000).toFixed(2)}s</strong><small>P50 · {(deterministic.latency_ms.end_to_end_p95 / 1000).toFixed(2)}s P95</small></div>
@@ -863,6 +922,7 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
             <div>{scopeFailures ? <CircleAlert size={17} /> : <CheckCircle2 size={17} />}<span><b>Scope</b> {scopeFailures ? "A query crossed the configured site boundary." : "Phrase-aware exclusions correctly rejected gall bladder without matching bladder."}</span><strong>{scopeFailures}</strong></div>
             <div><Search size={17} /><span><b>Retrieval</b> One lung threshold case missed top five and appeared at rank six.</span><strong>{blind.failures.retrieval_at_5.length}</strong></div>
             <div><BookOpen size={17} /><span><b>Citation syntax</b> {citationFailures ? "Some generated outputs still used non-canonical evidence-label formats." : "Every generated evidence label resolved."}</span><strong>{citationFailures}</strong></div>
+            <div><ShieldCheck size={17} /><span><b>Claim coverage</b> Fail-closed release rejected any answer still missing a claim-level citation after one bounded repair.</span><strong>{blind.failures.claim_citation_coverage?.length ?? 0}</strong></div>
           </div>
         </section>
       )}
@@ -892,6 +952,15 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
           </div>
         </section>
       )}
+      {!automated && (
+        <section className="semantic-section semantic-pending">
+          <div className="semantic-heading">
+            <div><span className="section-kicker">Semantic evaluation</span><h2>Independent entailment review remains separate.</h2></div>
+            <span className="pending-review"><CircleAlert size={15} /> Not claimed</span>
+          </div>
+          <p className="semantic-warning">The runtime now blocks uncited clinical claim units. That proves citation coverage, not semantic entailment. Independent claim-support and citation-entailment results appear here only after a completed judge or human review.</p>
+        </section>
+      )}
 
       {evaluation && (
         <section className="benchmark-section">
@@ -902,7 +971,7 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
           <p className="benchmark-context">This 31-query set was used during development. Its 100% hybrid score selected the architecture; it is context, not the headline validation result.</p>
           <div className="benchmark-table" role="table">
             <div className="benchmark-row header" role="row">
-              <span>Mode</span><span>Recall@1</span><span>Recall@5</span><span>MRR@10</span><span>Canonical top-1</span><span>Scope refusal</span><span>P50</span>
+              <span>Mode</span><span>Recall@1</span><span>Recall@5</span><span>Precision@3</span><span>Precision@5</span><span>MRR@10</span><span>Canonical top-1</span><span>P50</span>
             </div>
             {(["bm25", "dense", "hybrid"] as Mode[]).map((mode) => {
               const values = evaluation.modes[mode];
@@ -912,14 +981,16 @@ function MetricsView({ metrics }: { metrics: MetricsResponse | null }) {
                   <span><i>{winner ? "●" : "○"}</i><b>{mode}</b></span>
                   <MetricCell value={values.recall_at_1} />
                   <MetricCell value={values.recall_at_5} />
+                  <MetricCell value={values.precision_at_3} />
+                  <MetricCell value={values.precision_at_5} />
                   <MetricCell value={values.mrr_at_10} />
                   <MetricCell value={values.canonical_top1_accuracy} />
-                  <MetricCell value={values.out_of_scope_refusal_accuracy} />
                   <span><b>{values.latency_ms.p50.toFixed(1)}</b><small>ms</small></span>
                 </div>
               );
             })}
           </div>
+          <p className="precision-note">{evaluation.precision_definition}</p>
           <p className="selection-rule">{evaluation.selection_rule}</p>
         </section>
       )}

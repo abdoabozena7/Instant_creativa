@@ -12,8 +12,10 @@ from typing import Any, Literal
 import numpy as np
 
 from .bm25 import BM25Index
+from .emergency_guard import assess_emergency
 from .ollama_client import OllamaClient
 from .query_safety import assess_query_safety
+from .reranker import rerank_candidates
 from .scope_guard import assess_query_answerability, assess_scope
 
 
@@ -31,6 +33,7 @@ EXPLICIT_SITE_BOOST = 0.03
 ANCHOR_MINIMUM_SCORE = 0.75
 ANCHOR_SITE_BOOST = 0.10
 ANCHOR_OTHER_SITE_PENALTY = -0.06
+RERANK_CANDIDATE_K = 20
 EVIDENCE_TERMS = re.compile(
     r"\b(?:evidence|rationale|reason|why|study|studies|ppv|predictive value|risk of bias|committee)\b",
     re.IGNORECASE,
@@ -75,6 +78,7 @@ class RetrievalEngine:
         top_k: int = 8,
         cancer_sites: list[str] | None = None,
         content_types: list[str] | None = None,
+        rerank: bool = True,
     ) -> dict[str, Any]:
         started = time.perf_counter()
         query = " ".join(query.split()).strip()
@@ -89,6 +93,11 @@ class RetrievalEngine:
                 "mode_requested": mode,
                 "mode_used": "instruction_safety_guard",
                 "safety": safety,
+                "emergency": {
+                    "status": "not_assessed",
+                    "reason_codes": [],
+                    "message": None,
+                },
                 "scope": {
                     "status": "not_assessed",
                     "selected_sites": [],
@@ -109,6 +118,35 @@ class RetrievalEngine:
                     "Retrieval skipped by the deterministic instruction-safety guard."
                 ],
             }
+        emergency = assess_emergency(query)
+        if emergency["status"] == "redirect":
+            return {
+                "query": query,
+                "outcome": "emergency_redirect",
+                "mode_requested": mode,
+                "mode_used": "emergency_guard",
+                "safety": safety,
+                "emergency": emergency,
+                "scope": {
+                    "status": "not_assessed",
+                    "selected_sites": [],
+                    "excluded_sites": [],
+                    "message": None,
+                },
+                "answerability": {
+                    "status": "not_assessed",
+                    "clinical_features": [],
+                },
+                "filters": {
+                    "cancer_sites": cancer_sites or [],
+                    "content_types": content_types or [],
+                },
+                "results": [],
+                "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+                "warnings": [
+                    "Retrieval skipped by the deterministic emergency guard."
+                ],
+            }
         scope = assess_scope(query)
         if scope["status"] == "out_of_scope":
             return {
@@ -117,6 +155,7 @@ class RetrievalEngine:
                 "mode_requested": mode,
                 "mode_used": "scope_guard",
                 "safety": safety,
+                "emergency": emergency,
                 "scope": scope,
                 "answerability": {"status": "not_assessed", "clinical_features": []},
                 "results": [],
@@ -132,6 +171,7 @@ class RetrievalEngine:
                 "mode_requested": mode,
                 "mode_used": "answerability_guard",
                 "safety": safety,
+                "emergency": emergency,
                 "scope": scope,
                 "answerability": answerability,
                 "filters": {
@@ -160,6 +200,7 @@ class RetrievalEngine:
                 "mode_requested": mode,
                 "mode_used": mode,
                 "safety": safety,
+                "emergency": emergency,
                 "scope": scope,
                 "answerability": answerability,
                 "results": [],
@@ -279,6 +320,19 @@ class RetrievalEngine:
             reverse=True,
         )
 
+        first_stage_candidates = scored[:RERANK_CANDIDATE_K]
+        if rerank:
+            scored = rerank_candidates(
+                query,
+                first_stage_candidates,
+                chunks=self.chunks,
+                term_frequencies=self.bm25.term_frequencies,
+                inverse_document_frequency=self.bm25.inverse_document_frequency,
+                preferred_sites=set(scope["selected_sites"]),
+            )
+        else:
+            scored = first_stage_candidates
+
         results = []
         for rank, (score, index, score_detail) in enumerate(scored[:top_k], start=1):
             chunk = dict(self.chunks[index])
@@ -297,9 +351,16 @@ class RetrievalEngine:
             "mode_requested": mode,
             "mode_used": mode_used,
             "safety": safety,
+            "emergency": emergency,
             "scope": scope,
             "answerability": answerability,
             "filters": {"cancer_sites": cancer_sites or [], "content_types": content_types or []},
+            "reranking": {
+                "enabled": rerank,
+                "method": "idf_query_coverage_and_content_intent" if rerank else None,
+                "candidate_k": RERANK_CANDIDATE_K,
+                "candidates_considered": len(first_stage_candidates),
+            },
             "results": results,
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),
             "warnings": warnings,

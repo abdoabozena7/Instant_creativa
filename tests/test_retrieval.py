@@ -257,6 +257,35 @@ def test_citation_validation_rejects_labels_outside_supplied_evidence() -> None:
     assert warnings == ["Invalid evidence labels were generated: [7]"]
 
 
+def test_citation_validation_rejects_uncited_claim_units() -> None:
+    answer = (
+        "The current recommendation uses an urgent pathway [E1].\n"
+        "- The age threshold is 45 years.\n"
+        "- Visible haematuria is included [E1]."
+    )
+    validation, warnings = validate_citation_labels(answer, 1)
+    assert validation["label_validation_passed"] is True
+    assert validation["claim_coverage_passed"] is False
+    assert validation["citation_coverage_rate"] == pytest.approx(2 / 3, abs=0.0001)
+    assert validation["uncited_claim_units"] == ["The age threshold is 45 years."]
+    assert validation["passed"] is False
+    assert warnings[-1] == "Clinical claim units without evidence labels: 1"
+
+
+def test_citation_coverage_ignores_markdown_table_headers() -> None:
+    answer = (
+        "| Cancer | Referral |\n"
+        "|---|---|\n"
+        "| Renal | Refer on the suspected cancer pathway [E1] |\n"
+        "| Bladder | Refer on the suspected cancer pathway [E2] |"
+    )
+    validation, warnings = validate_citation_labels(answer, 2)
+    assert validation["claim_units_checked"] == 2
+    assert validation["citation_coverage_rate"] == 1.0
+    assert validation["passed"] is True
+    assert warnings == []
+
+
 def test_generation_normalizes_and_validates_model_citation_brackets() -> None:
     class FakeOllama:
         chat_model = "fake-model"
@@ -282,6 +311,50 @@ def test_generation_normalizes_and_validates_model_citation_brackets() -> None:
     assert result["answer"] == "Use the current recommendation[E1]."
     assert result["citation_validation"]["applicable"] is True
     assert result["citation_validation"]["passed"] is True
+
+
+def test_generation_repairs_partial_claim_citation_coverage_once() -> None:
+    class RepairingOllama:
+        chat_model = "fake-model"
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def chat(self, messages: list[dict[str, str]]) -> dict:
+            self.calls += 1
+            if self.calls == 1:
+                return {
+                    "message": {
+                        "content": "Offer the current recommendation. The threshold is 45 [E1]."
+                    }
+                }
+            assert "Every prose sentence" in messages[1]["content"]
+            return {
+                "message": {
+                    "content": "Offer the current recommendation [E1]. The threshold is 45 [E1]."
+                }
+            }
+
+    model = RepairingOllama()
+    result = asyncio.run(
+        generate_grounded_answer(
+            "What is recommended for visible haematuria at age 45?",
+            [
+                {
+                    "citation": "NICE NG12 · Recommendation 1.6.6 · Page 23",
+                    "authority_priority": "primary",
+                    "content_type": "recommendation",
+                    "text": "Refer people aged 45 and over with unexplained visible haematuria.",
+                }
+            ],
+            model,  # type: ignore[arg-type]
+        )
+    )
+    assert model.calls == 2
+    assert result["response_status"] == "grounded_answer"
+    assert result["citation_repair_attempted"] is True
+    assert result["initial_citation_coverage_rate"] == 0.5
+    assert result["citation_validation"]["citation_coverage_rate"] == 1.0
 
 
 @pytest.mark.parametrize(
@@ -377,7 +450,7 @@ def test_fastapi_exposes_health_search_metrics_and_frontend() -> None:
         assert metrics.status_code == 200
         assert metrics.json()["evaluation"]["recommended_mode"] == "hybrid"
         assert metrics.json()["blind_e2e"]["questions"]["total"] == 44
-        assert metrics.json()["blind_e2e"]["evaluation_name"] == "blind_end_to_end_v8"
+        assert metrics.json()["blind_e2e"]["evaluation_name"] == "blind_end_to_end_v12"
         assert (
             metrics.json()["blind_e2e"]["semantic_metrics"]["status"] == "not_run"
         )

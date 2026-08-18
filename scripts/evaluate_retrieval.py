@@ -63,15 +63,26 @@ async def evaluate(cases_path: Path) -> dict[str, Any]:
             "Dense index is missing. Run scripts/build_retrieval_index.py before evaluation."
         )
     evaluations: dict[str, Any] = {}
-    for mode in ["bm25", "dense", "hybrid"]:
+    configurations = [
+        ("bm25", "bm25", False),
+        ("dense", "dense", False),
+        ("hybrid", "hybrid", False),
+        ("hybrid_reranked", "hybrid", True),
+    ]
+    for configuration, mode, use_reranker in configurations:
         ranks: list[int | None] = []
+        precision_at_3: list[float] = []
+        precision_at_5: list[float] = []
+        precision_ceiling_at_3: list[float] = []
         latencies: list[float] = []
         authority_checks: list[bool] = []
         category_ranks: dict[str, list[int | None]] = defaultdict(list)
         diagnostics = []
         out_of_scope_checks: list[bool] = []
         for case in cases:
-            response = await engine.search(case["query"], mode=mode, top_k=10)
+            response = await engine.search(
+                case["query"], mode=mode, top_k=10, rerank=use_reranker
+            )
             latencies.append(response["latency_ms"])
             if case.get("out_of_scope"):
                 passed = response["scope"]["status"] == "out_of_scope" and not response["results"]
@@ -85,6 +96,14 @@ async def evaluate(cases_path: Path) -> dict[str, Any]:
                 None,
             )
             ranks.append(rank)
+            gold_chunks_in_corpus = sum(relevant(chunk, case) for chunk in engine.chunks)
+            precision_ceiling_at_3.append(min(gold_chunks_in_corpus, 3) / 3)
+            precision_at_3.append(
+                sum(relevant(result, case) for result in response["results"][:3]) / 3
+            )
+            precision_at_5.append(
+                sum(relevant(result, case) for result in response["results"][:5]) / 5
+            )
             category_ranks[case["category"]].append(rank)
             if case.get("authority_required"):
                 top = response["results"][0] if response["results"] else None
@@ -95,6 +114,8 @@ async def evaluate(cases_path: Path) -> dict[str, Any]:
                 {
                     "case_id": case["case_id"],
                     "rank": rank,
+                    "precision_at_3": round(precision_at_3[-1], 4),
+                    "precision_at_5": round(precision_at_5[-1], 4),
                     "top_chunk_id": response["results"][0]["chunk_id"] if response["results"] else None,
                     "top_recommendation_id": (
                         response["results"][0].get("recommendation_id") if response["results"] else None
@@ -103,13 +124,25 @@ async def evaluate(cases_path: Path) -> dict[str, Any]:
                 }
             )
 
-        evaluations[mode] = {
+        precision_at_3_value = sum(precision_at_3) / len(precision_at_3)
+        precision_ceiling_at_3_value = sum(precision_ceiling_at_3) / len(
+            precision_ceiling_at_3
+        )
+        evaluations[configuration] = {
+            "retrieval_mode": mode,
+            "reranker_enabled": use_reranker,
             "queries_evaluated": len(cases),
             "in_scope_queries": len(ranks),
             "out_of_scope_queries": len(out_of_scope_checks),
             "recall_at_1": round(sum(rank == 1 for rank in ranks) / len(ranks), 4),
             "recall_at_3": round(sum(rank is not None and rank <= 3 for rank in ranks) / len(ranks), 4),
             "recall_at_5": round(sum(rank is not None and rank <= 5 for rank in ranks) / len(ranks), 4),
+            "precision_at_3": round(precision_at_3_value, 4),
+            "precision_at_5": round(sum(precision_at_5) / len(precision_at_5), 4),
+            "precision_at_3_ceiling": round(precision_ceiling_at_3_value, 4),
+            "ceiling_adjusted_precision_at_3": round(
+                precision_at_3_value / precision_ceiling_at_3_value, 4
+            ),
             "mrr_at_10": round(sum(1 / rank if rank else 0 for rank in ranks) / len(ranks), 4),
             "canonical_top1_accuracy": round(sum(authority_checks) / len(authority_checks), 4),
             "out_of_scope_refusal_accuracy": round(
@@ -133,12 +166,13 @@ async def evaluate(cases_path: Path) -> dict[str, Any]:
             + [item for item in diagnostics if "rank" in item and item["rank"] is None and "out_of_scope_passed" not in item],
             "case_diagnostics": diagnostics,
         }
-    best_mode = max(
+    best_configuration = max(
         evaluations,
-        key=lambda mode: (
-            evaluations[mode]["recall_at_5"],
-            evaluations[mode]["canonical_top1_accuracy"],
-            evaluations[mode]["mrr_at_10"],
+        key=lambda name: (
+            evaluations[name]["recall_at_5"],
+            evaluations[name]["precision_at_3"],
+            evaluations[name]["canonical_top1_accuracy"],
+            evaluations[name]["mrr_at_10"],
         ),
     )
     return {
@@ -155,11 +189,18 @@ async def evaluate(cases_path: Path) -> dict[str, Any]:
             "chunks": len(engine.chunks),
             "dimensions": int(engine.embeddings.shape[1]),
         },
+        "precision_definition": (
+            "Strict gold-unit Precision@K: retrieved passages matching the labeled "
+            "recommendation ID, or labeled content-type and site, divided by K. Related "
+            "but unlabeled context is counted as non-gold, so Recall@K remains the primary "
+            "coverage metric for this narrow-label set."
+        ),
         "modes": evaluations,
-        "recommended_mode": best_mode,
+        "recommended_mode": evaluations[best_configuration]["retrieval_mode"],
+        "recommended_configuration": best_configuration,
         "selection_rule": (
-            "Maximize Recall@5, then canonical top-1 accuracy, then MRR@10. "
-            "Out-of-scope refusal must remain 1.0."
+            "Maximize Recall@5, then strict Precision@3, canonical top-1 accuracy, "
+            "and MRR@10. Out-of-scope refusal must remain 1.0."
         ),
     }
 
@@ -171,10 +212,11 @@ def main() -> int:
     args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
         "recommended_mode": report["recommended_mode"],
+        "recommended_configuration": report["recommended_configuration"],
         "modes": {
             mode: {
                 key: values[key]
-                for key in ["recall_at_1", "recall_at_3", "recall_at_5", "mrr_at_10", "canonical_top1_accuracy", "out_of_scope_refusal_accuracy", "latency_ms"]
+                for key in ["recall_at_1", "recall_at_3", "recall_at_5", "precision_at_3", "precision_at_3_ceiling", "ceiling_adjusted_precision_at_3", "precision_at_5", "mrr_at_10", "canonical_top1_accuracy", "out_of_scope_refusal_accuracy", "latency_ms"]
             }
             for mode, values in report["modes"].items()
         },

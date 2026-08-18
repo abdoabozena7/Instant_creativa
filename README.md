@@ -61,6 +61,8 @@ data/
     evaluation_freeze_v4.json
     evaluation_freeze_v6.json
     evaluation_freeze_v8.json
+    evaluation_freeze_v10.json
+    evaluation_freeze_v12.json
     blind_questions_v1.jsonl
     blind_gold_v1.jsonl
     blind_run_v1.jsonl
@@ -73,6 +75,10 @@ data/
     blind_e2e_report_v6.json
     blind_run_v8.jsonl
     blind_e2e_report_v8.json
+    blind_run_v10.jsonl
+    blind_e2e_report_v10.json
+    blind_run_v12.jsonl
+    blind_e2e_report_v12.json
     adjudication_packets_v1.jsonl
     adjudication_template_v1.csv
     multi_judge_manifest_v1.json
@@ -97,6 +103,7 @@ src/ingestion/
 src/retrieval/
   bm25.py
   engine.py
+  reranker.py
   generation.py
   ollama_client.py
   scope_guard.py
@@ -221,7 +228,9 @@ The retriever exposes three modes over the same corpus:
 - Dense exact-cosine retrieval using `nomic-embed-text:latest`.
 - Hybrid retrieval using a measured 55% normalized BM25 / 45% dense score.
 
-The final score also exposes deterministic adjustments for exact recommendation IDs, current canonical authority, evidence intent, explicit cancer-site matches, and site coherence inferred from a strong canonical result. These components are returned in `score_detail`; the safety policy is not hidden in a proprietary reranker.
+The first stage retrieves 20 candidates. A deterministic second stage then reranks them using IDF-weighted coverage of salient clinical query terms, explicit evidence-versus-rationale intent, and soft cancer-site metadata matching. The final response returns the requested Top K. Every component, including first-stage rank and score, query coverage, content adjustment, and site adjustment, is returned in `score_detail`; the ranking policy is not hidden in a proprietary model.
+
+The development comparison keeps Recall@3 at 100% while raising strict Precision@3 from 36.90% to its corpus/label ceiling of 41.67%. The one subsequent retrieval-only blind comparison raises Precision@3 from 34.23% to 37.84%, Recall@1 from 75.68% to 86.49%, and MRR@5 from 85.59% to 92.57%, while Recall@3 remains 97.30%. See `data/eval/retrieval_noise_diagnostics_v12.json` for the 73-result label-ceiling analysis and `data/eval/blind_retrieval_rerank_experiment_v13.json` for the frozen comparison.
 
 FastAPI endpoints:
 
@@ -351,9 +360,13 @@ Prompt-injection rehearsal then exposed a separate control-flow defect: explicit
 
 The full 44-case v8 regression preserves scope 100%, correct refusal 100%, false refusal 0%, 37 retrieval-scored cases, Recall@1 75.68%, Recall@5 97.30%, MRR@6 86.04%, current-guideline accuracy 100%, and citation-label validity 100%. End-to-end latency was 4.76 s P50 and 9.22 s P95. Semantic judging and human review were not run; v8 is a regression run, not a new independent blind evaluation.
 
-The dashboard and `/api/metrics` expose v8 as the current deterministic result. V1, v2, v4, and v6 remain historical evidence and are never overwritten or relabeled. Optional semantic tooling is outside setup/runtime; future behavior changes require a new versioned freeze/run/report.
+Submission rehearsal then exposed two separate release risks: an explicit current emergency could enter retrieval/generation, and answers with valid labels could still contain uncited clinical sentences. V10 added a high-precision emergency redirect before retrieval and a deterministic claim-unit coverage gate. Its fail-closed behavior exposed 19 partially cited outputs instead of displaying them. V12 adds one bounded model repair only when labels are already valid but claim coverage is incomplete; the same validator runs again and still withholds failures.
 
-The Retrieval workspace presents ranked results as explicit clickable evidence rows. Selecting an `[E#]` citation or row opens the full source passage, current/supporting status, page-level provenance, stable chunk ID, and score explanation in one inspector; mobile selection scrolls to the same inspector. A reranker was not added: the independent development benchmark already gives hybrid 100% Recall@1 and MRR, so there is no measured headroom, while using the historical blind set to tune a reranker would invalidate its role as evaluation evidence.
+The full 44-case v12 regression reports scope 100%, correct refusal 100%, false refusal 0%, Recall@1 75.68%, Recall@5 97.30%, strict Precision@3 34.23%, strict Precision@5 21.08%, current-guideline accuracy 100%, citation-label validity 100%, claim citation coverage 98.50%, and complete citation release pass 94.87%. End-to-end latency is 5.44 s P50 and 19.61 s P95. Two outputs remain correctly withheld. Semantic entailment was not run and is not claimed.
+
+The dashboard and `/api/metrics` expose v12 as the current deterministic result. Earlier versions remain historical evidence and are never overwritten or relabeled. Optional semantic tooling is outside setup/runtime; future behavior changes require a new versioned freeze/run/report.
+
+The Retrieval workspace presents ranked results as explicit clickable evidence rows. In-answer links show both rank and page (`E1 · p.23`); selecting one opens citation, page range, section, subsection, recommendation ID, version, authority, content type, sites, stable chunk ID, full passage, and ranking trace. Mobile selection scrolls to the same inspector. The Top-20 reranker is enabled by default, and callers can set `rerank: false` to reproduce the first-stage baseline. Its parameters were selected on `retrieval_cases.jsonl`; the completed v12 artifacts were used only for retrospective label-ceiling diagnosis. The v13 comparison is retrieval-only and does not replace the v12 end-to-end report.
 
 The resulting metric must be described as **automated LLM-judged groundedness**, not clinical validation. The API and dashboard expose `multi_judge_report_v1.json` automatically when the complete report exists.
 
@@ -363,4 +376,4 @@ Core architecture development is closed after the architecture and fresh-clone a
 
 Allowed changes from this point are only localized fixes for bugs reproduced during submission rehearsal or Instructor Defense rehearsal. Every such fix must retain the same regression discipline and create a new evaluation identity when it changes frozen architecture behavior.
 
-The clean-clone path and live evidence flow have passed. Architecture development closed again after the measured v8 prompt-injection fix; further changes still require a reproduced bug and a new versioned regression run.
+The clean-clone path and live evidence flow have passed. The v13 retrieval-only experiment records the reranker change; any new end-to-end claim still requires a new versioned architecture freeze, run, and report.
