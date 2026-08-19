@@ -1,75 +1,9 @@
-INFO:     127.0.0.1:63448 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63450 - "POST /api/search HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63461 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64350 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52597 - "GET /assets/index-COQ_qFUO.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64350 - "GET /assets/index-mj8_umZ7.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64350 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52597 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52597 - "GET /favicon.svg HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51399 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51399 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59794 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59794 - "GET /assets/index-DIzK2joH.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52819 - "GET /assets/index-COQ_qFUO.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52819 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64479 - "GET /favicon.svg HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:59794 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61993 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61993 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55102 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55102 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51753 - "GET /assets/index-COQ_qFUO.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51753 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:57821 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:56981 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56981 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58872 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58872 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49709 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49709 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57841 - "POST /api/search HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57841 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60178 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60178 - "GET /assets/index-Cm50fUB-.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52497 - "GET /assets/index-COQ_qFUO.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60178 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50454 - "GET /favicon.svg HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:52497 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57356 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57356 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:65027 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:65027 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54728 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54728 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64665 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64665 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60356 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60356 - "GET /assets/index-D_q2BUa2.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55640 - "GET /assets/index-YMYdjzJk.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60356 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55640 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58314 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58314 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58192 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58194 - "POST /api/search HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET / HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:53333 - "GET /assets/index-YMYdjzJk.css HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:64520 - "GET /assets/index-D_q2BUa2.js HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:53333 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET / HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:53333 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET / HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:53333 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET / HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:53333 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET / HTTP/1.1" 304 Not Modified
-INFO:     127.0.0.1:53333 - "GET /api/metrics HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64520 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60531 - "POST /api/answer HTTP/1.1" 422 Unprocessable Entity
-INFO:     127.0.0.1:54924 - "POST /api/answer HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54924 - "GET /api/metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65204 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65208 - "POST /api/vision/answer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64503 - "POST /api/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64579 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53782 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49670 - "GET /assets/index-CQZbxaWg.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53782 - "GET /assets/index-tdq6coOC.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53782 - "GET /api/metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49670 - "GET /api/health HTTP/1.1" 200 OK

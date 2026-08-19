@@ -795,7 +795,7 @@ function EvidenceList({ results, selected, onSelect, retrieval }: {
               <span className="evidence-excerpt">{result.text}</span>
             </span>
             <span className="evidence-row-action">
-              <span className="score" title="Ranking score, not a confidence probability"><b>{result.score.toFixed(3)}</b><small>rank score</small></span>
+              <span className="score" title="Ranking score, not a confidence probability"><b>{pct(result.score)}</b><small>rank score</small></span>
               <span className="open-label">Open <ChevronRight size={13} /></span>
             </span>
           </motion.button>

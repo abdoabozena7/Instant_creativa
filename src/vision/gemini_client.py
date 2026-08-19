@@ -153,7 +153,7 @@ class GeminiVisionClient:
         image_base64: str,
         mime_type: str,
         case_context: str = "",
-        timeout: float = 60.0,
+        timeout: float = 120.0,
     ) -> VisionExtraction:
         if not self.api_key:
             raise RuntimeError(

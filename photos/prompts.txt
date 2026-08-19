@@ -1,0 +1,20 @@
+1. 68-year-old smoker with persistent cough, haemoptysis, fatigue, and weight loss.
+   Combine this de-identified case with the attached photo. Using only in-scope NG12 evidence, state the recommended action and urgency. Treat the image as context, not a definitive diagnosis.
+
+2. 88-year-old man with change in bowel habit, iron-deficiency anaemia, and weight loss.
+   Combine this de-identified case with the attached photo. Using only in-scope NG12 evidence, state the recommended action and urgency. Treat the image as context, not a definitive diagnosis.
+
+3. 64-year-old with progressive dysphagia and 7 kg unintentional weight loss.
+   Combine this de-identified case with the attached photo. Using only in-scope NG12 evidence, state the recommended action and urgency. Treat the image as context, not a definitive diagnosis.
+
+4. 72-year-old with upper abdominal pain, early satiety, nausea, and weight loss.
+   Combine this de-identified case with the attached photo. Using only in-scope NG12 evidence, state the recommended action and urgency. Treat the image as context, not a definitive diagnosis.
+
+5. 66-year-old with weight loss, upper abdominal pain radiating to the back, and new-onset diabetes.
+   Combine this de-identified case with the attached photo. Using only in-scope NG12 evidence, state the recommended action and urgency. Treat the image as context, not a definitive diagnosis.
+
+6. 71-year-old with recurrent visible haematuria and no symptoms of urinary infection.
+   Combine this de-identified case with the attached photo. Using only in-scope NG12 evidence, state the recommended action and urgency. Treat the image as context, not a definitive diagnosis.
+
+7. 62-year-old with visible haematuria, unilateral flank pain, and weight loss.
+   Combine this de-identified case with the attached photo. Using only in-scope NG12 evidence, state the recommended action and urgency. Treat the image as context, not a definitive diagnosis.

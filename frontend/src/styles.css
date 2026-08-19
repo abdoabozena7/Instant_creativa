@@ -336,6 +336,87 @@ button { color: inherit; }
 .corpus-result { position: relative; z-index: 2; display: flex; justify-content: center; align-items: center; gap: 28px; margin-top: clamp(54px, 8vh, 85px); }
 .corpus-result > svg { color: #a4aaa6; }.metric-beat { text-align: center; }.metric-beat strong { display: block; font: 500 32px/1 ui-monospace, monospace; color: #123d38; }.metric-beat span { color: #6d7773; font-size: 9px; text-transform: uppercase; letter-spacing: .07em; }
 
+.architecture-scene { position: relative; z-index: 2; max-width: 1240px; margin-top: clamp(27px, 4.7vh, 52px); }
+.architecture-console { padding-bottom: 15px; border-bottom: 1px solid #d2d8d1; }
+.architecture-console-topline { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.architecture-auto-tag { display: flex; align-items: center; color: var(--teal); font: 700 9px ui-monospace, monospace; letter-spacing: .13em; text-transform: uppercase; }
+.architecture-auto-tag i { width: 6px; height: 6px; margin-right: 8px; border-radius: 50%; background: var(--teal); }
+.architecture-trace-count { color: #87928d; font: 600 9px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.architecture-query { display: flex; align-items: center; gap: 11px; margin-top: 13px; color: #173c37; }
+.architecture-query svg { flex: 0 0 auto; color: var(--teal); }
+.architecture-query span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 clamp(16px, 1.55vw, 23px)/1.25 Georgia, serif; letter-spacing: -.025em; }
+.architecture-case-tabs { display: flex; align-items: center; gap: 5px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; }
+.architecture-case-tabs::-webkit-scrollbar { display: none; }
+.architecture-case-tabs > span { flex: 0 0 auto; margin-right: 8px; color: #87928d; font: 700 8px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.architecture-case-tabs button { flex: 0 0 auto; border: 0; border-bottom: 1px solid transparent; padding: 4px 8px 5px; color: #6e7b76; background: transparent; font: 600 9px ui-monospace, monospace; cursor: pointer; transition: color .2s, border-color .2s; }
+.architecture-case-tabs button:hover, .architecture-case-tabs button.active { color: var(--teal); border-color: var(--teal); }
+
+.architecture-track { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: clamp(31px, 5vh, 53px); padding: 0 5px; }
+.architecture-track-base, .architecture-track-progress { position: absolute; z-index: 0; top: 25px; left: 5%; right: 5%; height: 2px; transform-origin: left; }
+.architecture-track-base { background: #c5d0ca; }
+.architecture-track-progress { background: var(--teal); box-shadow: 0 0 14px rgba(17,124,112,.2); }
+.architecture-node { position: relative; z-index: 1; display: flex; min-width: 0; flex-direction: column; align-items: center; text-align: center; transition: opacity .25s; }
+.architecture-node.queued { opacity: .55; }.architecture-node.bypassed { opacity: .28; }
+.architecture-node-icon { display: grid; width: 52px; height: 52px; place-items: center; border: 4px solid #f7f5ef; border-radius: 50%; color: #6c817a; background: #d9e0db; box-shadow: 0 0 0 1px #c2ccc6; transition: color .25s, background .25s, box-shadow .25s, transform .25s; }
+.architecture-node.reached .architecture-node-icon { color: #fff; background: var(--deep); box-shadow: 0 0 0 1px rgba(18,63,57,.3); }
+.architecture-node.current .architecture-node-icon { color: #153b35; background: var(--warm); box-shadow: 0 0 0 5px rgba(233,181,98,.18), 0 0 0 1px #c99c58; transform: translateY(-2px); }
+.architecture-node b { margin-top: 12px; color: #193d38; font: 650 11px "Segoe UI", sans-serif; }
+.architecture-node small { max-width: 125px; margin-top: 5px; color: #77837e; font-size: 8px; line-height: 1.35; }
+.architecture-node.current b { color: #9d6b2f; }.architecture-node.bypassed b { color: #85918b; }
+
+.architecture-branch-row { display: grid; grid-template-columns: 145px minmax(0, 1fr); gap: 22px; align-items: start; margin-top: clamp(28px, 4.2vh, 44px); padding-top: 14px; border-top: 1px solid #d2d8d1; }
+.architecture-branch-intro span { display: block; color: var(--teal); font: 700 9px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.architecture-branch-intro small { display: block; margin-top: 6px; color: #7c8883; font-size: 9px; }
+.architecture-branch-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.architecture-branch { display: grid; min-height: 53px; grid-template-columns: 20px minmax(0, 1fr); gap: 7px; align-items: center; padding: 8px 9px; border-left: 2px solid #c7d0ca; background: rgba(255,255,255,.32); color: #5e6d67; transition: border-color .25s, background .25s, color .25s; }
+.architecture-branch svg { color: #85938d; }.architecture-branch span, .architecture-branch b, .architecture-branch small { display: block; }.architecture-branch b { font-size: 9px; font-weight: 650; }.architecture-branch small { margin-top: 4px; font-size: 7px; line-height: 1.25; }
+.architecture-branch.selected { border-left-color: var(--warm); background: #fff8ea; color: #8e5a25; }.architecture-branch.selected svg { color: #b87932; }.architecture-branch.selected b { color: #7f4f20; }
+
+.architecture-readout { display: grid; grid-template-columns: minmax(240px, 1.15fr) minmax(180px, .7fr) minmax(230px, .9fr); gap: 24px; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid #c5cec8; }
+.architecture-readout-step > span, .architecture-readout-result > span { display: block; color: var(--teal); font: 700 8px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+.architecture-readout-step strong { display: inline-block; margin-top: 5px; color: #153c37; font: 650 18px "Segoe UI", sans-serif; }.architecture-readout-step p { display: inline; margin-left: 9px; color: #6d7974; font-size: 9px; }
+.architecture-readout-result { padding-left: 18px; border-left: 1px solid #c5cec8; }.architecture-readout-result b { display: block; margin-top: 5px; color: #173d38; font: 600 12px ui-monospace, monospace; }
+.architecture-readout.halted .architecture-readout-result > span { color: #b06b30; }.architecture-readout.halted .architecture-readout-result b { color: #a04d36; }
+.architecture-readout-proof { display: flex; justify-content: flex-end; gap: 18px; color: #7a8680; font-size: 8px; line-height: 1.4; text-transform: uppercase; letter-spacing: .06em; }.architecture-readout-proof span { display: flex; align-items: baseline; gap: 5px; }.architecture-readout-proof b { color: #1b6359; font: 700 9px ui-monospace, monospace; }
+
+@media (max-width: 1050px) {
+  .architecture-branch-row { grid-template-columns: 115px minmax(0, 1fr); gap: 15px; }
+  .architecture-branch-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .architecture-readout { grid-template-columns: minmax(210px, 1fr) minmax(170px, .7fr); gap: 18px; }
+  .architecture-readout-proof { grid-column: 1 / -1; justify-content: flex-start; padding-top: 5px; }
+}
+
+@media (max-width: 720px) {
+  .architecture-scene { margin-top: 23px; }
+  .architecture-console-topline { gap: 10px; }
+  .architecture-auto-tag, .architecture-trace-count { font-size: 7px; }
+  .architecture-query { margin-top: 10px; gap: 8px; }
+  .architecture-query svg { width: 14px; }
+  .architecture-query span { font-size: 13px; }
+  .architecture-case-tabs { margin-top: 11px; }
+  .architecture-case-tabs > span { font-size: 7px; }
+  .architecture-case-tabs button { padding: 3px 6px 4px; font-size: 8px; }
+  .architecture-track { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 28px; padding: 0; }
+  .architecture-track-base, .architecture-track-progress { top: 20px; height: 1px; left: 4%; right: 4%; }
+  .architecture-node-icon { width: 40px; height: 40px; border-width: 3px; }
+  .architecture-node-icon svg { width: 14px; height: 14px; }
+  .architecture-node b { margin-top: 8px; font-size: 8px; }
+  .architecture-node small { max-width: 58px; margin-top: 3px; font-size: 6px; }
+  .architecture-node.current .architecture-node-icon { box-shadow: 0 0 0 3px rgba(233,181,98,.18), 0 0 0 1px #c99c58; }
+  .architecture-branch-row { grid-template-columns: 1fr; gap: 10px; margin-top: 23px; padding-top: 11px; }
+  .architecture-branch-intro { display: flex; align-items: baseline; gap: 8px; }
+  .architecture-branch-intro small { margin-top: 0; font-size: 8px; }
+  .architecture-branch-list { gap: 6px; }
+  .architecture-branch { min-height: 43px; padding: 6px 7px; grid-template-columns: 16px minmax(0, 1fr); gap: 5px; }
+  .architecture-branch svg { width: 13px; }
+  .architecture-branch b { font-size: 7px; }.architecture-branch small { margin-top: 2px; font-size: 6px; }
+  .architecture-readout { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 13px; padding-top: 10px; }
+  .architecture-readout-step > span, .architecture-readout-result > span { font-size: 7px; }
+  .architecture-readout-step strong { margin-top: 4px; font-size: 14px; }.architecture-readout-step p { display: block; margin: 3px 0 0; font-size: 7px; line-height: 1.35; }
+  .architecture-readout-result { padding-left: 10px; }.architecture-readout-result b { margin-top: 4px; font-size: 9px; line-height: 1.3; }
+  .architecture-readout-proof { display: none; }
+}
+
 .retrieval-comparison { position: relative; z-index: 2; width: min(820px, 67vw); margin-top: clamp(60px, 10vh, 100px); }
 .retrieval-bar { display: grid; grid-template-columns: 90px 1fr 72px; align-items: center; gap: 18px; margin: 25px 0; color: #99aaa6; }
 .retrieval-bar > span { text-transform: uppercase; font: 700 10px ui-monospace, monospace; letter-spacing: .08em; }.retrieval-bar > i { height: 7px; background: #728b85; transform-origin: left; }.retrieval-bar strong { font: 500 20px ui-monospace, monospace; }

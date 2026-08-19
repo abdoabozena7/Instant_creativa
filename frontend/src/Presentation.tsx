@@ -14,6 +14,7 @@ import {
   GitCompareArrows,
   Play,
   Search,
+  ScanLine,
   ShieldCheck,
   Sparkles,
   Split,
@@ -27,6 +28,7 @@ const chapters = [
   ["promise", "The promise"],
   ["sources", "Source truth"],
   ["pipeline", "Evidence pipeline"],
+  ["architecture", "Live architecture"],
   ["retrieval", "Why hybrid"],
   ["safety", "Safety logic"],
   ["blind", "Recall baseline"],
@@ -46,6 +48,75 @@ const pipeline = [
   { label: "Guard", detail: "Scope + authority", icon: ShieldCheck },
   { label: "Answer", detail: "Claim + evidence", icon: Sparkles },
 ];
+
+const architectureStages = [
+  { label: "Question", detail: "written request", icon: FileText },
+  { label: "Context", detail: "optional image → text", icon: ScanLine },
+  { label: "Gates", detail: "safety · scope · urgency", icon: ShieldCheck },
+  { label: "Retrieve", detail: "BM25 55% · dense 45%", icon: Search },
+  { label: "Rank", detail: "authority + reranker", icon: Target },
+  { label: "Generate", detail: "evidence-bound model", icon: Sparkles },
+  { label: "Release", detail: "citations · fail closed", icon: Check },
+] as const;
+
+const architectureBranches = [
+  { id: "emergency", label: "Emergency redirect", detail: "urgent care · no retrieval", icon: CircleAlert },
+  { id: "scope", label: "Scope refusal", detail: "outside configured sites", icon: ShieldCheck },
+  { id: "answerability", label: "Ask for detail", detail: "no clinical feature", icon: Search },
+  { id: "safety", label: "Safety refusal", detail: "instruction blocked first", icon: Split },
+] as const;
+
+type ArchitectureCase = {
+  label: string;
+  query: string;
+  route: number[];
+  branch: string | null;
+  outcome: string;
+  detail: string;
+};
+
+const architectureCases: ArchitectureCase[] = [
+  {
+    label: "Direct",
+    query: "What does NG12 recommend for unexplained haemoptysis in someone aged 40 or over?",
+    route: [0, 1, 2, 3, 4, 5, 6],
+    branch: null,
+    outcome: "Grounded answer",
+    detail: "Current evidence is selected, cited, and released.",
+  },
+  {
+    label: "Photo",
+    query: "Case + image · persistent cough and haemoptysis",
+    route: [0, 1, 2, 3, 4, 5, 6],
+    branch: null,
+    outcome: "Vision → text → answer",
+    detail: "Gemini adds bounded context; the same text pipeline continues.",
+  },
+  {
+    label: "Emergency",
+    query: "I am vomiting blood heavily right now and feel faint.",
+    route: [0, 1, 2],
+    branch: "emergency",
+    outcome: "Emergency redirect",
+    detail: "The request stops before retrieval and generation.",
+  },
+  {
+    label: "Scope",
+    query: "What does NG12 recommend for suspected prostate cancer?",
+    route: [0, 1, 2],
+    branch: "scope",
+    outcome: "Scope refusal",
+    detail: "The configured seven-site boundary stays explicit.",
+  },
+  {
+    label: "Clarify",
+    query: "What about stomach?",
+    route: [0, 1, 2],
+    branch: "answerability",
+    outcome: "Ask for clinical detail",
+    detail: "No evidence search starts until the question is answerable.",
+  },
+] as const;
 
 const v13Precision = {
   observed: .3784,
@@ -191,8 +262,13 @@ export function Presentation({
           </div>
         </StorySlide>
 
-        <StorySlide index={3} id="retrieval" tone="ink">
-          <StoryHeading number="03" overline="Measured retrieval" title="Hybrid won the experiment." copy="Dense was not assumed to be better. Three modes competed on the same development set." />
+        <StorySlide index={3} id="architecture" tone="soft">
+          <StoryHeading number="03" overline="Live architecture" title="The question never takes a shortcut." copy="One trace shows the optional context, deterministic gates, retrieval path, and the final evidence release." />
+          <ArchitectureScene isActive={active === 3} />
+        </StorySlide>
+
+        <StorySlide index={4} id="retrieval" tone="ink">
+          <StoryHeading number="04" overline="Measured retrieval" title="Hybrid won the experiment." copy="Dense was not assumed to be better. Three modes competed on the same development set." />
           <div className="retrieval-comparison">
             {(["bm25", "dense", "hybrid"] as const).map((mode, index) => {
               const result = development?.modes[mode];
@@ -207,8 +283,8 @@ export function Presentation({
           <div className="retrieval-verdict"><GitCompareArrows /><p><b>55% lexical</b> catches exact thresholds and recommendation IDs.<br /><b>45% dense</b> catches paraphrases and clinical intent.</p><span>Chosen by measurement</span></div>
         </StorySlide>
 
-        <StorySlide index={4} id="safety">
-          <StoryHeading number="04" overline="Safety logic" title="Before retrieval, the system decides whether it should proceed." copy="Instruction safety, urgent-care redirection, scope, and source authority are deterministic gates—not suggestions to the language model." />
+        <StorySlide index={5} id="safety">
+          <StoryHeading number="05" overline="Safety logic" title="Before retrieval, the system decides whether it should proceed." copy="Instruction safety, urgent-care redirection, scope, and source authority are deterministic gates—not suggestions to the language model." />
           <div className="safety-flow">
             <div className="question-signal"><span>Question</span><motion.i animate={{ x: [0, 25, 0] }} transition={{ repeat: Infinity, duration: 2 }} /></div>
             <Split size={32} />
@@ -219,8 +295,8 @@ export function Presentation({
           <div className="authority-rule"><span>2026 action</span><motion.i initial={{ width: 0 }} whileInView={{ width: "100%" }} viewport={{ once: true }} /><span>2015 context</span><b>Never reversed</b></div>
         </StorySlide>
 
-        <StorySlide index={5} id="blind" tone="soft">
-          <StoryHeading number="05" overline="Blind end-to-end baseline" title="The easy 100% was not the final story." copy="Forty-four harder cases measured the complete journey and exposed real weaknesses." />
+        <StorySlide index={6} id="blind" tone="soft">
+          <StoryHeading number="06" overline="Blind end-to-end baseline" title="The easy 100% was not the final story." copy="Forty-four harder cases measured the complete journey and exposed real weaknesses." />
           <div className="blind-layout">
             <div className="case-matrix">
               {Object.entries(blind?.questions.by_scope_group ?? { lung: 11, colorectal: 11, upper_gi: 11, bladder_renal: 11 }).map(([group, count], groupIndex) => (
@@ -242,9 +318,9 @@ export function Presentation({
           </div>
         </StorySlide>
 
-        <StorySlide index={6} id="precision" tone="ink">
+        <StorySlide index={7} id="precision" tone="ink">
           <StoryHeading
-            number="06"
+            number="07"
             overline="Strict precision · v13"
             title="The system captured nearly all of the score it could earn."
             copy="The frozen evaluation contains 45 results that can receive strict credit. The system found 42 of them; only three attainable results remain."
@@ -278,8 +354,8 @@ export function Presentation({
           </motion.div>
         </StorySlide>
 
-        <StorySlide index={7} id="failures" tone="ink">
-          <StoryHeading number="07" overline="Failure analysis" title="Six failures. Six isolated fixes." copy="Measured failures and rehearsal bugs tell us what to change—and what not to touch." />
+        <StorySlide index={8} id="failures" tone="ink">
+          <StoryHeading number="08" overline="Failure analysis" title="Six failures. Six isolated fixes." copy="Measured failures and rehearsal bugs tell us what to change—and what not to touch." />
           <div className="failure-story">
             <FailureBeat marker="A" before="gall bladder" fault="substring: bladder" after="phrase-level scope" metric="Correct refusal 80% → 100%" />
             <FailureBeat marker="B" before="[ **E2** ]" fault="strict label parser" after="citation normalization" metric="Validity 80% → 100%" />
@@ -291,8 +367,8 @@ export function Presentation({
           <div className="do-not-touch"><ShieldCheck /><p><b>Retrieval architecture stays frozen.</b> Recall@5 is already above the 95% target.</p></div>
         </StorySlide>
 
-        <StorySlide index={8} id="evaluation">
-          <StoryHeading number="08" overline="Hackathon evaluation mode" title="Computer scores facts. Gemini judges meaning." copy="The sophisticated multi-judge runner remains available, but the presentation path is deliberately lightweight." />
+        <StorySlide index={9} id="evaluation">
+          <StoryHeading number="09" overline="Hackathon evaluation mode" title="Computer scores facts. Gemini judges meaning." copy="The sophisticated multi-judge runner remains available, but the presentation path is deliberately lightweight." />
           <div className="evaluation-split">
             <div className="eval-lane deterministic-lane"><span>Deterministic</span><strong>Exact</strong>{["Scope", "Recall@K", "Precision@K", "MRR", "Claim citation coverage", "Latency"].map((item) => <p key={item}><Check size={14} />{item}</p>)}</div>
             <motion.div className="evaluation-arrow" animate={{ opacity: [.3, 1, .3] }} transition={{ repeat: Infinity, duration: 1.8 }}><ArrowRight /></motion.div>
@@ -302,9 +378,9 @@ export function Presentation({
           <div className="evaluation-policy">SUPPORTED = pass <i /> PARTIAL · UNSUPPORTED · CONTRADICTED · UNCERTAIN = fail</div>
         </StorySlide>
 
-        <StorySlide index={9} id="confidence" tone="ink">
+        <StorySlide index={10} id="confidence" tone="ink">
           <StoryHeading
-            number="09"
+            number="10"
             overline="Confidence & thresholds"
             title="No invented confidence score. Release depends on measured gates."
             copy="Retrieval scores order evidence; they are not diagnostic probabilities. Confidence comes from frozen evaluation results and deterministic release checks."
@@ -335,8 +411,8 @@ export function Presentation({
           </div>
         </StorySlide>
 
-        <StorySlide index={10} id="experiments" tone="soft">
-          <StoryHeading number="10" overline="Failure-driven development" title="One change. Same 44 cases. One decision." copy="Every experiment is accepted or rejected against a frozen baseline." />
+        <StorySlide index={11} id="experiments" tone="soft">
+          <StoryHeading number="11" overline="Failure-driven development" title="One change. Same 44 cases. One decision." copy="Every experiment is accepted or rejected against a frozen baseline." />
           <div className="experiment-track">
             <Experiment marker="A" title="Scope matching" target="Correct refusal ≥95%" guardrail="False refusal 0–2%" />
             <Experiment marker="B" title="Citation normalization" target="Validity ≥98%" guardrail="No retrieval change" />
@@ -345,7 +421,7 @@ export function Presentation({
           <div className="decision-loop"><span>Baseline</span><ArrowRight /><span>Change one thing</span><ArrowRight /><span>Run same cases</span><ArrowRight /><span>Keep or revert</span></div>
         </StorySlide>
 
-        <StorySlide index={11} id="demo" tone="ink">
+        <StorySlide index={12} id="demo" tone="ink">
           <div className="final-stage">
             <span className="story-overline">Now show, don’t tell</span>
             <h2>Ask a real question.<br />Open every piece of evidence.</h2>
@@ -360,6 +436,135 @@ export function Presentation({
           </div>
         </StorySlide>
       </main>
+    </div>
+  );
+}
+
+function ArchitectureScene({ isActive }: { isActive: boolean }) {
+  const [caseIndex, setCaseIndex] = useState(0);
+  const [phase, setPhase] = useState(0);
+  const caseStudy = architectureCases[caseIndex];
+  const lastStep = caseStudy.route[caseStudy.route.length - 1] ?? 0;
+  const currentStageIndex = Math.min(phase, lastStep);
+  const currentStage = architectureStages[currentStageIndex];
+  const progress = (currentStageIndex / (architectureStages.length - 1)) * 100;
+
+  useEffect(() => {
+    if (!isActive) {
+      setPhase(0);
+      return;
+    }
+
+    setPhase(0);
+    const stepTimer = window.setInterval(() => {
+      setPhase((current) => Math.min(lastStep, current + 1));
+    }, 820);
+    const cycleTimer = window.setTimeout(() => {
+      setCaseIndex((current) => (current + 1) % architectureCases.length);
+    }, Math.max(9000, (lastStep + 1) * 820 + 2300));
+
+    return () => {
+      window.clearInterval(stepTimer);
+      window.clearTimeout(cycleTimer);
+    };
+  }, [isActive, caseIndex, lastStep]);
+
+  function chooseCase(index: number) {
+    setCaseIndex(index);
+    setPhase(0);
+  }
+
+  return (
+    <div className="architecture-scene">
+      <div className="architecture-console">
+        <div className="architecture-console-topline">
+          <span className="architecture-auto-tag"><motion.i animate={{ opacity: [.35, 1, .35] }} transition={{ repeat: Infinity, duration: 1.5 }} /> Auto demo · {caseStudy.label}</span>
+          <span className="architecture-trace-count">Trace {String(currentStageIndex + 1).padStart(2, "0")} / {String(architectureStages.length).padStart(2, "0")}</span>
+        </div>
+        <motion.div
+          key={`${caseStudy.label}-${caseStudy.query}`}
+          className="architecture-query"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: .28 }}
+        >
+          <FileText size={16} />
+          <span>{caseStudy.query}</span>
+        </motion.div>
+        <div className="architecture-case-tabs" aria-label="Architecture demo cases">
+          <span>Path library</span>
+          {architectureCases.map((item, index) => (
+            <button key={item.label} className={index === caseIndex ? "active" : ""} onClick={() => chooseCase(index)} aria-pressed={index === caseIndex}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="architecture-track" aria-label="Live request architecture">
+        <motion.i className="architecture-track-base" initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true, amount: .6 }} transition={{ duration: 1.1 }} />
+        <motion.i className="architecture-track-progress" animate={{ scaleX: progress / 100 }} transition={{ duration: .58, ease: "easeOut" }} />
+        {architectureStages.map((stage, index) => {
+          const Icon = stage.icon;
+          const reached = caseStudy.route.includes(index) && currentStageIndex >= index;
+          const current = caseStudy.route.includes(index) && currentStageIndex === index;
+          const bypassed = !caseStudy.route.includes(index);
+          return (
+            <motion.div
+              className={`architecture-node ${reached ? "reached" : "queued"} ${current ? "current" : ""} ${bypassed ? "bypassed" : ""}`}
+              key={stage.label}
+              initial={{ y: 24, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              viewport={{ once: true, amount: .55 }}
+              transition={{ delay: index * .08, duration: .42 }}
+            >
+              <span className="architecture-node-icon"><Icon size={18} /></span>
+              <b>{stage.label}</b>
+              <small>{stage.detail}</small>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="architecture-branch-row">
+        <div className="architecture-branch-intro">
+          <span>Gate output</span>
+          <small>Every stop is deliberate.</small>
+        </div>
+        <div className="architecture-branch-list">
+          {architectureBranches.map((branch) => {
+            const Icon = branch.icon;
+            const selected = caseStudy.branch === branch.id;
+            return (
+              <motion.div
+                key={branch.id}
+                className={`architecture-branch ${selected ? "selected" : ""}`}
+                animate={{ opacity: selected ? 1 : .78, y: selected && phase >= 2 ? 0 : 2 }}
+                transition={{ duration: .28 }}
+              >
+                <Icon size={15} />
+                <span><b>{branch.label}</b><small>{branch.detail}</small></span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      <motion.div className={`architecture-readout ${caseStudy.branch ? "halted" : ""}`} key={`${caseStudy.label}-${phase}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .22 }}>
+        <div className="architecture-readout-step">
+          <span>Live trace · {String(currentStageIndex + 1).padStart(2, "0")}</span>
+          <strong>{currentStage.label}</strong>
+          <p>{caseStudy.detail}</p>
+        </div>
+        <div className="architecture-readout-result">
+          <span>{currentStageIndex === lastStep ? "Path result" : "Next handoff"}</span>
+          <b>{currentStageIndex === lastStep ? caseStudy.outcome : architectureStages[currentStageIndex + 1]?.label}</b>
+        </div>
+        <div className="architecture-readout-proof">
+          <span><b>2026</b> current action first</span>
+          <span><b>Evidence</b> before fluency</span>
+        </div>
+      </motion.div>
     </div>
   );
 }
